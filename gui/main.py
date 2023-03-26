@@ -1,27 +1,28 @@
 from PyQt5 import QtCore, QtWidgets
+from gui.channels import ChannelsPageWidget
 import load_page
-import accounts
+
 
 class Ui_BuharVideoUploader(object):
     def __init__(self):
         self.currentOption = None
         self.main_layout = None
 
-    def setupUi(self, BuharVideoUploader):
-        BuharVideoUploader.setObjectName("BuharVideoUploader")
-        BuharVideoUploader.setWindowModality(QtCore.Qt.ApplicationModal)
-        BuharVideoUploader.resize(954, 603)
-        BuharVideoUploader.setStyleSheet("")
-        BuharVideoUploader.setToolButtonStyle(QtCore.Qt.ToolButtonFollowStyle)
-        BuharVideoUploader.setAnimated(True)
-        BuharVideoUploader.setTabShape(QtWidgets.QTabWidget.Triangular)
-        self.central_widget = QtWidgets.QWidget(BuharVideoUploader)
+    def setupUi(self, ui):
+        ui.setObjectName("BuharVideoUploader")
+        ui.setWindowModality(QtCore.Qt.ApplicationModal)
+        ui.resize(954, 603)
+        ui.setStyleSheet("")
+        ui.setToolButtonStyle(QtCore.Qt.ToolButtonFollowStyle)
+        ui.setAnimated(True)
+        ui.setTabShape(QtWidgets.QTabWidget.Triangular)
+        self.central_widget = QtWidgets.QWidget(ui)
         self.central_widget.setObjectName("centralwidget")
 
         self.vertical_layout = QtWidgets.QVBoxLayout(self.central_widget)
         self.vertical_layout.setObjectName("verticalLayout")
-        self.tab_widget = load_page.setupUi(self.central_widget) #Инициализация таблицы
-        self.accounts_page = accounts.setupUi(self.central_widget)
+        self.tab_widget = load_page.LoadPageWidget(self.central_widget) #Инициализация таблицы
+        self.accounts_page = ChannelsPageWidget(self.central_widget)
         self.main_layout = QtWidgets.QVBoxLayout(self.central_widget)
         self.main_layout.addWidget(self.tab_widget)
         self.main_layout.addWidget(self.accounts_page)
@@ -33,9 +34,9 @@ class Ui_BuharVideoUploader(object):
         self.load_button = QtWidgets.QPushButton(self.central_widget)
         self.load_button.setObjectName("pushButton")
         self.horizontal_layout.addWidget(self.load_button)
-        self.upload_button = QtWidgets.QPushButton(self.central_widget)
-        self.upload_button.setObjectName("pushButton_3")
-        self.horizontal_layout.addWidget(self.upload_button)
+        # self.upload_button = QtWidgets.QPushButton(self.central_widget)
+        # self.upload_button.setObjectName("pushButton_3")
+        # self.horizontal_layout.addWidget(self.upload_button)
         self.accounts_button = QtWidgets.QPushButton(self.central_widget)
         self.accounts_button.setObjectName("pushButton_4")
         self.horizontal_layout.addWidget(self.accounts_button)
@@ -43,24 +44,22 @@ class Ui_BuharVideoUploader(object):
         self.settings_button.setObjectName("pushButton_2")
         self.horizontal_layout.addWidget(self.settings_button)
         self.vertical_layout.addLayout(self.horizontal_layout)
-        BuharVideoUploader.setCentralWidget(self.central_widget)
+        ui.setCentralWidget(self.central_widget)
 
-        self.retranslateUi(BuharVideoUploader)
-        QtCore.QMetaObject.connectSlotsByName(BuharVideoUploader)
+        self.retranslate_ui(ui)
+        QtCore.QMetaObject.connectSlotsByName(ui)
 
-    def retranslateUi(self, BuharVideoUploader):
+    def retranslate_ui(self, BuharVideoUploader):
         _translate = QtCore.QCoreApplication.translate
         BuharVideoUploader.setWindowTitle(_translate("BuharVideoUploader", "BuharVideoUploader"))
         self.load_button.setText(_translate("BuharVideoUploader", "Выгрузить"))
-        self.upload_button.setText(_translate("BuharVideoUploader", "Загрузить"))
+        # self.upload_button.setText(_translate("BuharVideoUploader", "Загрузить"))
         self.accounts_button.setText(_translate("BuharVideoUploader", "Аккаунты"))
         self.settings_button.setText(_translate("BuharVideoUploader", "Настройки"))
 
         self.load_button.clicked.connect(self.b1)
         self.accounts_button.clicked.connect(self.b2)
-    ##сигналы и слоты + добавление табов + отрисовка остальных страниц и сохранение предыдущих
 
-    a = False
     def b1(self):
         self.accounts_page.hide()
         self.tab_widget.show()
@@ -68,8 +67,6 @@ class Ui_BuharVideoUploader(object):
     def b2(self):
         self.accounts_page.show()
         self.tab_widget.hide()
-
-
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 import enum
 
 
-class Hostings(enum.Enum):
+class Hosting(enum.Enum):
     Youtube = 'Youtube'
     TikTok = 'TikTok'
     Instagram = 'Instagram'
