@@ -1,15 +1,20 @@
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 from model.hosting import Hosting
 from model.tab import TabModel
+from pyqt_checkbox_table_widget.checkBoxTableWidget import CheckBoxTableWidget
 from service.state_service import StateService
+from service.videohosting_service.YoutubeService import YoutubeService
+from threading import Thread
 
+import asyncio
 
 class LoadPageWidget(QtWidgets.QTabWidget):
 
     _translate = QtCore.QCoreApplication.translate
     state_service = StateService()
-    tabs = state_service.get_last_tabs()
+    tab_models = state_service.get_last_tabs()
+    tables = list()
 
     def __init__(self, central_widget):
 
@@ -32,20 +37,21 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         self.tabBar().setTabButton(0, QtWidgets.QTabBar.RightSide, add_button)
 
-        if len(self.tabs) == 0:
-            self.createTab()
+        if len(self.tab_models) == 0:
+            self.create_empty_tab()
         else:
-            for tab in self.tabs:
+            for tab in self.tab_models:
                 self.create_tab(tab.tab_name, tab.channel, tab.hosting)
 
         self.setCurrentIndex(0)
 
     def remove_tab(self, index):
-        self.tabs.pop(index - 1)
+        self.tab_models.pop(index - 1)
+        self.tables.pop(index - 1)
         self.widget(index)
         self.removeTab(index)
 
-        self.state_service.save_tabs_state(self.tabs)
+        self.state_service.save_tabs_state(self.tab_models)
 
     def create_empty_tab(self):
         return self.create_tab(None, '', 0)
@@ -62,9 +68,9 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         selected_index = 0
 
         for hosting in Hosting:
-            combo_box.addItem(hosting.value)
+            combo_box.addItem(hosting.name)
 
-            if selected == hosting.value:
+            if selected == hosting.name:
                 selected_index = combo_box.__len__() - 1
 
         combo_box.setCurrentIndex(selected_index)
@@ -96,7 +102,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         item = QtWidgets.QTableWidgetItem()
         table_widget.setHorizontalHeaderItem(3, item)
 
-        self.insertTab(len(self.tabs), tab, "")
+        self.insertTab(len(self.tables), tab, "")
 
         videohosting_label.setHtml(self._translate("BuharVideoUploader",
                                               "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
@@ -111,6 +117,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                       "</style></head><body style=\" font-family:\'Fira Sans Semi-Light\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
                                       "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Ссылка</p></body></html>"))
         add_button.setText(self._translate("BuharVideoUploader", "Go"))
+        add_button.clicked.connect(self.create_daemon_for_getting_video_list)
         item = table_widget.horizontalHeaderItem(0)
         item.setText(self._translate("BuharVideoUploader", "Название"))
         item = table_widget.horizontalHeaderItem(1)
@@ -123,11 +130,11 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         if name:
             self.setTabText(self.indexOf(tab), name)
         else:
-            index = len(self.tabs) + 1
+            index = len(self.tab_models) + 1
 
             while True:
                 val = True
-                for i in range(len(self.tabs) + 1):
+                for i in range(len(self.tab_models) + 1):
                     if self.tabText(i).endswith(f' {index}'):
                         index += 1
                         val = False
@@ -138,17 +145,49 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             tab_name = self._translate("BuharVideoUploader", f'Tab {index}')
             self.setTabText(self.indexOf(tab), tab_name)
 
-            self.tabs.append(TabModel(tab_name, '', Hosting.Youtube))
-            self.state_service.save_tabs_state(self.tabs)
+            self.tab_models.append(TabModel(tab_name, '', Hosting.Youtube.name))
+            self.state_service.save_tabs_state(self.tab_models)
 
+        self.tables.append(table_widget)
         combo_box.currentTextChanged.connect(self.on_hosting_changed)
         link_edit.textChanged.connect(self.on_url_changed)
 
     def on_hosting_changed(self, item):
-        self.tabs[self.currentIndex() - 1].hosting = item
-        self.state_service.save_tabs_state(self.tabs)
+        self.tab_models[self.currentIndex()].hosting = item
+        self.state_service.save_tabs_state(self.tab_models)
 
     def on_url_changed(self, item):
-        self.tabs[self.currentIndex() - 1].channel = item
-        self.state_service.save_tabs_state(self.tabs)
+        self.tab_models[self.currentIndex()].channel = item
+        self.state_service.save_tabs_state(self.tab_models)
 
+    def create_daemon_for_getting_video_list(self):
+        thread = Thread(target=self.get_video_list, daemon=True)
+        thread.start()
+
+    def get_video_list(self):
+        service = Hosting.__getattribute__(Hosting, self.tab_models[self.currentIndex()].hosting).value
+
+        table = self.tables[self.currentIndex()]
+
+        while table.rowCount() > 0:
+            table.removeRow(0)
+
+        index = 1
+
+        for video in service.get_videos_by_link(self.tab_models[self.currentIndex()].channel):
+            table.insertRow(index - 1)
+
+            item1 = QtWidgets.QTableWidgetItem(video.name)
+            item2 = QtWidgets.QTableWidgetItem(video.url)
+            item3 = QtWidgets.QTableWidgetItem(video.date)
+            # item4 = QtWidgets.QTableWidgetItem('Ы')
+            # item4.setFlags(QtCore.Qt.ItemIsUserCheckable |
+            #               QtCore.Qt.ItemIsEnabled)
+            # item4.setCheckState(QtCore.Qt.Unchecked)
+            # self.table.setItem(index - 1, 3, item4)
+
+            table.setItem(index - 1, 0, item1)
+            table.setItem(index - 1, 1, item2)
+            table.setItem(index - 1, 2, item3)
+
+            index += 1

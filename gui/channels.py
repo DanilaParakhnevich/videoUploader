@@ -34,7 +34,7 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
 
         self.comboBox.setParent(central_widget)
         for hosting in Hosting:
-            self.comboBox.addItem(hosting.value)
+            self.comboBox.addItem(hosting.name)
         self.comboBox.setMaximumWidth(50)
         self.comboBox.setObjectName("comboBox")
 
