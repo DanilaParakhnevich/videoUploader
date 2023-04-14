@@ -1,8 +1,10 @@
 from PyQt5 import QtCore, QtWidgets
+from playwright.sync_api import sync_playwright
 
 from model.hosting import Hosting
 from service.state_service import StateService
 from model.channel import Channel
+
 
 class ChannelsPageWidget(QtWidgets.QTableWidget):
 
@@ -83,7 +85,6 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
             self.setItem(input_position, 0, item1)
             self.setItem(input_position, 1, item2)
 
-
     def on_add(self):
 
         self.insertRow(self.rowCount())
@@ -101,10 +102,22 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
         self.setItem(input_position, 0, item1)
         self.setItem(input_position, 1, item2)
 
+        hosting = Hosting[self.comboBox.currentText()]
+
+        # Если для работы с хостингом необходима авторизация:
+        if hosting.value[1]:
+            with sync_playwright() as pw:
+                browser = pw.chromium.launch(headless=False)
+                context = browser.new_context(viewport={"width": 1920, "height": 1080})
+                page = context.new_page()
+                page.goto("https://vk.com")
+                # wait for content to fully load:
+                page.wait_for_event(event='click')
+                print("123213")
+
         self.channels.append(Channel(hosting=self.comboBox.currentText(), login=self.login_edit.text(), password=self.password_edit.text(), url=self.url_edit.text()))
 
         self.state_service.save_channels(self.channels)
-
 
     def on_delete_row(self):
         button = self.sender()
@@ -113,4 +126,3 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
             self.removeRow(row)
             self.channels.pop(row)
             self.state_service.save_channels(self.channels)
-

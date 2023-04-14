@@ -14,3 +14,7 @@ class YoutubeService(VideohostingService):
             link = f'{self.url}{{video["navigationEndpoint"]["commandMetadata"]["web/CommandMetadata"]}}'
             result.append(VideoModel(link, video['title']['runs'][0]['text'], video['publishedTimeText']['simpleText']))
         return result
+
+    def login(self, login, password, form):
+
+        return list()

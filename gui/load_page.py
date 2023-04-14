@@ -59,32 +59,23 @@ class LoadPageWidget(QtWidgets.QTabWidget):
     def create_tab(self, name, link, selected):
         tab = QtWidgets.QWidget()
         tab.setObjectName("tab.py")
-        videohosting_label = QtWidgets.QTextBrowser(tab)
-        videohosting_label.setGeometry(QtCore.QRect(700, 0, 201, 31))
-        videohosting_label.setObjectName("videohosting_label")
 
-        combo_box = QtWidgets.QComboBox(tab)
+        channel_box = QtWidgets.QComboBox(tab)
 
         selected_index = 0
 
-        for hosting in Hosting:
-            combo_box.addItem(hosting.name)
+        channels = self.state_service.get_channels()
 
-            if selected == hosting.name:
-                selected_index = combo_box.__len__() - 1
+        for channel in self.state_service.get_channels():
+            channel_box.addItem(channel.url)
 
-        combo_box.setCurrentIndex(selected_index)
+            if channel == channels.__getitem__(selected):
+                selected_index = channel_box.__len__() - 1
 
-        combo_box.setGeometry(QtCore.QRect(700, 30, 201, 30))
-        combo_box.setObjectName("combo_box")
+        channel_box.setCurrentIndex(selected_index)
 
-        link_label = QtWidgets.QTextBrowser(tab)
-        link_label.setGeometry(QtCore.QRect(20, 10, 201, 31))
-        link_label.setObjectName("link_label")
-        link_edit = QtWidgets.QLineEdit(tab)
-        link_edit.setGeometry(QtCore.QRect(20, 40, 591, 30))
-        link_edit.setObjectName("link_edit")
-        link_edit.setText(link)
+        channel_box.setGeometry(QtCore.QRect(20, 40, 591, 30))
+        channel_box.setObjectName("link_edit")
         add_button = QtWidgets.QPushButton(tab)
         add_button.setGeometry(QtCore.QRect(620, 40, 51, 30))
         add_button.setObjectName("add_button")
@@ -104,18 +95,6 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         self.insertTab(len(self.tables), tab, "")
 
-        videohosting_label.setHtml(self._translate("BuharVideoUploader",
-                                              "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-                                              "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-                                              "p, li { white-space: pre-wrap; }\n"
-                                              "</style></head><body style=\" font-family:\'Fira Sans Semi-Light\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-                                              "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Видеохостинг</p></body></html>"))
-        link_label.setHtml(self._translate("BuharVideoUploader",
-                                      "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-                                      "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-                                      "p, li { white-space: pre-wrap; }\n"
-                                      "</style></head><body style=\" font-family:\'Fira Sans Semi-Light\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-                                      "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Ссылка</p></body></html>"))
         add_button.setText(self._translate("BuharVideoUploader", "Go"))
         add_button.clicked.connect(self.create_daemon_for_getting_video_list)
         item = table_widget.horizontalHeaderItem(0)
@@ -149,14 +128,9 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             self.state_service.save_tabs_state(self.tab_models)
 
         self.tables.append(table_widget)
-        combo_box.currentTextChanged.connect(self.on_hosting_changed)
-        link_edit.textChanged.connect(self.on_url_changed)
+        channel_box.currentTextChanged.connect(self.on_channel_changed)
 
-    def on_hosting_changed(self, item):
-        self.tab_models[self.currentIndex()].hosting = item
-        self.state_service.save_tabs_state(self.tab_models)
-
-    def on_url_changed(self, item):
+    def on_channel_changed(self, item):
         self.tab_models[self.currentIndex()].channel = item
         self.state_service.save_tabs_state(self.tab_models)
 
@@ -165,7 +139,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         thread.start()
 
     def get_video_list(self):
-        service = Hosting.__getattribute__(Hosting, self.tab_models[self.currentIndex()].hosting).value
+        service = Hosting[self.tab_models[self.currentIndex()].hosting].value[0]
 
         table = self.tables[self.currentIndex()]
 

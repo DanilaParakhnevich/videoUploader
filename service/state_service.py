@@ -1,6 +1,8 @@
 import pickle
 
 
+# Этот класс предназначен для сохранения данных,
+# необходимых для дальнейшей работы приложения
 class StateService(object):
 
     channels_file = 'channels.pkl'

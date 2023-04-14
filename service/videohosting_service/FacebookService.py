@@ -9,3 +9,7 @@ class FacebookService(VideohostingService):
     def get_videos_by_link(self, link):
         # access token https://developers.facebook.com/docs/video-api/guides/get-videos/
         return list()
+
+    def login(self, login, password, form):
+
+        return list()
