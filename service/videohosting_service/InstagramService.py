@@ -16,6 +16,9 @@ class InstagramService(VideohostingService):
                 result.append(VideoModel(post.url, post.caption, str(datetime.fromtimestamp(post.created_time).strftime('%Y-%m-%d %H:%M:%S'))))
         return result
 
-    def login(self, login, password, form):
+    def show_login_dialog(self, hosting, url, form):
 
         return list()
+
+    def login(self, url, login, password):
+        pass

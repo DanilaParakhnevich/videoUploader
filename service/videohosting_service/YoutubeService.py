@@ -15,6 +15,9 @@ class YoutubeService(VideohostingService):
             result.append(VideoModel(link, video['title']['runs'][0]['text'], video['publishedTimeText']['simpleText']))
         return result
 
-    def login(self, login, password, form):
+    def show_login_dialog(self, hosting, url, form):
 
         return list()
+
+    def login(self, url, login, password):
+        pass

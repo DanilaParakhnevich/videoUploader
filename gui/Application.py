@@ -6,7 +6,7 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     BuharVideoUploader = QtWidgets.QMainWindow()
 
-    from main import Ui_BuharVideoUploader
+    from Main import Ui_BuharVideoUploader
 
     ui = Ui_BuharVideoUploader()
     ui.setupUi(BuharVideoUploader)

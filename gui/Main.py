@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtWidgets
-from gui.channels import ChannelsPageWidget
-import load_page
+from gui.Channels import ChannelsPageWidget
+import LoadPage
 
 
 class Ui_BuharVideoUploader(object):
@@ -21,7 +21,7 @@ class Ui_BuharVideoUploader(object):
 
         self.vertical_layout = QtWidgets.QVBoxLayout(self.central_widget)
         self.vertical_layout.setObjectName("verticalLayout")
-        self.tab_widget = load_page.LoadPageWidget(self.central_widget) #Инициализация таблицы
+        self.tab_widget = LoadPage.LoadPageWidget(self.central_widget) #Инициализация таблицы
         self.accounts_page = ChannelsPageWidget(self.central_widget)
         self.main_layout = QtWidgets.QVBoxLayout(self.central_widget)
         self.main_layout.addWidget(self.tab_widget)
@@ -54,7 +54,7 @@ class Ui_BuharVideoUploader(object):
         BuharVideoUploader.setWindowTitle(_translate("BuharVideoUploader", "BuharVideoUploader"))
         self.load_button.setText(_translate("BuharVideoUploader", "Выгрузить"))
         # self.upload_button.setText(_translate("BuharVideoUploader", "Загрузить"))
-        self.accounts_button.setText(_translate("BuharVideoUploader", "Аккаунты"))
+        self.accounts_button.setText(_translate("BuharVideoUploader", "Каналы"))
         self.settings_button.setText(_translate("BuharVideoUploader", "Настройки"))
 
         self.load_button.clicked.connect(self.b1)

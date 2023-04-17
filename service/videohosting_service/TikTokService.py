@@ -37,10 +37,12 @@ class TikTokService(VideohostingService):
             # parse data:
             parsed = []
 
-    def login(self, login, password, form):
+    def show_login_dialog(self, hosting, url, form):
 
         return list()
 
+    def login(self, url, login, password):
+        pass
 
 
 if __name__ == "__main__":

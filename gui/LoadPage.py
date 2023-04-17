@@ -1,13 +1,13 @@
+import time
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+from widgets.ChannelComboBox import ChannelComboBox
 
 from model.hosting import Hosting
 from model.tab import TabModel
-from pyqt_checkbox_table_widget.checkBoxTableWidget import CheckBoxTableWidget
-from service.state_service import StateService
-from service.videohosting_service.YoutubeService import YoutubeService
+from service.StateService import StateService
 from threading import Thread
 
-import asyncio
 
 class LoadPageWidget(QtWidgets.QTabWidget):
 
@@ -41,7 +41,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             self.create_empty_tab()
         else:
             for tab in self.tab_models:
-                self.create_tab(tab.tab_name, tab.channel, tab.hosting)
+                self.create_tab(tab.tab_name, tab.channel)
 
         self.setCurrentIndex(0)
 
@@ -54,25 +54,17 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         self.state_service.save_tabs_state(self.tab_models)
 
     def create_empty_tab(self):
-        return self.create_tab(None, '', 0)
+        channels = self.state_service.get_channels()
+        if len(channels) == 0:
+            return self.create_tab(None, None)
+        else:
+            return self.create_tab(None, channels.__getitem__(0))
 
-    def create_tab(self, name, link, selected):
+    def create_tab(self, name, selected_channel):
         tab = QtWidgets.QWidget()
         tab.setObjectName("tab.py")
 
-        channel_box = QtWidgets.QComboBox(tab)
-
-        selected_index = 0
-
-        channels = self.state_service.get_channels()
-
-        for channel in self.state_service.get_channels():
-            channel_box.addItem(channel.url)
-
-            if channel == channels.__getitem__(selected):
-                selected_index = channel_box.__len__() - 1
-
-        channel_box.setCurrentIndex(selected_index)
+        channel_box = ChannelComboBox(tab, selected_channel)
 
         channel_box.setGeometry(QtCore.QRect(20, 40, 591, 30))
         channel_box.setObjectName("link_edit")
@@ -80,7 +72,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         add_button.setGeometry(QtCore.QRect(620, 40, 51, 30))
         add_button.setObjectName("add_button")
         table_widget = QtWidgets.QTableWidget(tab)
-        table_widget.setGeometry(QtCore.QRect(20, 80, 411, 421))
+        table_widget.setGeometry(QtCore.QRect(20, 80, 500, 421))
         table_widget.setObjectName("table_widget")
         table_widget.setColumnCount(4)
         table_widget.setRowCount(0)
@@ -128,6 +120,11 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             self.state_service.save_tabs_state(self.tab_models)
 
         self.tables.append(table_widget)
+
+        download_button = QtWidgets.QPushButton(tab)
+        download_button.setGeometry(QtCore.QRect(600, 400, 51, 30))
+        download_button.setObjectName("download_button")
+        download_button.setText(self._translate("BuharVideoUploader", "Go"))
         channel_box.currentTextChanged.connect(self.on_channel_changed)
 
     def on_channel_changed(self, item):
@@ -139,7 +136,16 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         thread.start()
 
     def get_video_list(self):
-        service = Hosting[self.tab_models[self.currentIndex()].hosting].value[0]
+        hosting = Hosting[self.tab_models[self.currentIndex()].hosting]
+        channel = self.state_service.get_channel_by_url(self.tab_models[self.currentIndex()].channel)
+
+        if hosting.value[1] and (channel is None or channel.token is None):
+            msg = QtWidgets.QMessageBox()
+            msg.setText('Необходимо авторизоваться на странице "Выгрузка"')
+            msg.exec_()
+            return list()
+
+        service = hosting.value[0]
 
         table = self.tables[self.currentIndex()]
 
@@ -148,7 +154,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         index = 1
 
-        for video in service.get_videos_by_link(self.tab_models[self.currentIndex()].channel):
+        for video in service.get_videos_by_link(channel.url):
             table.insertRow(index - 1)
 
             item1 = QtWidgets.QTableWidgetItem(video.name)

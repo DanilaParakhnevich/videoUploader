@@ -9,5 +9,9 @@ class VideohostingService(ABC):
         return list()
 
     @abc.abstractmethod
-    def login(self, login, password, form):
+    def show_login_dialog(self, hosting, url, form):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def login(self, url, login, password):
         raise NotImplementedError()

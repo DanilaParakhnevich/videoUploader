@@ -1,16 +1,12 @@
 from PyQt5 import QtCore, QtWidgets
-from playwright.sync_api import sync_playwright
 
 from model.hosting import Hosting
-from service.state_service import StateService
+from service.StateService import StateService
 from model.channel import Channel
 
 
 class ChannelsPageWidget(QtWidgets.QTableWidget):
-
     comboBox = QtWidgets.QComboBox()
-    password_edit = QtWidgets.QLineEdit()
-    login_edit = QtWidgets.QLineEdit()
     url_edit = QtWidgets.QLineEdit()
 
     state_service = StateService()
@@ -44,12 +40,6 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
         self.url_edit.setParent(central_widget)
         self.url_edit.setObjectName("url_edit")
         horizontal_layout.addWidget(self.url_edit)
-        self.login_edit.setParent(central_widget)
-        self.login_edit.setObjectName("login_edit")
-        horizontal_layout.addWidget(self.login_edit)
-        self.password_edit.setParent(central_widget)
-        self.password_edit.setObjectName("password_edit")
-        horizontal_layout.addWidget(self.password_edit)
         add_button = QtWidgets.QPushButton(central_widget)
         add_button.setObjectName("add_button")
         horizontal_layout.addWidget(add_button)
@@ -60,19 +50,17 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
         item = self.horizontalHeaderItem(0)
         item.setText(_translate("BuharVideoUploader", "Видеохостинг"))
         item = self.horizontalHeaderItem(1)
-        item.setText(_translate("BuharVideoUploader", "Логин"))
+        item.setText(_translate("BuharVideoUploader", "Ссылка"))
         item = self.horizontalHeaderItem(2)
         item.setText(_translate("BuharVideoUploader", "Удалить"))
         add_button.setText(_translate("BuharVideoUploader", "Добавить"))
 
         self.url_edit.setPlaceholderText(_translate("BuharVideoUploader", "Ссылка на канал"))
-        self.login_edit.setPlaceholderText(_translate("BuharVideoUploader", "Логин"))
-        self.password_edit.setPlaceholderText(_translate("BuharVideoUploader", "Пароль"))
 
         for channel in self.channels:
             self.insertRow(self.rowCount())
             item1 = QtWidgets.QTableWidgetItem(channel.hosting)
-            item2 = QtWidgets.QTableWidgetItem(channel.login)
+            item2 = QtWidgets.QTableWidgetItem(channel.url)
 
             input_position = self.rowCount() - 1
 
@@ -86,10 +74,21 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
             self.setItem(input_position, 1, item2)
 
     def on_add(self):
+        hosting = Hosting[self.comboBox.currentText()]
+
+        # Если для работы с хостингом необходима авторизация:
+        try:
+            if hosting.value[1]:
+                hosting.value[0].show_login_dialog(hosting, self.url_edit.text(), self.parentWidget())
+            else:
+                self.channels.append(Channel(hosting=self.comboBox.currentText(), url=self.url_edit.text()))
+                self.state_service.save_channels(self.channels)
+        except:
+            return
 
         self.insertRow(self.rowCount())
         item1 = QtWidgets.QTableWidgetItem(self.comboBox.currentText())
-        item2 = QtWidgets.QTableWidgetItem(self.login_edit.text())
+        item2 = QtWidgets.QTableWidgetItem(self.url_edit.text())
 
         input_position = self.rowCount() - 1
 
@@ -102,22 +101,7 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
         self.setItem(input_position, 0, item1)
         self.setItem(input_position, 1, item2)
 
-        hosting = Hosting[self.comboBox.currentText()]
-
-        # Если для работы с хостингом необходима авторизация:
-        if hosting.value[1]:
-            with sync_playwright() as pw:
-                browser = pw.chromium.launch(headless=False)
-                context = browser.new_context(viewport={"width": 1920, "height": 1080})
-                page = context.new_page()
-                page.goto("https://vk.com")
-                # wait for content to fully load:
-                page.wait_for_event(event='click')
-                print("123213")
-
-        self.channels.append(Channel(hosting=self.comboBox.currentText(), login=self.login_edit.text(), password=self.password_edit.text(), url=self.url_edit.text()))
-
-        self.state_service.save_channels(self.channels)
+        self.url_edit.setText('')
 
     def on_delete_row(self):
         button = self.sender()

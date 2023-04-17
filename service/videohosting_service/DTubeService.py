@@ -7,6 +7,9 @@ class DTubeService(VideohostingService):
         # scrapping or try to use youtube-dl
         return list()
 
-    def login(self, login, password, form):
+    def show_login_dialog(self, hosting, url, form):
 
         return list()
+
+    def login(self, url, login, password):
+        pass

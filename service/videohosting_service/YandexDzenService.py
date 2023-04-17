@@ -21,6 +21,9 @@ class YandexDzenService(VideohostingService):
             print(info)
         return result
 
-    def login(self, login, password, form):
+    def show_login_dialog(self, hosting, url, form):
 
         return list()
+
+    def login(self, url, login, password):
+        pass
