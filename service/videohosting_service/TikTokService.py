@@ -13,7 +13,7 @@ class TikTokService(VideohostingService):
 
 
 
-    def get_videos_by_link(self, link):
+    def get_videos_by_link(self, link, account=None):
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=False)
             context = browser.new_context(viewport={"width": 1920, "height": 1080})
@@ -37,11 +37,11 @@ class TikTokService(VideohostingService):
             # parse data:
             parsed = []
 
-    def show_login_dialog(self, hosting, url, form):
+    def show_login_dialog(self, hosting, form):
 
         return list()
 
-    def login(self, url, login, password):
+    def login(self, login, password):
         pass
 
 

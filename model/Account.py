@@ -1,8 +1,7 @@
-class Channel(object):
+class Account(object):
 
-    def __init__(self, hosting, url, login=None, password=None, auth=None, auth_data_lifetime=None):
+    def __init__(self, hosting, login=None, password=None, auth=None, auth_data_lifetime=None):
         self.hosting = hosting
-        self.url = url
         self.login = login
         self.password = password
         self.auth = auth

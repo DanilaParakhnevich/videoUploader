@@ -11,7 +11,7 @@ class YandexDzenService(VideohostingService):
         "extract_flat": True,
     }
 
-    def get_videos_by_link(self, link):
+    def get_videos_by_link(self, link, account=None):
         result = list()
 
         with YoutubeDL(self.extract_info_opts) as ydl:
@@ -21,9 +21,9 @@ class YandexDzenService(VideohostingService):
             print(info)
         return result
 
-    def show_login_dialog(self, hosting, url, form):
+    def show_login_dialog(self, hosting, form):
 
         return list()
 
-    def login(self, url, login, password):
+    def login(self, login, password):
         pass

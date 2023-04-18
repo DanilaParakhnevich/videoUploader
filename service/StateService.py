@@ -1,22 +1,22 @@
 import pickle
 from threading import Lock
 
-import model.channel
-
-
 # Этот класс предназначен для сохранения данных,
 # необходимых для дальнейшей работы приложения
 class StateService(object):
 
+    accounts = None
     channels = None
     tabs = None
 
     channel_lock = Lock()
     last_tabs_lock = Lock()
 
+    accounts_file = 'accounts.pkl'
     channels_file = 'channels.pkl'
     last_tabs_file = 'last_tabs.pkl'
 
+    #Channels
     def save_channels(self, channels):
         self.channel_lock.acquire()
         StateService.channels = channels
@@ -41,6 +41,32 @@ class StateService(object):
                 return channel
         return None
 
+    #Accounts
+    def save_accounts(self, accounts):
+        self.channel_lock.acquire()
+        StateService.accounts = accounts
+
+        with open(self.accounts_file, 'wb') as f:
+            pickle.dump(accounts, f)
+        self.channel_lock.release()
+
+    def get_accounts(self):
+        if not self.channel_lock.locked():
+            if StateService.accounts is None:
+                try:
+                    with open(self.accounts_file, 'rb') as f:
+                        StateService.accounts = pickle.load(f)
+                except EOFError:
+                    return list()
+            return StateService.accounts
+
+    def get_account_by_hosting(self, hosting):
+        for account in self.accounts:
+            if account.hosting == hosting:
+                return account
+        return None
+
+    #Tabs
     def save_tabs_state(self, tabs):
         self.last_tabs_lock.acquire()
         StateService.tabs = tabs

@@ -3,8 +3,8 @@ import time
 from PyQt5 import QtCore, QtGui, QtWidgets
 from widgets.ChannelComboBox import ChannelComboBox
 
-from model.hosting import Hosting
-from model.tab import TabModel
+from model.Hosting import Hosting
+from model.Tab import TabModel
 from service.StateService import StateService
 from threading import Thread
 
@@ -62,7 +62,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
     def create_tab(self, name, selected_channel):
         tab = QtWidgets.QWidget()
-        tab.setObjectName("tab.py")
+        tab.setObjectName("Tab.py")
 
         channel_box = ChannelComboBox(tab, selected_channel)
 
@@ -121,11 +121,12 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         self.tables.append(table_widget)
 
-        download_button = QtWidgets.QPushButton(tab)
-        download_button.setGeometry(QtCore.QRect(600, 400, 51, 30))
-        download_button.setObjectName("download_button")
-        download_button.setText(self._translate("BuharVideoUploader", "Go"))
+        # download_button = QtWidgets.QPushButton(tab)
+        # download_button.setGeometry(QtCore.QRect(600, 400, 51, 30))
+        # download_button.setObjectName("download_button")
+        # download_button.setText(self._translate("BuharVideoUploader", "Go"))
         channel_box.currentTextChanged.connect(self.on_channel_changed)
+
 
     def on_channel_changed(self, item):
         self.tab_models[self.currentIndex()].channel = item
@@ -160,14 +161,14 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             item1 = QtWidgets.QTableWidgetItem(video.name)
             item2 = QtWidgets.QTableWidgetItem(video.url)
             item3 = QtWidgets.QTableWidgetItem(video.date)
-            # item4 = QtWidgets.QTableWidgetItem('Ы')
-            # item4.setFlags(QtCore.Qt.ItemIsUserCheckable |
-            #               QtCore.Qt.ItemIsEnabled)
-            # item4.setCheckState(QtCore.Qt.Unchecked)
-            # self.table.setItem(index - 1, 3, item4)
+            item4 = QtWidgets.QTableWidgetItem()
+            item4.setFlags(QtCore.Qt.ItemIsUserCheckable |
+                          QtCore.Qt.ItemIsEnabled)
+            item4.setCheckState(QtCore.Qt.Checked)
 
             table.setItem(index - 1, 0, item1)
             table.setItem(index - 1, 1, item2)
             table.setItem(index - 1, 2, item3)
+            table.setItem(index - 1, 3, item4)
 
             index += 1

@@ -1,12 +1,14 @@
 from PyQt5.QtWidgets import (QWidget, QDialog, QPushButton, QLabel, QLineEdit, QGridLayout, QMessageBox)
 
-from model.channel import Channel
+from model.Account import Account
 from service.videohosting_service.VideohostingService import VideohostingService
 from service.StateService import StateService
 
 
 class LoginForm(QDialog):
-    def __init__(self, parent: QWidget, hosting, url, service: VideohostingService):
+    account = None
+
+    def __init__(self, parent: QWidget, hosting, service: VideohostingService):
         super().__init__(parent)
         self.setWindowTitle('Login Form')
         self.resize(500, 120)
@@ -35,7 +37,6 @@ class LoginForm(QDialog):
         layout.setRowMinimumHeight(3, 75)
 
         self.setLayout(layout)
-        self.url = url
         self.hosting = hosting
         self.service = service
         self.state_service = StateService()
@@ -43,24 +44,23 @@ class LoginForm(QDialog):
     def check_password(self):
         msg = QMessageBox()
         try:
-            token = self.service.login(self.url, self.lineEdit_username.text(), self.lineEdit_password.text())
+            token = self.service.login(self.lineEdit_username.text(), self.lineEdit_password.text())
         except:
             self.label_error.show()
             return
 
         msg.setText('Вы успешно авторизованы')
 
-        current_channels = self.state_service.get_channels()
-        current_channels.append(
-            Channel(hosting=self.hosting,
-                    url=self.url,
-                    login=self.lineEdit_username.text(),
-                    password=self.lineEdit_password.text(),
-                    auth=token,
-                    auth_data_lifetime=int(token['expires_in'])))
-        self.state_service.save_channels(current_channels)
+        current_accounts = self.state_service.get_channels()
+        self.account = Account(hosting=self.hosting.name,
+                               login='123',
+                               password='321',
+                               auth='123')
 
-        # only for vk
+        current_accounts.append(self.account)
+
+        self.state_service.save_accounts(current_accounts)
+
         msg.exec_()
         self.label_error.hide()
         self.close()

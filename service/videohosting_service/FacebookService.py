@@ -6,13 +6,13 @@ from datetime import datetime
 
 class FacebookService(VideohostingService):
 
-    def get_videos_by_link(self, link):
+    def get_videos_by_link(self, link, account=None):
         # access token https://developers.facebook.com/docs/video-api/guides/get-videos/
         return list()
 
-    def show_login_dialog(self, hosting, url, form):
+    def show_login_dialog(self, hosting, form):
 
         return list()
 
-    def login(self, url, login, password):
+    def login(self, login, password):
         pass

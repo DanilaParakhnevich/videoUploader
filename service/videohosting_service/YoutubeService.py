@@ -7,7 +7,7 @@ class YoutubeService(VideohostingService):
 
     url = 'https://www.youtube.com/'
 
-    def get_videos_by_link(self, link):
+    def get_videos_by_link(self, link, account=None):
         c = scrapetube.get_channel(channel_url=link)
         result = list()
         for video in c:
@@ -15,9 +15,9 @@ class YoutubeService(VideohostingService):
             result.append(VideoModel(link, video['title']['runs'][0]['text'], video['publishedTimeText']['simpleText']))
         return result
 
-    def show_login_dialog(self, hosting, url, form):
+    def show_login_dialog(self, hosting, form):
 
         return list()
 
-    def login(self, url, login, password):
+    def login(self, login, password):
         pass

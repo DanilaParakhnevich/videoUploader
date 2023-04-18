@@ -8,7 +8,7 @@ class InstagramService(VideohostingService):
 
     url = 'https://www.instagram.com/'
 
-    def get_videos_by_link(self, link):
+    def get_videos_by_link(self, link, account=None):
         with Instascraper() as insta:
             posts = insta.profile(link.replace(self.url, '').replace('/', '')).timeline_posts()
             result = list()
@@ -16,9 +16,9 @@ class InstagramService(VideohostingService):
                 result.append(VideoModel(post.url, post.caption, str(datetime.fromtimestamp(post.created_time).strftime('%Y-%m-%d %H:%M:%S'))))
         return result
 
-    def show_login_dialog(self, hosting, url, form):
+    def show_login_dialog(self, hosting, form):
 
         return list()
 
-    def login(self, url, login, password):
+    def login(self, login, password):
         pass
