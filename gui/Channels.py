@@ -74,17 +74,14 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
             self.setItem(input_position, 1, item2)
 
     def on_add(self):
-        hosting = Hosting[self.comboBox.currentText()]
+        if self.state_service.get_channel_by_url(self.url_edit.text()) is not None:
+            msg = QtWidgets.QMessageBox()
+            msg.setText('Такой канал уже существует')
+            msg.exec_()
+            raise Exception
 
-        # Если для работы с хостингом необходима авторизация:
-        try:
-            if hosting.value[1]:
-                hosting.value[0].show_login_dialog(hosting, self.url_edit.text(), self.parentWidget())
-            else:
-                self.channels.append(Channel(hosting=self.comboBox.currentText(), url=self.url_edit.text()))
-                self.state_service.save_channels(self.channels)
-        except:
-            return
+        self.channels.append(Channel(hosting=self.comboBox.currentText(), url=self.url_edit.text()))
+        self.state_service.save_channels(self.channels)
 
         self.insertRow(self.rowCount())
         item1 = QtWidgets.QTableWidgetItem(self.comboBox.currentText())

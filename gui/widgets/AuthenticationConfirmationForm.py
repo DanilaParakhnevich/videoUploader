@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import (QDialog, QPushButton, QLabel, QLineEdit, QGridLayou
 
 
 class AuthenticationConfirmationForm(QDialog):
-	def __init__(self, parent, defaultCode):
+	def __init__(self, parent):
 		super().__init__(parent)
 		self.setWindowTitle('Аутентификация')
 		self.resize(500, 120)
@@ -20,12 +20,9 @@ class AuthenticationConfirmationForm(QDialog):
 		layout.addWidget(button_check, 2, 0, 1, 2)
 		layout.setRowMinimumHeight(2, 75)
 
-		self.defaultCode = defaultCode
 		self.setLayout(layout)
 
 	def close(self) -> bool:
-		if self.code_edit.text() == '':
-			self.code_edit.setText(self.defaultCode)
 		return super().close()
 
 	def exit(self):

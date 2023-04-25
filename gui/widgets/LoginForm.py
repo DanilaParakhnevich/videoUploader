@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import (QWidget, QDialog, QPushButton, QLabel, QLineEdit, QGridLayout, QMessageBox)
+from PyQt5 import QtCore
 
 from model.Account import Account
 from service.videohosting_service.VideohostingService import VideohostingService
@@ -8,24 +9,34 @@ from service.StateService import StateService
 class LoginForm(QDialog):
     account = None
 
-    def __init__(self, parent: QWidget, hosting, service: VideohostingService):
+    def __init__(self, parent: QWidget, hosting, service: VideohostingService, type: int):
         super().__init__(parent)
         self.setWindowTitle('Login Form')
         self.resize(500, 120)
 
         layout = QGridLayout()
 
-        label_name = QLabel('<font size="4"> Username </font>')
-        self.lineEdit_username = QLineEdit()
-        self.lineEdit_username.setPlaceholderText('Please enter your username')
-        layout.addWidget(label_name, 0, 0)
-        layout.addWidget(self.lineEdit_username, 0, 1)
+        if type == 1:
+            label_name = QLabel('<font size="4"> Username </font>')
+            self.lineEdit_username = QLineEdit()
+            self.lineEdit_username.setPlaceholderText('Please enter your username')
+            layout.addWidget(label_name, 0, 0)
+            layout.addWidget(self.lineEdit_username, 0, 1)
 
-        label_password = QLabel('<font size="4"> Password </font>')
-        self.lineEdit_password = QLineEdit()
-        self.lineEdit_password.setPlaceholderText('Please enter your password')
-        layout.addWidget(label_password, 1, 0)
-        layout.addWidget(self.lineEdit_password, 1, 1)
+            label_password = QLabel('<font size="4"> Password </font>')
+            self.lineEdit_password = QLineEdit()
+            self.lineEdit_password.setPlaceholderText('Please enter your password')
+            layout.addWidget(label_password, 1, 0)
+            layout.addWidget(self.lineEdit_password, 1, 1)
+        else:
+            label_name = QLabel('<font size="4"> Phone number </font>')
+            self.lineEdit_username = QLineEdit()
+            self.lineEdit_username.setPlaceholderText('Please enter your phone number')
+            layout.addWidget(label_name, 0, 0)
+            layout.addWidget(self.lineEdit_username, 0, 1)
+
+            self.lineEdit_password = QLineEdit()
+
 
         self.label_error = QLabel('<font size="4">Введены неверные данные</font>')
         self.label_error.hide()
@@ -43,6 +54,13 @@ class LoginForm(QDialog):
 
     def check_password(self):
         msg = QMessageBox()
+
+        for account in self.state_service.get_accounts_by_hosting(self.hosting.name):
+            if account.login == self.lineEdit_username.text():
+                msg.setText('Такой аккаунт уже существует')
+                msg.exec_()
+                raise Exception
+
         try:
             token = self.service.login(self.lineEdit_username.text(), self.lineEdit_password.text())
         except:
@@ -51,11 +69,11 @@ class LoginForm(QDialog):
 
         msg.setText('Вы успешно авторизованы')
 
-        current_accounts = self.state_service.get_channels()
+        current_accounts = self.state_service.get_accounts()
         self.account = Account(hosting=self.hosting.name,
-                               login='123',
-                               password='321',
-                               auth='123')
+                               login=self.lineEdit_username.text(),
+                               password=self.lineEdit_password.text(),
+                               auth=token)
 
         current_accounts.append(self.account)
 

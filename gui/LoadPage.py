@@ -1,10 +1,9 @@
-import time
-
-from PyQt5 import QtCore, QtGui, QtWidgets
-from widgets.ChannelComboBox import ChannelComboBox
+from PyQt5 import QtCore, QtWidgets
+from widgets.ChooseAccountForm import ChooseAccountForm
 
 from model.Hosting import Hosting
 from model.Tab import TabModel
+from gui.widgets.ChannelComboBox import ChannelComboBox
 from service.StateService import StateService
 from threading import Thread
 
@@ -133,20 +132,32 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         self.state_service.save_tabs_state(self.tab_models)
 
     def create_daemon_for_getting_video_list(self):
+
+        # В существующем потоке выбираем аккаунт, если требуется, тк pyqt запрещает в других потоках
+        # создавать формы используя parent widget из текущего потока
+        self.channel = self.state_service.get_channel_by_url(self.tab_models[self.currentIndex()].channel)
+        self.hosting = Hosting[self.channel.hosting]
+        self.account = None
+
+        if self.hosting.value[1]:
+            accounts = self.state_service.get_accounts_by_hosting(self.hosting.name)
+            if len(accounts) == 0:
+                msg = QtWidgets.QMessageBox()
+                msg.setText('Необходимо авторизоваться на странице "Аккаунты"')
+                msg.exec_()
+                return list()
+            elif len(accounts) == 1:
+                self.account = accounts[0]
+            else:
+                self.form = ChooseAccountForm(parent=self.parentWidget(), accounts=accounts)
+                self.form.exec()
+                self.account = self.form.account
+
         thread = Thread(target=self.get_video_list, daemon=True)
         thread.start()
 
     def get_video_list(self):
-        hosting = Hosting[self.tab_models[self.currentIndex()].hosting]
-        channel = self.state_service.get_channel_by_url(self.tab_models[self.currentIndex()].channel)
-
-        if hosting.value[1] and (channel is None or channel.token is None):
-            msg = QtWidgets.QMessageBox()
-            msg.setText('Необходимо авторизоваться на странице "Выгрузка"')
-            msg.exec_()
-            return list()
-
-        service = hosting.value[0]
+        service = self.hosting.value[0]
 
         table = self.tables[self.currentIndex()]
 
@@ -155,7 +166,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         index = 1
 
-        for video in service.get_videos_by_link(channel.url):
+        for video in service.get_videos_by_link(link=self.channel.url, account=self.account):
             table.insertRow(index - 1)
 
             item1 = QtWidgets.QTableWidgetItem(video.name)

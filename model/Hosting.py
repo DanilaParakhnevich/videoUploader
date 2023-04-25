@@ -20,9 +20,9 @@ class Hosting(enum.Enum):
     TikTok = [TikTokService(), True]
     Instagram = [InstagramService(), False]#done
     Facebook = [FacebookService(), True]
-    YandexDzen = [YandexDzenService(), True]#done
-    VK = [VKService(), True]
+    YandexDzen = [YandexDzenService(), False]#done
+    VK = [VKService(), True]#done
     OK = [OKService(), True]
-    Rutube = [RutubeService(), True]
-    DTube = [DTubeService(), True]
-    Telegram = [TelegramService(), True]
+    Rutube = [RutubeService(), False]#done
+    DTube = [DTubeService(), False]#done
+    Telegram = [TelegramService(), True]#done (sync)

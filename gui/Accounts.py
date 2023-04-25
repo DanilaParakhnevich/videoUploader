@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 
 from model.Hosting import Hosting
 from service.StateService import StateService
@@ -69,23 +69,22 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
         hosting = Hosting[self.comboBox.currentText()]
 
         account = hosting.value[0].show_login_dialog(hosting, self.parentWidget())
+        if account is not None:
 
-        self.insertRow(self.rowCount())
-        item1 = QtWidgets.QTableWidgetItem(self.comboBox.currentText())
-        item2 = QtWidgets.QTableWidgetItem(account.login)
+            self.insertRow(self.rowCount())
+            item1 = QtWidgets.QTableWidgetItem(self.comboBox.currentText())
+            item2 = QtWidgets.QTableWidgetItem(account.login)
 
-        input_position = self.rowCount() - 1
+            input_position = self.rowCount() - 1
 
-        btn = QtWidgets.QPushButton(self)
-        btn.setText('-')
-        self.setCellWidget(input_position, 2, btn)
+            btn = QtWidgets.QPushButton(self)
+            btn.setText('-')
+            self.setCellWidget(input_position, 2, btn)
 
-        btn.clicked.connect(self.on_delete_row)
+            btn.clicked.connect(self.on_delete_row)
 
-        self.setItem(input_position, 0, item1)
-        self.setItem(input_position, 1, item2)
-
-        self.url_edit.setText('')
+            self.setItem(input_position, 0, item1)
+            self.setItem(input_position, 1, item2)
 
     def on_delete_row(self):
         button = self.sender()
@@ -93,4 +92,4 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
             row = self.indexAt(button.pos()).row()
             self.removeRow(row)
             self.accounts.pop(row)
-            self.state_service.save_accounts(self.channels)
+            self.state_service.save_accounts(self.accounts)

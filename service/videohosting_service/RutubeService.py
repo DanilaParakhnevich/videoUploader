@@ -1,11 +1,27 @@
 from service.videohosting_service.VideohostingService import VideohostingService
-
+from model.VideoModel import VideoModel
+from yt_dlp import YoutubeDL
+from datetime import datetime
 
 class RutubeService(VideohostingService):
 
+    extract_info_opts = {
+        'ignoreerrors': True,
+        'skip_download': True,
+        'logger': False,
+        "extract_flat": True,
+    }
+
     def get_videos_by_link(self, link, account=None):
-        # access token https://ru.stackoverflow.com/questions/288901/%D0%9F%D0%BE%D0%BB%D1%83%D1%87%D0%B8%D1%82%D1%8C-%D0%B2%D0%B8%D0%B4%D0%B5%D0%BE-vkontakte-api
-        return list()
+        result = list()
+
+        with YoutubeDL(self.extract_info_opts) as ydl:
+            info = ydl.extract_info('https://rutube.ru/channel/25933729/videos/')
+            for item in info['entries']:
+                result.append(VideoModel(item['url'], item['title']
+                                         , datetime.fromtimestamp(item['timestamp']).__str__()))
+
+        return result
 
     def show_login_dialog(self, hosting, form):
 

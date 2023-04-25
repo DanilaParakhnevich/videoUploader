@@ -60,11 +60,12 @@ class StateService(object):
                     return list()
             return StateService.accounts
 
-    def get_account_by_hosting(self, hosting):
+    def get_accounts_by_hosting(self, hosting):
+        result = list()
         for account in self.accounts:
             if account.hosting == hosting:
-                return account
-        return None
+                result.append(account)
+        return result
 
     #Tabs
     def save_tabs_state(self, tabs):
