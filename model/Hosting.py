@@ -16,13 +16,13 @@ from service.videohosting_service.InstagramService import InstagramService
 # данными в качестве значений для работы с ними:
 # (Объект соответсвующего сервиса, Обязательна ли авторизация для выборки данных)
 class Hosting(enum.Enum):
-    Youtube = [YoutubeService(), False]#done
-    TikTok = [TikTokService(), True]
-    Instagram = [InstagramService(), False]#done
-    Facebook = [FacebookService(), True]
-    YandexDzen = [YandexDzenService(), False]#done
-    VK = [VKService(), True]#done
-    OK = [OKService(), True]
-    Rutube = [RutubeService(), False]#done
-    DTube = [DTubeService(), False]#done
-    Telegram = [TelegramService(), True]#done (sync)
+    Youtube = [YoutubeService(), False]#g
+    TikTok = [TikTokService(), True]#
+    Instagram = [InstagramService(), False]#g
+    Facebook = [FacebookService(), True]#a
+    YandexDzen = [YandexDzenService(), False]#g
+    VK = [VKService(), True]#ga
+    OK = [OKService(), True]#a
+    Rutube = [RutubeService(), False]#ga
+    DTube = [DTubeService(), False]#ga
+    Telegram = [TelegramService(), True]#g!a

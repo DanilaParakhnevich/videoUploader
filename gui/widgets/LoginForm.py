@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import (QWidget, QDialog, QPushButton, QLabel, QLineEdit, QGridLayout, QMessageBox)
-from PyQt5 import QtCore
+import service.LoggingService
 
 from model.Account import Account
 from service.videohosting_service.VideohostingService import VideohostingService

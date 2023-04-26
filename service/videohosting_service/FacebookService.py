@@ -1,7 +1,8 @@
 from service.videohosting_service.VideohostingService import VideohostingService
-from model.VideoModel import VideoModel
-from yt_dlp import YoutubeDL
-from datetime import datetime
+from gui.widgets.AuthenticationConfirmationForm import AuthenticationConfirmationForm
+from gui.widgets.LoginForm import LoginForm
+from playwright.sync_api import sync_playwright
+from time import sleep
 
 
 class FacebookService(VideohostingService):
@@ -11,25 +12,32 @@ class FacebookService(VideohostingService):
         return list()
 
     def show_login_dialog(self, hosting, form):
-
-        return list()
+        self.login_form = LoginForm(form, hosting, self, 1)
+        self.login_form.exec_()
+        return self.login_form.account
 
     def login(self, login, password):
-        pass
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            context = browser.new_context()
+            page = context.new_page()
+            page.goto('https://mbasic.facebook.com')
+            page.type('input[name=email]', login)
+            page.type('input[name=pass]', password)
+            page.keyboard.press('Enter')
+            sleep(5)
 
+            if len(page.context.cookies()) != 7:
+                if len(page.context.cookies()) == 4:
+                    form = AuthenticationConfirmationForm(self.login_form)
+                    form.exec_()
+                    page.type('#approvals_code', form.code_edit.text())
+                    page.click('#checkpointSubmitButton')
+                    sleep(2)
+                    if len(page.context.cookies()) != 7:
+                        raise Exception('Неправильный код подтверждения')
+                else:
+                    raise Exception('Неверные данные')
 
-if __name__ == '__main__':
-    extract_info_opts = {
-        'ignoreerrors': True,
-        'skip_download': True,
-        'logger': False,
-        "extract_flat": True,
-    }
-
-    result = list()
-
-    with YoutubeDL(extract_info_opts) as ydl:
-        info = ydl.extract_info('https://www.facebook.com/people/Marwah-Sopa/pfbid02GnRkup21d7ZsiR3nuhdLvBipYV9DCd1bKA3aNBUhURQRteTbdbcLGX4SK7frFKBFl/')
-        for item in info['entries']:
-            result.append(VideoModel(item['url'], item['title']
-                                     , datetime.fromtimestamp(item['timestamp']).__str__()))
+            page.screenshot(path="s1.jpg")
+            return page.context.cookies()

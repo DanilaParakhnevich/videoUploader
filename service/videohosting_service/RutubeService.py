@@ -1,7 +1,10 @@
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
+from gui.widgets.LoginForm import LoginForm
 from yt_dlp import YoutubeDL
 from datetime import datetime
+from playwright.sync_api import sync_playwright
+
 
 class RutubeService(VideohostingService):
 
@@ -24,8 +27,24 @@ class RutubeService(VideohostingService):
         return result
 
     def show_login_dialog(self, hosting, form):
-
-        return list()
+        self.login_form = LoginForm(form, hosting, self, 2)
+        self.login_form.exec_()
+        return self.login_form.account
 
     def login(self, login, password):
-        pass
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=False)
+            context = browser.new_context()
+            page = context.new_page()
+            page.goto('https://rutube.ru')
+            page.wait_for_selector('.freyja_char-base-button__pointerCursor__JNA7y')
+            page.click('.freyja_char-base-button__pointerCursor__JNA7y')
+            page.wait_for_selector('.freyja_char-button__button__c4Dm-')
+            page.click('.freyja_char-button__button__c4Dm-')
+
+            #js?
+            page.wait_for_selector('.freyja_char-header-user-menu__userAvatar__p5-3v freyja_char-header-user-menu__userAvatarNoMargin__6zVk8', timeout=0)
+
+            page.screenshot(path="s1.jpg")
+            return page.context.cookies()
+

@@ -3,7 +3,6 @@ from pyrogram import Client
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
 from gui.widgets.AuthenticationConfirmationForm import AuthenticationConfirmationForm
-import asyncio
 
 
 class TelegramService(VideohostingService):

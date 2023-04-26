@@ -58,7 +58,6 @@ class VKService(VideohostingService):
             response = self.auth(login, password, session, two_fa=True, code=self.handle_auth())
         elif 'error' in response:
             raise Exception(response['error_description'])
-        #капчи
 
         return response
 
