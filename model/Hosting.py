@@ -16,8 +16,8 @@ from service.videohosting_service.InstagramService import InstagramService
 # данными в качестве значений для работы с ними:
 # (Объект соответсвующего сервиса, Обязательна ли авторизация для выборки данных)
 class Hosting(enum.Enum):
-    Youtube = [YoutubeService(), False]#g
-    TikTok = [TikTokService(), True]#a
+    Youtube = [YoutubeService(), False]#ga
+    TikTok = [TikTokService(), True]#ga
     Instagram = [InstagramService(), False]#ga
     Facebook = [FacebookService(), True]#ga
     YandexDzen = [YandexDzenService(), False]#ga
