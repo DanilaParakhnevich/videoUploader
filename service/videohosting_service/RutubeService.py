@@ -27,7 +27,7 @@ class RutubeService(VideohostingService):
         return result
 
     def show_login_dialog(self, hosting, form):
-        self.login_form = LoginForm(form, hosting, self, 2)
+        self.login_form = LoginForm(form, hosting, self, 1, 'Введите название аккаунта')
         self.login_form.exec_()
         return self.login_form.account
 
@@ -42,7 +42,6 @@ class RutubeService(VideohostingService):
             page.wait_for_selector('.freyja_char-button__button__c4Dm-')
             page.click('.freyja_char-button__button__c4Dm-')
 
-            #js?
             page.wait_for_selector('.freyja_char-header-user-menu__userAvatar__p5-3v freyja_char-header-user-menu__userAvatarNoMargin__6zVk8', timeout=0)
 
             page.screenshot(path="s1.jpg")

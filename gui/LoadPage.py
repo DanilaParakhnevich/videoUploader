@@ -139,19 +139,19 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         self.hosting = Hosting[self.channel.hosting]
         self.account = None
 
-        if self.hosting.value[1]:
-            accounts = self.state_service.get_accounts_by_hosting(self.hosting.name)
-            if len(accounts) == 0:
-                msg = QtWidgets.QMessageBox()
-                msg.setText('Необходимо авторизоваться на странице "Аккаунты"')
-                msg.exec_()
-                return list()
-            elif len(accounts) == 1:
-                self.account = accounts[0]
-            else:
-                self.form = ChooseAccountForm(parent=self.parentWidget(), accounts=accounts)
-                self.form.exec()
-                self.account = self.form.account
+        accounts = self.state_service.get_accounts_by_hosting(self.hosting.name)
+
+        if len(accounts) == 0 and self.hosting.value[1]:
+            msg = QtWidgets.QMessageBox()
+            msg.setText('Необходимо авторизоваться на странице "Аккаунты"')
+            msg.exec_()
+            return list()
+        elif len(accounts) == 1:
+            self.account = accounts[0]
+        else:
+            self.form = ChooseAccountForm(parent=self.parentWidget(), accounts=accounts)
+            self.form.exec()
+            self.account = self.form.account
 
         thread = Thread(target=self.get_video_list, daemon=True)
         thread.start()

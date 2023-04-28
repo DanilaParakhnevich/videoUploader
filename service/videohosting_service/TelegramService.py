@@ -19,7 +19,7 @@ class TelegramService(VideohostingService):
         return result
 
     def show_login_dialog(self, hosting, form):
-        self.login_form = LoginForm(form, hosting, self, 2)
+        self.login_form = LoginForm(form, hosting, self, 1, 'Введите номер телефона')
         self.login_form.exec_()
 
         return self.login_form.account

@@ -17,12 +17,12 @@ from service.videohosting_service.InstagramService import InstagramService
 # (Объект соответсвующего сервиса, Обязательна ли авторизация для выборки данных)
 class Hosting(enum.Enum):
     Youtube = [YoutubeService(), False]#g
-    TikTok = [TikTokService(), True]#
-    Instagram = [InstagramService(), False]#g
-    Facebook = [FacebookService(), True]#a
-    YandexDzen = [YandexDzenService(), False]#g
+    TikTok = [TikTokService(), True]#a
+    Instagram = [InstagramService(), False]#ga
+    Facebook = [FacebookService(), True]#ga
+    YandexDzen = [YandexDzenService(), False]#ga
     VK = [VKService(), True]#ga
-    OK = [OKService(), True]#a
+    OK = [OKService(), True]#ga
     Rutube = [RutubeService(), False]#ga
     DTube = [DTubeService(), False]#ga
     Telegram = [TelegramService(), True]#g!a

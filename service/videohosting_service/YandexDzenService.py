@@ -1,5 +1,6 @@
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
+from gui.widgets.LoginForm import LoginForm
 from yt_dlp import YoutubeDL
 import json
 from playwright.sync_api import sync_playwright
@@ -31,8 +32,16 @@ class YandexDzenService(VideohostingService):
         return result
 
     def show_login_dialog(self, hosting, form):
-
-        return list()
+        self.login_form = LoginForm(form, hosting, self, 1, 'Введите название аккаунта')
+        self.login_form.exec_()
+        return self.login_form.account
 
     def login(self, login, password):
-        pass
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=False)
+            context = browser.new_context()
+            page = context.new_page()
+            page.goto('https://passport.yandex.ru/auth/welcome')
+            page.keyboard.press('Enter')
+            page.wait_for_selector('.Section_link__pZJDa', timeout=0)
+            return page.context.cookies()

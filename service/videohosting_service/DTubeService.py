@@ -27,7 +27,7 @@ class DTubeService(VideohostingService):
         return result
 
     def show_login_dialog(self, hosting, form):
-        self.login_form = LoginForm(form, hosting, self, 1)
+        self.login_form = LoginForm(form, hosting, self, 2, 'Введите логин', 'Введите код')
         self.login_form.exec_()
 
         return self.login_form.account

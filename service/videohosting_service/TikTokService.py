@@ -1,8 +1,6 @@
-from TikTokAPI import TikTokAPI
-
 from service.videohosting_service.VideohostingService import VideohostingService
 from playwright.sync_api import sync_playwright
-from time import sleep
+
 
 class TikTokService(VideohostingService):
 
@@ -14,22 +12,16 @@ class TikTokService(VideohostingService):
         return list()
 
     def login(self, login, password):
+        CHROMIUM_ARGS = [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--no-first-run',
+            '--disable-blink-features=AutomationControlled'
+        ]
+
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=False)
+            browser = p.chromium.launch(headless=False, args=CHROMIUM_ARGS, ignore_default_args=['--enable-automation'])
             context = browser.new_context()
             page = context.new_page()
             page.goto('https://www.tiktok.com/login')
-            page.wait_for_selector(selector='.elwz89c90')
-
-            page.screenshot(path="s1.jpg")
-            return page.context.cookies()
-
-if __name__ == '__main__':
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
-        context = browser.new_context()
-        page = context.new_page()
-        page.goto('https://www.tiktok.com/login')
-        # page.wait_for_selector(selector='.elwz89c90', timeout=0)
-        sleep(100000000)
-        page.screenshot(path="s1.jpg")
+            page.wait_for_selector(selector='#main-content-homepage_hot', timeout=0)

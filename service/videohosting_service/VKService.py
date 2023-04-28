@@ -41,7 +41,7 @@ class VKService(VideohostingService):
         return videos
 
     def show_login_dialog(self, hosting, form):
-        self.login_form = LoginForm(form, hosting, self, 1)
+        self.login_form = LoginForm(form, hosting, self, 2, 'Введите логин', 'Введите пароль')
         self.login_form.exec_()
 
         return self.login_form.account
