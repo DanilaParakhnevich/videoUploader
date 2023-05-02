@@ -58,7 +58,7 @@ class LoginForm(QDialog):
             if account.login == self.lineEdit_username.text():
                 msg.setText('Такой аккаунт уже существует')
                 msg.exec_()
-                raise Exception
+                return
 
         try:
             token = self.service.login(self.lineEdit_username.text(), self.lineEdit_password.text())

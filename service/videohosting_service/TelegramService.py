@@ -6,16 +6,23 @@ from gui.widgets.AuthenticationConfirmationForm import AuthenticationConfirmatio
 
 
 class TelegramService(VideohostingService):
+
     api_id = 21915718
     api_hash = "e4fda4b7d7ab5c8f27df56c71fbe44d9"
+
+    def __init__(self):
+        self.video_regex = 'https:\/\/t.me/.*\/.*'
+        self.channel_regex = 'https:\/\/t.me\/.*'
 
     def get_videos_by_link(self, link, account=None):
         app = Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash)
         result = list()
 
-        for message in app.get_chat_history(link):
-            if message.video is not None:
-                result.append(VideoModel(url=message.id, name=message.text, date=message.date))
+        with app:
+            for message in app.get_chat_history(chat_id='durov'):
+                if message.video is not None:
+                    result.append(VideoModel(url=message.id, name=message.text, date=message.date))
+
         return result
 
     def show_login_dialog(self, hosting, form):
@@ -37,4 +44,5 @@ class TelegramService(VideohostingService):
     def handle_auth(self):
         form = AuthenticationConfirmationForm(self.login_form)
         form.exec_()
+
         return form.code_edit.text()

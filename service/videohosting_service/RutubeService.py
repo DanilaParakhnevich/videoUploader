@@ -8,12 +8,9 @@ from playwright.sync_api import sync_playwright
 
 class RutubeService(VideohostingService):
 
-    extract_info_opts = {
-        'ignoreerrors': True,
-        'skip_download': True,
-        'logger': False,
-        "extract_flat": True,
-    }
+    def __init__(self):
+        self.video_regex = 'https:/\/rutube.ru\/video\/.*'
+        self.channel_regex = 'https:\/\/rutube.ru\/.*\/videos\/'
 
     def get_videos_by_link(self, link, account=None):
         result = list()
@@ -29,12 +26,12 @@ class RutubeService(VideohostingService):
     def show_login_dialog(self, hosting, form):
         self.login_form = LoginForm(form, hosting, self, 1, 'Введите название аккаунта')
         self.login_form.exec_()
+
         return self.login_form.account
 
     def login(self, login, password):
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=False)
-            context = browser.new_context()
+            context = self.new_context(p=p, headless=False)
             page = context.new_page()
             page.goto('https://rutube.ru')
             page.wait_for_selector('.freyja_char-base-button__pointerCursor__JNA7y')
@@ -46,4 +43,3 @@ class RutubeService(VideohostingService):
 
             page.screenshot(path="s1.jpg")
             return page.context.cookies()
-

@@ -1,5 +1,4 @@
-import pickle
-from threading import Lock
+from PyQt5.QtCore import QSettings
 
 # Этот класс предназначен для сохранения данных,
 # необходимых для дальнейшей работы приложения
@@ -8,32 +7,28 @@ class StateService(object):
     accounts = None
     channels = None
     tabs = None
-
-    channel_lock = Lock()
-    last_tabs_lock = Lock()
+    settings = None
 
     accounts_file = 'accounts.pkl'
     channels_file = 'channels.pkl'
     last_tabs_file = 'last_tabs.pkl'
 
-    #Channels
-    def save_channels(self, channels):
-        self.channel_lock.acquire()
-        StateService.channels = channels
+    def __init__(self):
+        self.settings = QSettings('BuharVideoUploaderSettings')
 
-        with open(self.channels_file, 'wb') as f:
-            pickle.dump(channels, f)
-        self.channel_lock.release()
+    # Channels
+    def save_channels(self, channels):
+        StateService.channels = channels
+        self.settings.setValue('channels', channels)
 
     def get_channels(self):
-        if not self.channel_lock.locked():
+        if StateService.channels is None:
+            StateService.channels = self.settings.value('channels')
+
             if StateService.channels is None:
-                try:
-                    with open(self.channels_file, 'rb') as f:
-                        StateService.channels = pickle.load(f)
-                except EOFError:
-                    return list()
-            return StateService.channels
+                StateService.channels = list()
+
+        return StateService.channels
 
     def get_channel_by_url(self, url):
         for channel in self.channels:
@@ -41,24 +36,19 @@ class StateService(object):
                 return channel
         return None
 
-    #Accounts
+    # Accounts
     def save_accounts(self, accounts):
-        self.channel_lock.acquire()
         StateService.accounts = accounts
-
-        with open(self.accounts_file, 'wb') as f:
-            pickle.dump(accounts, f)
-        self.channel_lock.release()
+        self.settings.setValue('accounts', accounts)
 
     def get_accounts(self):
-        if not self.channel_lock.locked():
+        if StateService.accounts is None:
+            StateService.accounts = self.settings.value('accounts')
+
             if StateService.accounts is None:
-                try:
-                    with open(self.accounts_file, 'rb') as f:
-                        StateService.accounts = pickle.load(f)
-                except EOFError:
-                    return list()
-            return StateService.accounts
+                StateService.accounts = list()
+
+        return StateService.accounts
 
     def get_accounts_by_hosting(self, hosting):
         result = list()
@@ -67,22 +57,17 @@ class StateService(object):
                 result.append(account)
         return result
 
-    #Tabs
+    # Tabs
     def save_tabs_state(self, tabs):
-        self.last_tabs_lock.acquire()
         StateService.tabs = tabs
-
-        with open(self.last_tabs_file, 'wb') as f:
-            pickle.dump(tabs, f)
-        self.last_tabs_lock.release()
+        self.settings.setValue('tabs', tabs)
 
     def get_last_tabs(self):
-        if not self.last_tabs_lock.locked():
+        if StateService.tabs is None:
+            StateService.tabs = self.settings.value('tabs')
+
             if StateService.tabs is None:
-                try:
-                    with open(self.last_tabs_file, 'rb') as f:
-                        StateService.tabs = pickle.load(f)
-                except EOFError:
-                    return list()
-            return StateService.tabs
+                StateService.tabs = list()
+
+        return StateService.tabs
 

@@ -7,35 +7,30 @@ import scrapetube
 
 class YoutubeService(VideohostingService):
 
-    url = 'https://www.youtube.com/'
-
-    CHROMIUM_ARGS = [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--no-first-run',
-        '--disable-blink-features=AutomationControlled'
-    ]
+    def __init__(self):
+        self.video_regex = 'https:\/\/www.youtube.com\/watch?v=.*'
+        self.channel_regex = '(https:\/\/www.youtube.com\/@.*)|(https:\/\/www.youtube.com\/channel\/)'
 
     def get_videos_by_link(self, link, account=None):
         c = scrapetube.get_channel(channel_url=link)
         result = list()
         for video in c:
-            link = f'{self.url}{{video["navigationEndpoint"]["commandMetadata"]["web/CommandMetadata"]}}'
+            link = f'https://www.youtube.com/{video["navigationEndpoint"]["commandMetadata"]["webCommandMetadata"]["url"]}'
             result.append(VideoModel(link, video['title']['runs'][0]['text'], video['publishedTimeText']['simpleText']))
         return result
 
     def show_login_dialog(self, hosting, form):
-        self.login_form = LoginForm(form, hosting, self, 1, 'Введите телефон или адрес эл. почти')
+        self.login_form = LoginForm(form, hosting, self, 1, 'Введите телефон или адрес эл. почты')
         self.login_form.exec_()
         return self.login_form.account
 
     def login(self, login, password):
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=False, args=self.CHROMIUM_ARGS, ignore_default_args=['--enable-automation'])
-            context = browser.new_context()
+            context = self.new_context(p=p, headless=False)
             page = context.new_page()
             page.goto('https://youtube.com', wait_until='commit')
             page.wait_for_selector('a[aria-label="Sign in"]')
             page.click('a[aria-label="Sign in"]')
             page.wait_for_selector('#avatar-btn', timeout=0)
-            page.context.cookies()
+
+            return page.context.cookies()

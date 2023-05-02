@@ -74,11 +74,19 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
             self.setItem(input_position, 1, item2)
 
     def on_add(self):
+        msg = QtWidgets.QMessageBox()
+
         if self.state_service.get_channel_by_url(self.url_edit.text()) is not None:
-            msg = QtWidgets.QMessageBox()
             msg.setText('Такой канал уже существует')
             msg.exec_()
-            raise Exception
+            raise Exception(msg.text())
+
+        validate_result = Hosting[self.comboBox.currentText()].value[0].validate_page(self.url_edit.text())
+
+        if validate_result == 0:
+            msg.setText('Канал не прошел валидацию')
+            msg.exec_()
+            raise Exception(msg.text())
 
         self.channels.append(Channel(hosting=self.comboBox.currentText(), url=self.url_edit.text()))
         self.state_service.save_channels(self.channels)

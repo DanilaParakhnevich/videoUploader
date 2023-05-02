@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 from gui.Channels import ChannelsPageWidget
 from gui.Accounts import AccountsPageWidget
+from gui.SettingsPage import SettingsPage
 import LoadPage
 
 
@@ -25,6 +26,7 @@ class Ui_BuharVideoUploader(object):
         self.main_page = LoadPage.LoadPageWidget(self.central_widget)
         self.channels_page = ChannelsPageWidget(self.central_widget)
         self.accounts_page = AccountsPageWidget(self.central_widget)
+        self.settings_dialog = SettingsPage(self.central_widget)
         self.main_layout = QtWidgets.QVBoxLayout(self.central_widget)
         self.main_layout.addWidget(self.main_page)
         self.main_layout.addWidget(self.accounts_page)
@@ -67,6 +69,10 @@ class Ui_BuharVideoUploader(object):
         self.load_button.clicked.connect(self.show_main_page)
         self.channels_button.clicked.connect(self.show_channels_page)
         self.accounts_button.clicked.connect(self.show_accounts_page)
+        self.settings_button.clicked.connect(self.show_settings_dialog)
+
+    def show_settings_dialog(self):
+        self.settings_dialog.exec_()
 
     def show_main_page(self):
         self.channels_page.hide()

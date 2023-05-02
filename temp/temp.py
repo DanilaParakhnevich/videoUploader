@@ -23,5 +23,4 @@ with sync_playwright() as p:
     # page.type('input[name=phoneCode]', a)
     sleep(1)
     page.screenshot(path="s1.jpg")
-    #
     # print(page.context.cookies())

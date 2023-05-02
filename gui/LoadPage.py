@@ -6,6 +6,7 @@ from model.Tab import TabModel
 from gui.widgets.ChannelComboBox import ChannelComboBox
 from service.StateService import StateService
 from threading import Thread
+from service.LoggingService import *
 
 
 class LoadPageWidget(QtWidgets.QTabWidget):
@@ -148,7 +149,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             return list()
         elif len(accounts) == 1:
             self.account = accounts[0]
-        else:
+        elif len(accounts) > 1:
             self.form = ChooseAccountForm(parent=self.parentWidget(), accounts=accounts)
             self.form.exec()
             self.account = self.form.account
@@ -165,21 +166,23 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             table.removeRow(0)
 
         index = 1
+        try:
+            for video in service.get_videos_by_link(link=self.channel.url, account=self.account):
+                table.insertRow(index - 1)
 
-        for video in service.get_videos_by_link(link=self.channel.url, account=self.account):
-            table.insertRow(index - 1)
+                item1 = QtWidgets.QTableWidgetItem(video.name)
+                item2 = QtWidgets.QTableWidgetItem(video.url)
+                item3 = QtWidgets.QTableWidgetItem(video.date)
+                item4 = QtWidgets.QTableWidgetItem()
+                item4.setFlags(QtCore.Qt.ItemIsUserCheckable |
+                              QtCore.Qt.ItemIsEnabled)
+                item4.setCheckState(QtCore.Qt.Checked)
 
-            item1 = QtWidgets.QTableWidgetItem(video.name)
-            item2 = QtWidgets.QTableWidgetItem(video.url)
-            item3 = QtWidgets.QTableWidgetItem(video.date)
-            item4 = QtWidgets.QTableWidgetItem()
-            item4.setFlags(QtCore.Qt.ItemIsUserCheckable |
-                          QtCore.Qt.ItemIsEnabled)
-            item4.setCheckState(QtCore.Qt.Checked)
+                table.setItem(index - 1, 0, item1)
+                table.setItem(index - 1, 1, item2)
+                table.setItem(index - 1, 2, item3)
+                table.setItem(index - 1, 3, item4)
 
-            table.setItem(index - 1, 0, item1)
-            table.setItem(index - 1, 1, item2)
-            table.setItem(index - 1, 2, item3)
-            table.setItem(index - 1, 3, item4)
-
-            index += 1
+                index += 1
+        except Exception:
+            log_error(traceback.format_exc())
