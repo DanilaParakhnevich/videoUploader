@@ -12,11 +12,11 @@ class RutubeService(VideohostingService):
         self.video_regex = 'https:/\/rutube.ru\/video\/.*'
         self.channel_regex = 'https:\/\/rutube.ru\/.*\/videos\/'
 
-    def get_videos_by_link(self, link, account=None):
+    def get_videos_by_url(self, url, account=None):
         result = list()
 
         with YoutubeDL(self.extract_info_opts) as ydl:
-            info = ydl.extract_info('https://rutube.ru/channel/25933729/videos/')
+            info = ydl.extract_info(url)
             for item in info['entries']:
                 result.append(VideoModel(item['url'], item['title']
                                          , datetime.fromtimestamp(item['timestamp']).__str__()))

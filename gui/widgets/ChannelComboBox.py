@@ -24,7 +24,7 @@ class ChannelComboBox(QtWidgets.QComboBox):
         for channel in channels:
             self.addItem(channel.url)
 
-            if channel == self.selected_channel:
+            if channel.url == self.selected_channel:
                 selected_index = self.__len__() - 1
 
         self.setCurrentIndex(selected_index)

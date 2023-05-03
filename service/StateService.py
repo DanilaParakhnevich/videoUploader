@@ -1,4 +1,5 @@
 from PyQt5.QtCore import QSettings
+from model.Settings import Settings
 
 # Этот класс предназначен для сохранения данных,
 # необходимых для дальнейшей работы приложения
@@ -8,22 +9,19 @@ class StateService(object):
     channels = None
     tabs = None
     settings = None
-
-    accounts_file = 'accounts.pkl'
-    channels_file = 'channels.pkl'
-    last_tabs_file = 'last_tabs.pkl'
+    queue_media = None
 
     def __init__(self):
-        self.settings = QSettings('BuharVideoUploaderSettings')
+        self.q_settings = QSettings('BuharVideoUploaderSettings')
 
     # Channels
     def save_channels(self, channels):
         StateService.channels = channels
-        self.settings.setValue('channels', channels)
+        self.q_settings.setValue('channels', channels)
 
     def get_channels(self):
         if StateService.channels is None:
-            StateService.channels = self.settings.value('channels')
+            StateService.channels = self.q_settings.value('channels')
 
             if StateService.channels is None:
                 StateService.channels = list()
@@ -39,11 +37,11 @@ class StateService(object):
     # Accounts
     def save_accounts(self, accounts):
         StateService.accounts = accounts
-        self.settings.setValue('accounts', accounts)
+        self.q_settings.setValue('accounts', accounts)
 
     def get_accounts(self):
         if StateService.accounts is None:
-            StateService.accounts = self.settings.value('accounts')
+            StateService.accounts = self.q_settings.value('accounts')
 
             if StateService.accounts is None:
                 StateService.accounts = list()
@@ -60,14 +58,41 @@ class StateService(object):
     # Tabs
     def save_tabs_state(self, tabs):
         StateService.tabs = tabs
-        self.settings.setValue('tabs', tabs)
+        self.q_settings.setValue('tabs', tabs)
 
     def get_last_tabs(self):
         if StateService.tabs is None:
-            StateService.tabs = self.settings.value('tabs')
+            StateService.tabs = self.q_settings.value('tabs')
 
             if StateService.tabs is None:
                 StateService.tabs = list()
 
         return StateService.tabs
 
+    # QueueMedia
+    def save_queue_media(self, queue_media):
+        StateService.queue_media = queue_media
+        self.q_settings.setValue('queue_media', queue_media)
+
+    def get_queue_media(self):
+        if StateService.queue_media is None:
+            StateService.queue_media = self.q_settings.value('queue_media')
+
+            if StateService.queue_media is None:
+                StateService.queue_media = list()
+
+        return StateService.queue_media
+
+    # Settings
+    def save_settings(self, settings):
+        StateService.settings = settings
+        self.q_settings.setValue('settings', settings)
+
+    def get_settings(self):
+        if StateService.settings is None:
+            StateService.settings = self.q_settings.value('settings')
+
+            if StateService.settings is None:
+                StateService.settings = Settings(language='Русский', download_strategy=0, autostart=False, download_dir='')
+
+        return StateService.settings

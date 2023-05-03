@@ -14,14 +14,13 @@ class TelegramService(VideohostingService):
         self.video_regex = 'https:\/\/t.me/.*\/.*'
         self.channel_regex = 'https:\/\/t.me\/.*'
 
-    def get_videos_by_link(self, link, account=None):
-        app = Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash)
+    def get_videos_by_url(self, url, account=None):
         result = list()
 
-        with app:
+        with Client(name=account.login, workdir='service/videohosting_service/tmp') as app:
             for message in app.get_chat_history(chat_id='durov'):
                 if message.video is not None:
-                    result.append(VideoModel(url=message.id, name=message.text, date=message.date))
+                    result.append(VideoModel(url=message.link, name=message.text, date=str(message.date)))
 
         return result
 
@@ -32,7 +31,7 @@ class TelegramService(VideohostingService):
         return self.login_form.account
 
     def login(self, phone_number, password=None):
-        app = Client(name=phone_number, api_id=self.api_id, api_hash=self.api_hash)
+        app = Client(name=phone_number, api_id=self.api_id, api_hash=self.api_hash, workdir='service/videohosting_service/tmp')
 
         app.connect()
         sent_code_info = app.send_code(phone_number)

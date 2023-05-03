@@ -11,12 +11,12 @@ class YoutubeService(VideohostingService):
         self.video_regex = 'https:\/\/www.youtube.com\/watch?v=.*'
         self.channel_regex = '(https:\/\/www.youtube.com\/@.*)|(https:\/\/www.youtube.com\/channel\/)'
 
-    def get_videos_by_link(self, link, account=None):
-        c = scrapetube.get_channel(channel_url=link)
+    def get_videos_by_url(self, url, account=None):
+        c = scrapetube.get_channel(channel_url=url)
         result = list()
         for video in c:
-            link = f'https://www.youtube.com/{video["navigationEndpoint"]["commandMetadata"]["webCommandMetadata"]["url"]}'
-            result.append(VideoModel(link, video['title']['runs'][0]['text'], video['publishedTimeText']['simpleText']))
+            url = f'https://www.youtube.com/{video["navigationEndpoint"]["commandMetadata"]["webCommandMetadata"]["url"]}'
+            result.append(VideoModel(url, video['title']['runs'][0]['text'], video['publishedTimeText']['simpleText']))
         return result
 
     def show_login_dialog(self, hosting, form):

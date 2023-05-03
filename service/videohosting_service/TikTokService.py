@@ -10,14 +10,14 @@ class TikTokService(VideohostingService):
         self.video_regex = 'https://www.tiktok.com/.*/video/.*'
         self.channel_regex = 'https://www.tiktok.com/.*'
 
-    def get_videos_by_link(self, link, account=None):
+    def get_videos_by_url(self, url, account=None):
         result = list()
 
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=False)
             context.add_cookies(account.auth)
             page = context.new_page()
-            page.goto(link)
+            page.goto(url)
             page.wait_for_selector('.tiktok-833rgq-DivShareLayoutMain')
 
             stream_boxes = page.locator("//div[contains(@class, 'tiktok-x6y88p-DivItemContainerV2')]")

@@ -11,14 +11,14 @@ class FacebookService(VideohostingService):
         self.video_regex = 'https:\/\/www.facebook.com\/watch\/\?v=.*'
         self.channel_regex = '(https:\/\/www.facebook.com\/watch\/.*\/.*)|(https:\/\/www.facebook.com\/.*\/videos)|(https:\/\/www.facebook.com\/.*sk=videos)'
 
-    def get_videos_by_link(self, link, account=None):
+    def get_videos_by_url(self, url, account=None):
         result = list()
 
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=True)
             context.add_cookies(account.auth)
             page = context.new_page()
-            page.goto('https://www.facebook.com/DerekHough/videos', wait_until='commit')
+            page.goto(url, wait_until='commit')
             time.sleep(5)
             self.scroll_page_to_the_bottom(page=page, timeout=3)
             stream_boxes = page.locator("//div[contains(@class,'x6s0dn4 x78zum5 x1q0g3np x1qughib')]")

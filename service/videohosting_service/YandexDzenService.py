@@ -13,7 +13,7 @@ class YandexDzenService(VideohostingService):
         self.channel_regex = 'https:\/\/dzen.ru\/id\/.*'
 
 
-    def get_videos_by_link(self, link, account=None):
+    def get_videos_by_url(self, url, account=None):
         result = list()
 
         with YoutubeDL(self.extract_info_opts) as ydl:
@@ -21,7 +21,7 @@ class YandexDzenService(VideohostingService):
                 browser = p.chromium.launch()
                 context = browser.new_context()
                 page = context.new_page()
-                info = ydl.extract_info(link)
+                info = ydl.extract_info(url)
                 for item in info['entries']:
                     page.goto(item['url'].split('?')[0])
                     response = json.loads(

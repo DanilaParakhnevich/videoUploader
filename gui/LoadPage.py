@@ -1,18 +1,22 @@
 from PyQt5 import QtCore, QtWidgets
 from widgets.ChooseAccountForm import ChooseAccountForm
 
+from model.QueuedMedia import QueuedMedia
 from model.Hosting import Hosting
 from model.Tab import TabModel
 from gui.widgets.ChannelComboBox import ChannelComboBox
 from service.StateService import StateService
+from service.QueueMediaService import QueueMediaService
 from threading import Thread
 from service.LoggingService import *
+import asyncio
 
 
 class LoadPageWidget(QtWidgets.QTabWidget):
 
     _translate = QtCore.QCoreApplication.translate
     state_service = StateService()
+    queue_media_service = QueueMediaService()
     tab_models = state_service.get_last_tabs()
     tables = list()
 
@@ -64,13 +68,16 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         tab = QtWidgets.QWidget()
         tab.setObjectName("Tab.py")
 
-        channel_box = ChannelComboBox(tab, selected_channel)
+        tab.channel_box = ChannelComboBox(tab, selected_channel)
 
-        channel_box.setGeometry(QtCore.QRect(20, 40, 591, 30))
-        channel_box.setObjectName("link_edit")
+        tab.channel_box.setGeometry(QtCore.QRect(20, 40, 591, 30))
+        tab.channel_box.setObjectName("link_edit")
         add_button = QtWidgets.QPushButton(tab)
         add_button.setGeometry(QtCore.QRect(620, 40, 51, 30))
         add_button.setObjectName("add_button")
+        add_media_to_query_button = QtWidgets.QPushButton(tab)
+        add_media_to_query_button.setGeometry(QtCore.QRect(680, 40, 100, 30))
+        add_media_to_query_button.setObjectName('add_media_to_query_button')
         table_widget = QtWidgets.QTableWidget(tab)
         table_widget.setGeometry(QtCore.QRect(20, 80, 500, 421))
         table_widget.setObjectName("table_widget")
@@ -89,6 +96,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         add_button.setText(self._translate("BuharVideoUploader", "Go"))
         add_button.clicked.connect(self.create_daemon_for_getting_video_list)
+        add_media_to_query_button.setObjectName("download_button")
+        add_media_to_query_button.setText(self._translate("BuharVideoUploader", "Add to queue"))
         item = table_widget.horizontalHeaderItem(0)
         item.setText(self._translate("BuharVideoUploader", "Название"))
         item = table_widget.horizontalHeaderItem(1)
@@ -118,15 +127,49 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
             self.tab_models.append(TabModel(tab_name, '', Hosting.Youtube.name))
             self.state_service.save_tabs_state(self.tab_models)
-
         self.tables.append(table_widget)
 
-        # download_button = QtWidgets.QPushButton(tab)
-        # download_button.setGeometry(QtCore.QRect(600, 400, 51, 30))
-        # download_button.setObjectName("download_button")
-        # download_button.setText(self._translate("BuharVideoUploader", "Go"))
-        channel_box.currentTextChanged.connect(self.on_channel_changed)
+        add_media_to_query_button.clicked.connect(self.on_add_media_to_query)
+        tab.channel_box.currentTextChanged.connect(self.on_channel_changed)
 
+    def on_add_media_to_query(self):
+        table = self.tables[self.currentIndex()]
+
+        if table.rowCount() == 0:
+            msg = QtWidgets.QMessageBox()
+            msg.setText('Необходимо подгрузить видео с канала')
+            msg.exec_()
+            return
+
+        upload_on = True
+
+        current_media_query = self.state_service.get_queue_media()
+
+        new_media = list()
+        for i in range(0, table.rowCount()):
+
+            if table.item(i, 3).checkState() == 0:
+                continue
+
+            self.channel = self.state_service.get_channel_by_url(self.tab_models[self.currentIndex()].channel)
+            self.hosting = self.channel.hosting
+
+            is_exist = False
+
+            for media in current_media_query:
+                if media.url == table.item(i, 1).text():
+                    log_info(f'Медиа "{media.url}" уже в списке очереди')
+                    is_exist = True
+                    break
+
+            if is_exist:
+                continue
+
+            queue_media = QueuedMedia(url=table.item(i, 1).text(), account=self.account, hosting=self.hosting, status=0, upload_after_download=upload_on)
+
+            new_media.append(queue_media)
+
+        self.queue_media_service.add_to_the_queue(new_media)
 
     def on_channel_changed(self, item):
         self.tab_models[self.currentIndex()].channel = item
@@ -154,10 +197,11 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             self.form.exec()
             self.account = self.form.account
 
-        thread = Thread(target=self.get_video_list, daemon=True)
+        thread = Thread(target=self.get_video_list, daemon=True, args=[asyncio.get_event_loop()])
         thread.start()
 
-    def get_video_list(self):
+    def get_video_list(self, event_loop):
+        asyncio.set_event_loop(event_loop)
         service = self.hosting.value[0]
 
         table = self.tables[self.currentIndex()]
@@ -165,10 +209,10 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         while table.rowCount() > 0:
             table.removeRow(0)
 
-        index = 1
+        index = 0
         try:
-            for video in service.get_videos_by_link(link=self.channel.url, account=self.account):
-                table.insertRow(index - 1)
+            for video in service.get_videos_by_url(url=self.channel.url, account=self.account):
+                table.insertRow(index)
 
                 item1 = QtWidgets.QTableWidgetItem(video.name)
                 item2 = QtWidgets.QTableWidgetItem(video.url)
@@ -178,11 +222,14 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                               QtCore.Qt.ItemIsEnabled)
                 item4.setCheckState(QtCore.Qt.Checked)
 
-                table.setItem(index - 1, 0, item1)
-                table.setItem(index - 1, 1, item2)
-                table.setItem(index - 1, 2, item3)
-                table.setItem(index - 1, 3, item4)
+                table.setItem(index, 0, item1)
+                table.setItem(index, 1, item2)
+                table.setItem(index, 2, item3)
+                table.setItem(index, 3, item4)
 
                 index += 1
-        except Exception:
+        except:
+            msg = QtWidgets.QMessageBox()
+            msg.setText('Произошла ошибка')
+            msg.exec_()
             log_error(traceback.format_exc())

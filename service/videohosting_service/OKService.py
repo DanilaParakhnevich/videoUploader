@@ -10,12 +10,12 @@ class OKService(VideohostingService):
         self.video_regex = 'https://ok.ru/video/.*'
         self.channel_regex = 'https:\/\/ok.ru\/.*\/video'
 
-    def get_videos_by_link(self, link, account=None):
+    def get_videos_by_url(self, url, account=None):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=True)
             context.add_cookies(account.auth)
             page = context.new_page()
-            page.goto(link)
+            page.goto(url)
             page.wait_for_selector('#listBlockPanelAltGroupVideoMoviesPagingBlock')
 
             self.scroll_page_to_the_bottom(page=page)

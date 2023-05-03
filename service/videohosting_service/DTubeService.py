@@ -12,11 +12,11 @@ class DTubeService(VideohostingService):
         self.video_regex = 'https:\/\/d.tube\/#!\/v\/.*\/.*'
         self.channel_regex = 'https:\/\/d.tube\/#!\/c\/.*'
 
-    def get_videos_by_link(self, link, account=None):
+    def get_videos_by_url(self, url, account=None):
         result = list()
 
         with YoutubeDL(self.extract_info_opts) as ydl:
-            info = ydl.extract_info(link)
+            info = ydl.extract_info(url)
             for item in info['entries']:
                 result.append(VideoModel(url=f'https://d.tube/#!/v/{item["id"]}',
                                          name=item['title'],

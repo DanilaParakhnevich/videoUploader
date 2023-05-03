@@ -30,7 +30,7 @@ class VKService(VideohostingService):
         self.video_regex = 'https:\/\/vk.com\/.*\/=video-.*'
         self.channel_regex = 'https:\/\/vk.com\/.*'
 
-    def get_videos_by_link(self, link, account=None):
+    def get_videos_by_url(self, url, account=None):
         vk_session = vk_api.VkApi(token=account.auth['access_token'])
         i = 0
         prev_size = 1
@@ -38,7 +38,7 @@ class VKService(VideohostingService):
 
         with vk_api.VkRequestsPool(vk_session) as pool:
             response = pool.method('utils.resolveScreenName', {
-                'screen_name': link.split('/')[3]
+                'screen_name': url.split('/')[3]
             })
 
         if response.result['type'] == 'group':

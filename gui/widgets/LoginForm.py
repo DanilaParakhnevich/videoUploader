@@ -61,7 +61,7 @@ class LoginForm(QDialog):
                 return
 
         try:
-            token = self.service.login(self.lineEdit_username.text(), self.lineEdit_password.text())
+            auth = self.service.login(self.lineEdit_username.text(), self.lineEdit_password.text())
         except:
             self.label_error.show()
             return
@@ -72,7 +72,7 @@ class LoginForm(QDialog):
         self.account = Account(hosting=self.hosting.name,
                                login=self.lineEdit_username.text(),
                                password=self.lineEdit_password.text(),
-                               auth=token)
+                               auth=auth)
 
         current_accounts.append(self.account)
 

@@ -13,12 +13,12 @@ class InstagramService(VideohostingService):
         self.video_regex = 'https:\/\/www.instagram.com\/p\/.*\/'
         self.channel_regex = 'https:\/\/www.instagram.com\/.*/'
 
-    def get_videos_by_link(self, link, account=None):
+    def get_videos_by_url(self, url, account=None):
         result = list()
 
         try:
             with Instascraper() as insta:
-                posts = insta.profile(link.replace('https://www.instagram.com/', '').replace('/', '')).timeline_posts()
+                posts = insta.profile(url.replace('https://www.instagram.com/', '').replace('/', '')).timeline_posts()
                 for post in posts:
                     result.append(VideoModel(post.url, post.caption, str(datetime.fromtimestamp(post.created_time).strftime('%Y-%m-%d %H:%M:%S'))))
 
@@ -28,16 +28,21 @@ class InstagramService(VideohostingService):
                     context = self.new_context(p=p, headless=True)
                     context.add_cookies(account.auth)
                     page = context.new_page()
-                    page.goto(link)
+                    page.goto(url)
                     self.scroll_page_to_the_bottom(page=page)
                     stream_boxes = page.locator("//div[contains(@class,'_aagv')]")
 
                     for box in stream_boxes.element_handles():
+                        not_parsed_date = box.query_selector('img').get_property('alt')
+                        if re.search(' on (.*).', str(not_parsed_date)) is not None:
+                            date = re.search(' on (.*).', str(box.query_selector('img').get_property('alt'))).group(1)
+                        else:
+                            date = 'Нет информации'
+
                         result.append(
                             VideoModel(url=box.owner_frame().__getattribute__('url'),
                                        name='Нет информации',
-                                       date=re.search(' on (.*). May',
-                                                      str(box.query_selector('img').get_property('alt'))).group(1)))
+                                       date=date))
 
             else:
                 raise Exception('Приватный профиль. Необходима авторизация')

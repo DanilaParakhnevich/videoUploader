@@ -4,6 +4,8 @@ import abc
 from playwright.sync_api import BrowserContext
 from playwright.sync_api._context_manager import Playwright
 from playwright.sync_api import Page
+from yt_dlp import YoutubeDL
+from PyQt5.QtWidgets import QTableWidgetItem
 import time
 
 
@@ -27,11 +29,13 @@ class VideohostingService(ABC):
         '--disable-blink-features=AutomationControlled',
     ]
 
+    downloading_videos = {}
+
     video_regex = None
     channel_regex = None
 
     @abc.abstractmethod
-    def get_videos_by_link(self, link, account=None):
+    def get_videos_by_url(self, url, account=None):
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -45,6 +49,26 @@ class VideohostingService(ABC):
     def new_context(self, p: Playwright, headless: bool) -> BrowserContext:
         browser = p.chromium.launch(headless=headless, args=self.CHROMIUM_ARGS)
         return browser.new_context()
+
+    def download_video(self, url, account = None, table_item: QTableWidgetItem = None):
+        #
+        # download_opts = {
+        #     'progress_hooks': [self.my_hook],
+        # }
+
+        with YoutubeDL() as ydl:
+            # self.downloading_videos.__setattr__(url, table_item)
+            ydl.download(url)
+
+    # def my_hook(self, d, table_item):
+    #     if d['status'] == 'finished':
+    #         file_tuple = os.path.split(os.path.abspath(d['filename']))
+    #         print("Done downloading {}".format(file_tuple[1]))
+    #     if d['status'] == 'downloading':
+    #         p = d['_percent_str']
+    #         p = p.replace('%', '')
+    #         self.progress.setValue(float(p))
+    #         print(d['filename'], d['_percent_str'], d['_eta_str'])
 
     # Возвращает: 0, если ссылка невалидна; 1, если ссылка валидна и является ссылкой на канал;
     # 2, если ссылка валидна и является ссылкой на видео

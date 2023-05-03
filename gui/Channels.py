@@ -10,7 +10,6 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
     url_edit = QtWidgets.QLineEdit()
 
     state_service = StateService()
-
     channels = state_service.get_channels()
 
     def __init__(self, central_widget):
@@ -83,7 +82,7 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
 
         validate_result = Hosting[self.comboBox.currentText()].value[0].validate_page(self.url_edit.text())
 
-        if validate_result == 0:
+        if validate_result != 1:
             msg.setText('Канал не прошел валидацию')
             msg.exec_()
             raise Exception(msg.text())
