@@ -3,6 +3,8 @@ from PyQt5.QtWidgets import (QWidget, QDialog, QPushButton, QLabel, QLineEdit, Q
 from model.Account import Account
 from service.videohosting_service.VideohostingService import VideohostingService
 from service.StateService import StateService
+from logging import *
+import traceback
 
 
 class LoginForm(QDialog):
@@ -64,6 +66,7 @@ class LoginForm(QDialog):
             auth = self.service.login(self.lineEdit_username.text(), self.lineEdit_password.text())
         except:
             self.label_error.show()
+            error(traceback.format_exc())
             return
 
         msg.setText('Вы успешно авторизованы')

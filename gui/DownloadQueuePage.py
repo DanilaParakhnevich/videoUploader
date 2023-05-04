@@ -4,8 +4,9 @@ from service.StateService import StateService
 from service.QueueMediaService import QueueMediaService
 from model.Hosting import Hosting
 from threading import Thread
-import asyncio
-import time
+from PyQt5.QtCore import QTimer
+from service.LoggingService import *
+import traceback
 
 
 class DownloadQueuePageWidget(QtWidgets.QTableWidget):
@@ -13,6 +14,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
     state_service = StateService()
     queue_media_service = QueueMediaService()
     queue_media_list = state_service.get_queue_media()
+    settings = state_service.get_settings()
     download_thread_dict = {}
 
     def __init__(self, central_widget):
@@ -46,17 +48,34 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
         for queue_media in self.queue_media_list:
             self.insert_queue_media(queue_media)
 
-        thread = Thread(target=self.update_queue_media, daemon=True)
-        thread.start()
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_queue_media)
+        self.timer.start(3_000)
 
-        thread = Thread(target=self.downloading_hook, daemon=True)
-        thread.start()
+        if self.settings.download_strategy == 1:
+            self.timer = QTimer(self)
+            self.timer.timeout.connect(self.downloading_serial_hook)
+            self.timer.start(3_000)
+        elif self.settings.download_strategy == 2:
+            self.timer = QTimer(self)
+            self.timer.timeout.connect(self.downloading_parallel_hook)
+            self.timer.start(3_000)
 
-
-    def downloading_hook(self):
-        while True:
+    def downloading_serial_hook(self):
+        if len(self.download_thread_dict) == 0:
             for media in self.queue_media_list:
-                if media.status == 0:
+                if len(self.download_thread_dict) == 0 and media.status == 0:
+                    media.status = 1
+                    self.state_service.save_queue_media(self.queue_media_list)
+                    download_video_thread = Thread(target=self.download_video, daemon=True, args=[media.url, media.account, media.hosting])
+
+                    self.download_thread_dict[media.url] = download_video_thread
+                    download_video_thread.start()
+
+    def downloading_parallel_hook(self):
+        if len(self.download_thread_dict) < self.settings.pack_count:
+            for media in self.queue_media_list:
+                if len(self.download_thread_dict) < self.settings.pack_count and media.status == 0:
                     media.status = 1
                     self.state_service.save_queue_media(self.queue_media_list)
                     download_video_thread = Thread(target=self.download_video, daemon=True, args=[media.url, media.account, media.hosting])
@@ -66,42 +85,38 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
     def download_video(self, url, account, hosting):
         try:
-            Hosting[hosting].value[0].download_video(url=url)
-        except:
-            i = 0
-            for media in self.queue_media_list:
-                if media.url == url:
-                    media.status = 3
-                    self.state_service.save_queue_media(self.queue_media_list)
-                    self.item(i, 1).setText('Ошибка')
-                    break
-                i += 1
+            self.set_media_status(url, 1, 'Процесс')
+            Hosting[hosting].value[0].download_video(
+                url=url,
+                account=account,
+                table_item=self.item(self.get_row_index(url), 1))
 
-        i = 0
-        for media in self.queue_media_list:
-            if media.url == url:
-                media.status = 2
-                self.state_service.save_queue_media(self.queue_media_list)
-                self.item(i, 1).setText('Завершено')
-                break
-            i += 1
+        except:
+            log_error(traceback.format_exc())
+            self.set_media_status(url, 3, 'Ошибка')
+
+        self.set_media_status(url, 2, 'Завершено')
+        self.download_thread_dict.pop(url)
 
     def update_queue_media(self):
-        while True:
-            last_added_queue_media = self.queue_media_service.get_last_added_queue_media()
-            for queue_media in last_added_queue_media:
-                self.insert_queue_media(queue_media)
-
-            self.queue_media_list.extend(last_added_queue_media)
-            time.sleep(3)
+        last_added_queue_media = self.queue_media_service.get_last_added_queue_media()
+        for queue_media in last_added_queue_media:
+            self.insert_queue_media(queue_media)
 
     def insert_queue_media(self, queue_media):
         self.insertRow(self.rowCount())
         input_position = self.rowCount() - 1
 
         item1 = QtWidgets.QTableWidgetItem(queue_media.url)
-        if queue_media.status != 3:
+        if queue_media.status == 0:
             item2 = QtWidgets.QTableWidgetItem('Пауза')
+        elif queue_media.status == 1:
+            if self.download_thread_dict[queue_media.url] is None:
+                item2 = QtWidgets.QTableWidgetItem('Пауза')
+            else:
+                item2 = QtWidgets.QTableWidgetItem('Процесс')
+        elif queue_media.status == 2:
+            item2 = QtWidgets.QTableWidgetItem('Завершено')
         else:
             item2 = QtWidgets.QTableWidgetItem('Ошибка')
 
@@ -117,6 +132,23 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
         self.setItem(input_position, 0, item1)
         self.setItem(input_position, 1, item2)
+
+    def set_media_status(self, url, status, status_name):
+        i = 0
+        for media in self.queue_media_list:
+            if media.url == url:
+                media.status = status
+                self.state_service.save_queue_media(self.queue_media_list)
+                self.item(i, 1).setText(status_name)
+                break
+            i += 1
+
+    def get_row_index(self, url):
+        i = 0
+        for media in self.queue_media_list:
+            if media.url == url:
+                return i
+            i += 1
 
     def on_delete_row(self):
         button = self.sender()

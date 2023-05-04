@@ -44,6 +44,6 @@ class OKService(VideohostingService):
             page.type('#field_email', login)
             page.type('#field_password', password)
             page.keyboard.press('Enter')
-            page.wait_for_selector('.html5-upload-link', timeout=10_000)
+            page.wait_for_selector('.html5-upload-link', timeout=0)
 
-            return page.context.cookies()
+        return page.context.cookies()

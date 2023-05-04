@@ -3,6 +3,7 @@ from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
 from playwright.sync_api import sync_playwright
 import scrapetube
+from yt_dlp import YoutubeDL
 
 
 class YoutubeService(VideohostingService):
@@ -34,3 +35,11 @@ class YoutubeService(VideohostingService):
             page.wait_for_selector('#avatar-btn', timeout=0)
 
             return page.context.cookies()
+
+if __name__ == '__main__':
+    par = {
+        'ffmpeg_location': '/opt/ffmpeg-master-latest-linux64-gpl/bin',
+    }
+    with YoutubeDL(par) as ydl:
+        # self.downloading_videos.__setattr__(url, table_item)
+        ydl.download('https://www.instagram.com/p/Crvl33stCc8/')

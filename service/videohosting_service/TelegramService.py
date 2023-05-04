@@ -3,6 +3,7 @@ from pyrogram import Client
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
 from gui.widgets.AuthenticationConfirmationForm import AuthenticationConfirmationForm
+import asyncio
 
 
 class TelegramService(VideohostingService):
@@ -15,12 +16,14 @@ class TelegramService(VideohostingService):
         self.channel_regex = 'https:\/\/t.me\/.*'
 
     def get_videos_by_url(self, url, account=None):
+        app = Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash, workdir='service/videohosting_service/tmp')
+
         result = list()
 
-        with Client(name=account.login, workdir='service/videohosting_service/tmp') as app:
+        with app:
             for message in app.get_chat_history(chat_id='durov'):
                 if message.video is not None:
-                    result.append(VideoModel(url=message.link, name=message.text, date=str(message.date)))
+                    result.append(VideoModel(url=message.link, name=message.caption, date=str(message.date)))
 
         return result
 

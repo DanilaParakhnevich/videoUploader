@@ -1,3 +1,5 @@
+import logging
+
 from PyQt5 import QtCore, QtWidgets
 
 from model.Hosting import Hosting
@@ -78,14 +80,14 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
         if self.state_service.get_channel_by_url(self.url_edit.text()) is not None:
             msg.setText('Такой канал уже существует')
             msg.exec_()
-            raise Exception(msg.text())
+            logging.info(msg.text())
 
         validate_result = Hosting[self.comboBox.currentText()].value[0].validate_page(self.url_edit.text())
 
         if validate_result != 1:
             msg.setText('Канал не прошел валидацию')
             msg.exec_()
-            raise Exception(msg.text())
+            logging.info(msg.text())
 
         self.channels.append(Channel(hosting=self.comboBox.currentText(), url=self.url_edit.text()))
         self.state_service.save_channels(self.channels)

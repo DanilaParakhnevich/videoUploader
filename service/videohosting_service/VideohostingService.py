@@ -2,7 +2,7 @@ import re
 from abc import ABC
 import abc
 from playwright.sync_api import BrowserContext
-from playwright.sync_api._context_manager import Playwright
+from playwright.sync_api import Playwright
 from playwright.sync_api import Page
 from yt_dlp import YoutubeDL
 from PyQt5.QtWidgets import QTableWidgetItem
@@ -50,25 +50,30 @@ class VideohostingService(ABC):
         browser = p.chromium.launch(headless=headless, args=self.CHROMIUM_ARGS)
         return browser.new_context()
 
-    def download_video(self, url, account = None, table_item: QTableWidgetItem = None):
-        #
-        # download_opts = {
-        #     'progress_hooks': [self.my_hook],
-        # }
+    def progress_bar_hook(self, d):
+        if d["status"] == "downloading":
+            p = d['_percent_str']
+            # p = p.replace('%', '')
+            # self.progress.setValue(float(p))
+            # table_item.setText(p)
 
-        with YoutubeDL() as ydl:
+    def download_video(self, url, account=None, table_item: QTableWidgetItem = None):
+
+        def prog_hook(d, table_item):
+            if d["status"] == "downloading":
+                p = d['_percent_str']
+                # p = p.replace('%', '')
+                # self.progress.setValue(float(p))
+                table_item.setText(p)
+
+        download_opts = {
+            'progress_hooks': [lambda d: prog_hook(d, table_item)],
+            'ffmpeg_location': '/opt/ffmpeg-master-latest-linux64-gpl/bin'
+        }
+
+        with YoutubeDL(download_opts) as ydl:
             # self.downloading_videos.__setattr__(url, table_item)
             ydl.download(url)
-
-    # def my_hook(self, d, table_item):
-    #     if d['status'] == 'finished':
-    #         file_tuple = os.path.split(os.path.abspath(d['filename']))
-    #         print("Done downloading {}".format(file_tuple[1]))
-    #     if d['status'] == 'downloading':
-    #         p = d['_percent_str']
-    #         p = p.replace('%', '')
-    #         self.progress.setValue(float(p))
-    #         print(d['filename'], d['_percent_str'], d['_eta_str'])
 
     # Возвращает: 0, если ссылка невалидна; 1, если ссылка валидна и является ссылкой на канал;
     # 2, если ссылка валидна и является ссылкой на видео
