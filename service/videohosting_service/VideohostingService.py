@@ -46,16 +46,12 @@ class VideohostingService(ABC):
     def login(self, login, password):
         raise NotImplementedError()
 
+    def upload_video(self, account, file_path, name, description):
+        raise NotImplementedError()
+
     def new_context(self, p: Playwright, headless: bool) -> BrowserContext:
         browser = p.chromium.launch(headless=headless, args=self.CHROMIUM_ARGS)
         return browser.new_context()
-
-    def progress_bar_hook(self, d):
-        if d["status"] == "downloading":
-            p = d['_percent_str']
-            # p = p.replace('%', '')
-            # self.progress.setValue(float(p))
-            # table_item.setText(p)
 
     def download_video(self, url, account=None, table_item: QTableWidgetItem = None):
 

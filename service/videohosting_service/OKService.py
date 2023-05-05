@@ -47,3 +47,27 @@ class OKService(VideohostingService):
             page.wait_for_selector('.html5-upload-link', timeout=0)
 
         return page.context.cookies()
+
+    def upload_video(self, account, file_path, name, description):
+        with sync_playwright() as p:
+            context = self.new_context(p=p, headless=True)
+            context.add_cookies(account.auth)
+            page = context.new_page()
+            page.goto('https://ok.ru/video/showcase')
+
+            page.click('.svg-ico_video_add_16')
+
+            with page.expect_file_chooser() as fc_info:
+                page.click(selector='.button-pro.js-upload-button')
+            file_chooser = fc_info.value
+            file_chooser.set_files(file_path)
+
+            page.click('.__small video-uploader_ac __go-to-editor-btn js-uploader-editor-link')
+
+            page.query_selector('#movie-title').fill('')
+            page.query_selector('#movie-title').type(text=name)
+
+            page.query_selector('#movie-description').type(text=description)
+
+            page.click('.button-pro.js-submit-annotations-form', timeout=0)
+            #retest

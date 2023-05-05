@@ -2,6 +2,7 @@ from gui.widgets.LoginForm import LoginForm
 from model.VideoModel import VideoModel
 from service.videohosting_service.VideohostingService import VideohostingService
 from playwright.sync_api import sync_playwright
+from service.Tiktok_uploader import uploadVideo
 
 
 class TikTokService(VideohostingService):
@@ -38,3 +39,12 @@ class TikTokService(VideohostingService):
             page.goto('https://www.tiktok.com/login')
             page.wait_for_selector(selector='#main-content-homepage_hot', timeout=0)
             return page.context.cookies()
+
+    def upload_video(self, account, file_path, name, description):
+
+        for cookie in account.auth:
+            if cookie['name'] == 'session_id':
+                uploadVideo(session_id=cookie['value'], video=file_path, title=name, tags=list())
+                return
+
+        raise Exception('Что-то пошло не так')

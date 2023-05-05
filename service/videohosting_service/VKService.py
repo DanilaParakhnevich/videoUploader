@@ -35,7 +35,6 @@ class VKService(VideohostingService):
         i = 0
         prev_size = 1
         videos = list()
-
         with vk_api.VkRequestsPool(vk_session) as pool:
             response = pool.method('utils.resolveScreenName', {
                 'screen_name': url.split('/')[3]
@@ -89,6 +88,12 @@ class VKService(VideohostingService):
             raise Exception(response['error_description'])
 
         return response
+
+    def upload_video(self, account, file_path, name, description):
+        vk_session = vk_api.VkApi(token=account.auth['access_token'])
+
+        vk_upload = vk_api.VkUpload(vk_session)
+        vk_upload.video(video_file=file_path, name=name, description=description)
 
     def handle_auth(self):
         form = AuthenticationConfirmationForm(self.login_form)

@@ -70,19 +70,10 @@ class InstagramService(VideohostingService):
 
             return page.context.cookies()
 
-CHROMIUM_ARGS = [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--no-first-run',
-    '--disable-blink-features=AutomationControlled',
-]
+    def upload_video(self, account, file_path, name, description):
+        cl = Client()
+        cl.login(account.login, account.password)
+        cl.video_upload(file_path, caption=name)
 
-if __name__ == '__main__':
-    # api for inst
-    cl = Client()
-    cl.login('dendilll', 'wtanke5074344')
-    cl.video_upload('/home/dendil/Documents/Projects/Own/BuxarVideoUploader/Video by tonight.minsk [B6i9ZUrn-_p].mp4', 'aza')
-    #pillow
-    #moviepy
-
-    #rabotaet
+        # pillow
+        # moviepy

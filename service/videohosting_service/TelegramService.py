@@ -3,7 +3,6 @@ from pyrogram import Client
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
 from gui.widgets.AuthenticationConfirmationForm import AuthenticationConfirmationForm
-import asyncio
 
 
 class TelegramService(VideohostingService):
@@ -40,6 +39,19 @@ class TelegramService(VideohostingService):
         sent_code_info = app.send_code(phone_number)
         phone_code = self.handle_auth()
         app.sign_in(phone_number, sent_code_info.phone_code_hash, phone_code)
+
+        return True
+
+    def upload_video(self, account, file_path, name, description):
+
+        app = Client(name=phone_number, api_id=self.api_id, api_hash=self.api_hash,
+                     workdir='service/videohosting_service/tmp')
+        app.send_video()
+        # send_video нужно просить написать канал для отправки
+        # app.connect()
+        # sent_code_info = app.send_code(phone_number)
+        # phone_code = self.handle_auth()
+        # app.sign_in(phone_number, sent_code_info.phone_code_hash, phone_code)
 
         return True
 

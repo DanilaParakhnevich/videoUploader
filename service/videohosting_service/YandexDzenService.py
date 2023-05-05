@@ -46,3 +46,16 @@ class YandexDzenService(VideohostingService):
             page.wait_for_selector('.Section_link__pZJDa', timeout=0)
 
             return page.context.cookies()
+
+    def upload_video(self, account, file_path, name, description):
+        with sync_playwright() as p:
+            context = self.new_context(p=p, headless=True)
+            context.add_cookies(account.auth)
+            page = context.new_page()
+            page.goto('https://dzen.ru/profile/editor/create#video-editor')
+
+            #снова ничего не работает (сервера)
+            with page.expect_file_chooser() as fc_info:
+                page.click(selector='[name="fileToUpload"]')
+            file_chooser = fc_info.value
+            file_chooser.set_files(file_path)

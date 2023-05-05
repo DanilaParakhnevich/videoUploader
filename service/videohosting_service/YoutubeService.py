@@ -3,7 +3,6 @@ from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
 from playwright.sync_api import sync_playwright
 import scrapetube
-from yt_dlp import YoutubeDL
 
 
 class YoutubeService(VideohostingService):
@@ -36,10 +35,43 @@ class YoutubeService(VideohostingService):
 
             return page.context.cookies()
 
-if __name__ == '__main__':
-    par = {
-        'ffmpeg_location': '/opt/ffmpeg-master-latest-linux64-gpl/bin',
-    }
-    with YoutubeDL(par) as ydl:
-        # self.downloading_videos.__setattr__(url, table_item)
-        ydl.download('https://www.instagram.com/p/Crvl33stCc8/')
+    def upload_video(self, account, file_path, name, description):
+        with sync_playwright() as p:
+            context = self.new_context(p=p, headless=True)
+            context.add_cookies(account.auth)
+            page = context.new_page()
+            page.goto('https://www.youtube.com/')
+
+            page.wait_for_selector('.yt-simple-endpoint.style-scope.ytd-topbar-menu-button-renderer',
+                                   timeout=10_000).click()
+            page.query_selector_all('.yt-simple-endpoint.style-scope.ytd-compact-link-renderer')[0].click()
+            with page.expect_file_chooser() as fc_info:
+                page.click(selector='#select-files-button')
+            file_chooser = fc_info.value
+            file_chooser.set_files(file_path)
+
+            page.wait_for_selector('#input', timeout=300_000)
+
+            page.query_selector('#title-textarea').click(click_count=3)
+            page.keyboard.press("Backspace")
+            page.query_selector('#title-textarea').type(text=name)
+
+            page.query_selector('#description-textarea').click()
+            page.query_selector('#description-textarea').type(text=description)
+
+            page.click(selector='#next-button')
+
+            page.click(selector='[name=VIDEO_MADE_FOR_KIDS_NOT_MFK]')
+
+            page.click(selector='#next-button')
+            page.click(selector='#next-button')
+            page.click(selector='#next-button')
+
+            page.click(selector='[name=PUBLIC]')
+
+            page.click(selector='#done-button')
+
+            wait = page.query_selector(selector='.ytcp-uploads-still-processing-dialog')
+
+            if wait is None:
+                page.wait_for_selector(selector='.label.style-scope.ytcp-video-share-dialog', timeout=0)

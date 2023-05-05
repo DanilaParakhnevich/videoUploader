@@ -43,3 +43,64 @@ class RutubeService(VideohostingService):
 
             page.screenshot(path="s1.jpg")
             return page.context.cookies()
+
+    def upload_video(self, account, file_path, name, description):
+        with sync_playwright() as p:
+            context = self.new_context(p=p, headless=True)
+            context.add_cookies(account.auth)
+            page = context.new_page()
+            page.goto('https://studio.rutube.ru/uploader/')
+
+            with page.expect_file_chooser() as fc_info:
+                page.click(selector='.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y')
+            file_chooser = fc_info.value
+            file_chooser.set_files(file_path)
+
+            page.wait_for_selector('#input', timeout=300_000)
+
+            page.query_selector('[name="title"]').fill('')
+            page.query_selector('[name="title"]').type(text=name)
+
+            page.query_selector('[name="description"]').type(text=description)
+
+            page.click('[name="categories"]')
+            page.click('.freyja_char-dropdown-layout__dropdownItem__x8JCK')
+
+            page.wait_for_selector('.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__regular__ksZLL.freyja_char-base-button__pointerCursor__JNA7y')
+
+            page.click(selector='.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__regular__ksZLL.freyja_char-base-button__pointerCursor__JNA7y')
+            #retest
+if __name__ == '__main__':
+    CHROMIUM_ARGS = [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--no-first-run',
+        '--disable-blink-features=AutomationControlled',
+    ]
+
+    with sync_playwright() as p:
+        context = p.chromium.launch(headless=False, args=CHROMIUM_ARGS).new_context()
+        page = context.new_page()
+        page.goto('https://studio.rutube.ru/uploader/')
+
+        with page.expect_file_chooser() as fc_info:
+            page.click(
+                selector='.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y')
+        file_chooser = fc_info.value
+        file_chooser.set_files('/home/dendil/Documents/Projects/Own/BuxarVideoUploader/Video by tonight.minsk [CivG8A7oRyy].mp4')
+
+        page.wait_for_selector('#input', timeout=300_000)
+
+        page.query_selector('[name="title"]').fill('')
+        page.query_selector('[name="title"]').type(text='aaza')
+
+        page.query_selector('[name="description"]').type(text='des')
+
+        page.click('[name="categories"]')
+        page.click('.freyja_char-dropdown-layout__dropdownItem__x8JCK')
+
+        page.wait_for_selector(
+            '.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__regular__ksZLL.freyja_char-base-button__pointerCursor__JNA7y')
+
+        page.click(
+            selector='.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__regular__ksZLL.freyja_char-base-button__pointerCursor__JNA7y')

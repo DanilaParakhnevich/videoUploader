@@ -46,3 +46,16 @@ class FacebookService(VideohostingService):
 
             page.wait_for_selector('#checkpointSubmitButton-actual-button', timeout=0)
             return page.context.cookies()
+    def upload_video(self, account, file_path, name, description):
+        with sync_playwright() as p:
+            context = self.new_context(p=p, headless=True)
+            context.add_cookies(account.auth)
+            page = context.new_page()
+            page.goto('https://www.facebook.com/')
+
+            page.query_selector_all('.x6s0dn4.x78zum5.xl56j7k.x1rfph6h.x6ikm8r.x10wlt62')[1].click()
+
+
+
+            #remain facebook...
+            #retest
