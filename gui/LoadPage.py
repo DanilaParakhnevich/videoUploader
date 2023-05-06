@@ -1,10 +1,11 @@
 from PyQt5 import QtCore, QtWidgets
 from widgets.ChooseAccountForm import ChooseAccountForm
 
-from model.QueuedMedia import QueuedMedia
+from model.LoadQueuedMedia import LoadQueuedMedia
 from model.Hosting import Hosting
 from model.Tab import TabModel
 from gui.widgets.ChannelComboBox import ChannelComboBox
+from gui.widgets.SpecialSourceForm import SpecialSourceForm
 from service.StateService import StateService
 from service.QueueMediaService import QueueMediaService
 from threading import Thread
@@ -143,7 +144,20 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         upload_on = True
 
-        current_media_query = self.state_service.get_queue_media()
+        current_media_query = self.state_service.get_download_queue_media()
+
+        service = Hosting[self.hosting].value[0]
+
+        source = None
+
+        if service.need_to_be_uploaded_to_special_source():
+            sourceForm = SpecialSourceForm(self, self.hosting, service, self.account)
+            sourceForm.exec_()
+
+            if sourceForm.passed:
+                source = sourceForm.source_edit.text()
+            else:
+                return
 
         new_media = list()
         for i in range(0, table.rowCount()):
@@ -165,11 +179,16 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             if is_exist:
                 continue
 
-            queue_media = QueuedMedia(url=table.item(i, 1).text(), account=self.account, hosting=self.hosting, status=0, upload_after_download=upload_on)
+            queue_media = LoadQueuedMedia(url=table.item(i, 1).text(),
+                                          account=self.account,
+                                          hosting=self.hosting,
+                                          status=0,
+                                          upload_after_download=upload_on,
+                                          upload_destination=source)
 
             new_media.append(queue_media)
 
-        self.queue_media_service.add_to_the_queue(new_media)
+        self.queue_media_service.add_to_the_download_queue(new_media)
 
     def on_channel_changed(self, item):
         self.tab_models[self.currentIndex()].channel = item

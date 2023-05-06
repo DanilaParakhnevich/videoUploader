@@ -3,6 +3,7 @@ from service.StateService import StateService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
 from gui.widgets.AuthenticationConfirmationForm import AuthenticationConfirmationForm
+from PyQt5.QtWidgets import QTableWidgetItem
 import vk_api
 from _datetime import datetime
 import requests
@@ -89,7 +90,7 @@ class VKService(VideohostingService):
 
         return response
 
-    def upload_video(self, account, file_path, name, description):
+    def upload_video(self, account, file_path, name, description, table_item: QTableWidgetItem):
         vk_session = vk_api.VkApi(token=account.auth['access_token'])
 
         vk_upload = vk_api.VkUpload(vk_session)

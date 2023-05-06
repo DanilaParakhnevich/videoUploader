@@ -13,7 +13,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
     state_service = StateService()
     queue_media_service = QueueMediaService()
-    queue_media_list = state_service.get_queue_media()
+    queue_media_list = state_service.get_download_queue_media()
     settings = state_service.get_settings()
     download_thread_dict = {}
 
@@ -66,7 +66,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             for media in self.queue_media_list:
                 if len(self.download_thread_dict) == 0 and media.status == 0:
                     media.status = 1
-                    self.state_service.save_queue_media(self.queue_media_list)
+                    self.state_service.save_download_queue_media(self.queue_media_list)
                     download_video_thread = Thread(target=self.download_video, daemon=True, args=[media.url, media.account, media.hosting])
 
                     self.download_thread_dict[media.url] = download_video_thread
@@ -77,7 +77,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             for media in self.queue_media_list:
                 if len(self.download_thread_dict) < self.settings.pack_count and media.status == 0:
                     media.status = 1
-                    self.state_service.save_queue_media(self.queue_media_list)
+                    self.state_service.save_download_queue_media(self.queue_media_list)
                     download_video_thread = Thread(target=self.download_video, daemon=True, args=[media.url, media.account, media.hosting])
 
                     self.download_thread_dict[media.url] = download_video_thread
@@ -99,7 +99,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
         self.download_thread_dict.pop(url)
 
     def update_queue_media(self):
-        last_added_queue_media = self.queue_media_service.get_last_added_queue_media()
+        last_added_queue_media = self.queue_media_service.get_last_added_download_queue_media()
         for queue_media in last_added_queue_media:
             self.insert_queue_media(queue_media)
 
@@ -138,7 +138,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
         for media in self.queue_media_list:
             if media.url == url:
                 media.status = status
-                self.state_service.save_queue_media(self.queue_media_list)
+                self.state_service.save_download_queue_media(self.queue_media_list)
                 self.item(i, 1).setText(status_name)
                 break
             i += 1
@@ -156,7 +156,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             row = self.indexAt(button.pos()).row()
             self.removeRow(row)
             url = self.queue_media_list.pop(row).url
-            self.state_service.save_queue_media(self.queue_media_list)
+            self.state_service.save_download_queue_media(self.queue_media_list)
             if url in self.download_thread_dict:
                 self.download_thread_dict[url].join()
                 del self.download_thread_dict[url]

@@ -4,6 +4,7 @@ from service.videohosting_service.VideohostingService import VideohostingService
 from playwright.sync_api import sync_playwright
 from gui.widgets.LoginForm import LoginForm
 from model.VideoModel import VideoModel
+import sys
 
 
 class OKService(VideohostingService):
@@ -11,6 +12,11 @@ class OKService(VideohostingService):
     def __init__(self):
         self.video_regex = 'https://ok.ru/video/.*'
         self.channel_regex = 'https:\/\/ok.ru\/.*\/video'
+        self.upload_video_formats = list(['3g2', '3gp', '3gpp', 'asf', 'avi', 'dat', 'divx', 'dv', 'f4v', 'flv', 'gif',
+                                          'm2ts', 'm4v', 'mkv', 'mod', 'mov', 'mp4', 'mpe', 'mpeg', 'mpeg4', 'mpg',
+                                          'mts', 'nsv', 'ogm', 'ogv', 'qt', 'tod', 'ts', 'vob', 'wmv'])
+        self.duration_restriction = sys.maxsize
+        self.size_restriction = 2 * 1024
 
     def get_videos_by_url(self, url, account=None):
         with sync_playwright() as p:

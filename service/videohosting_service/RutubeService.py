@@ -13,6 +13,11 @@ class RutubeService(VideohostingService):
     def __init__(self):
         self.video_regex = 'https:/\/rutube.ru\/video\/.*'
         self.channel_regex = 'https:\/\/rutube.ru\/.*\/videos\/'
+        self.upload_video_formats = list(['mp4', 'flv', 'avi', 'mov', 'mpg', 'wmv', 'm4v', 'mp3',
+                                          'wma', '3gp', 'mkv', 'webm'])
+
+        self.duration_restriction = 300
+        self.size_restriction = 10 * 1024
 
     def get_videos_by_url(self, url, account=None):
         result = list()

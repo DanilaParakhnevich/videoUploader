@@ -6,6 +6,14 @@ from playwright.sync_api import Playwright
 from playwright.sync_api import Page
 from yt_dlp import YoutubeDL
 from PyQt5.QtWidgets import QTableWidgetItem
+from moviepy.editor import VideoFileClip
+
+from service.videohosting_service.exception.DescriptionIsTooLongException import DescriptionIsTooLongException
+from service.videohosting_service.exception.FileFormatException import FileFormatException
+from service.videohosting_service.exception.FileSizeException import FileSizeException
+from service.videohosting_service.exception.NameIsTooLongException import NameIsTooLongException
+from service.videohosting_service.exception.VideoDurationException import VideoDurationException
+import os
 import time
 
 
@@ -34,6 +42,13 @@ class VideohostingService(ABC):
     video_regex = None
     channel_regex = None
 
+    # Ограничения для выгрузки
+    upload_video_formats = list()
+    size_restriction = None  # в мегабайтах
+    duration_restriction = None  # в минутах
+    name_size_restriction = None
+    description_size_restriction = None
+
     @abc.abstractmethod
     def get_videos_by_url(self, url, account=None):
         raise NotImplementedError()
@@ -45,6 +60,34 @@ class VideohostingService(ABC):
     @abc.abstractmethod
     def login(self, login, password):
         raise NotImplementedError()
+
+    def validate_video_info_for_uploading(self, video_dir, name, description):
+        clip = VideoFileClip(video_dir)
+
+        # Получение размера в мегабайтах
+        def get_size():
+            file_size = os.path.getsize(video_dir)
+            size = file_size / 1024 ** 2
+            return round(size, 3)
+
+        def validate_format():
+            return self.upload_video_formats.__contains__(clip.filename.split('.')[1])
+
+        if (clip.duration / 60) > self.duration_restriction:
+            raise VideoDurationException(f'Продолжительность ролика слишком большая ({clip.duration} > {self.duration_restriction})')
+
+        size = get_size()
+        if size > self.size_restriction:
+            raise FileSizeException(f'Размер файла слишком большой ({size} > {self.size_restriction})')
+
+        if validate_format() is False:
+            raise FileFormatException(f'Неподходящий формат для видеохостинга({clip.filename} не подходит к {self.upload_video_formats.__str__()})')
+
+        if self.name_size_restriction is not None and size(name) > self.name_size_restriction:
+            raise NameIsTooLongException(f'Слишком большой размер названия(Ограничение: {self.name_size_restriction} символов)')
+
+        if self.description_size_restriction is not None and size(description) > self.description_size_restriction:
+            raise DescriptionIsTooLongException(f'Слишком большой размер описания(Ограничение {self.description_size_restriction} символов)')
 
     def upload_video(self, account, file_path, name, description):
         raise NotImplementedError()
@@ -104,3 +147,10 @@ class VideohostingService(ABC):
             else:
                 prev_height = curr_height
                 time.sleep(timeout)
+
+    # Методы для определения конечного источника выгрузки видео для некоторых видеохостингов
+    def need_to_be_uploaded_to_special_source(self) -> bool:
+        return False  # False - видеохостингу не нужна эта логика
+
+    def validate_special_source(self, account, source_name) -> bool:
+        raise NotImplementedError()

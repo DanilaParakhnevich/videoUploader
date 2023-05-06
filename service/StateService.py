@@ -9,7 +9,8 @@ class StateService(object):
     channels = None
     tabs = None
     settings = None
-    queue_media = None
+    download_queue_media = None
+    upload_queue_media = None
 
     def __init__(self):
         self.q_settings = QSettings('BuharVideoUploaderSettings')
@@ -70,19 +71,32 @@ class StateService(object):
         return StateService.tabs
 
     # QueueMedia
-    def save_queue_media(self, queue_media):
-        StateService.queue_media = queue_media
-        self.q_settings.setValue('queue_media', queue_media)
+    def save_download_queue_media(self, queue_media):
+        StateService.download_queue_media = queue_media
+        self.q_settings.setValue('download_queue_media', queue_media)
 
-    def get_queue_media(self):
-        if StateService.queue_media is None:
-            StateService.queue_media = self.q_settings.value('queue_media')
+    def get_download_queue_media(self):
+        if StateService.download_queue_media is None:
+            StateService.download_queue_media = self.q_settings.value('download_queue_media')
 
-            if StateService.queue_media is None:
-                StateService.queue_media = list()
+            if StateService.download_queue_media is None:
+                StateService.download_queue_media = list()
 
-        return StateService.queue_media
+        return StateService.download_queue_media
 
+    # QueueMedia
+    def save_upload_queue_media(self, queue_media):
+        StateService.upload_queue_media = queue_media
+        self.q_settings.setValue('upload_queue_media', queue_media)
+
+    def get_upload_queue_media(self):
+        if StateService.upload_queue_media is None:
+            StateService.upload_queue_media = self.q_settings.value('upload_queue_media')
+
+            if StateService.upload_queue_media is None:
+                StateService.upload_queue_media = list()
+
+        return StateService.upload_queue_media
     # Settings
     def save_settings(self, settings):
         StateService.settings = settings
