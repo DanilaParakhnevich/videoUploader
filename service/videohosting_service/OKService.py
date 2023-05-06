@@ -1,3 +1,5 @@
+import time
+
 from service.videohosting_service.VideohostingService import VideohostingService
 from playwright.sync_api import sync_playwright
 from gui.widgets.LoginForm import LoginForm
@@ -45,8 +47,7 @@ class OKService(VideohostingService):
             page.type('#field_password', password)
             page.keyboard.press('Enter')
             page.wait_for_selector('.html5-upload-link', timeout=0)
-
-        return page.context.cookies()
+            return page.context.cookies()
 
     def upload_video(self, account, file_path, name, description):
         with sync_playwright() as p:
@@ -62,7 +63,9 @@ class OKService(VideohostingService):
             file_chooser = fc_info.value
             file_chooser.set_files(file_path)
 
-            page.click('.__small video-uploader_ac __go-to-editor-btn js-uploader-editor-link')
+            page.click('.__small.video-uploader_ac.__go-to-editor-btn.js-uploader-editor-link', timeout=60_000)
+
+            time.sleep(0.5)
 
             page.query_selector('#movie-title').fill('')
             page.query_selector('#movie-title').type(text=name)
@@ -70,4 +73,5 @@ class OKService(VideohostingService):
             page.query_selector('#movie-description').type(text=description)
 
             page.click('.button-pro.js-submit-annotations-form', timeout=0)
-            #retest
+
+            time.sleep(0.5)

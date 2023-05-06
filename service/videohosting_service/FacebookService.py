@@ -44,8 +44,9 @@ class FacebookService(VideohostingService):
             page.type('input[name=pass]', password)
             page.keyboard.press('Enter')
 
-            page.wait_for_selector('#checkpointSubmitButton-actual-button', timeout=0)
+            page.wait_for_selector('#mbasic_inline_feed_composer', timeout=0)
             return page.context.cookies()
+
     def upload_video(self, account, file_path, name, description):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=True)
@@ -55,7 +56,15 @@ class FacebookService(VideohostingService):
 
             page.query_selector_all('.x6s0dn4.x78zum5.xl56j7k.x1rfph6h.x6ikm8r.x10wlt62')[1].click()
 
+            with page.expect_file_chooser() as fc_info:
+                page.click(
+                    selector='.x1n2onr6.x1ja2u2z.x9f619.x78zum5.xdt5ytf.x2lah0s.x193iq5w.x5yr21d')
+            file_chooser = fc_info.value
+            file_chooser.set_files(file_path)
 
+            page.query_selector('[role="textbox"]').click()
+            page.keyboard.type(name)
 
-            #remain facebook...
-            #retest
+            page.query_selector('[role="button"][aria-label="Post"]').click()
+
+            time.sleep(5)

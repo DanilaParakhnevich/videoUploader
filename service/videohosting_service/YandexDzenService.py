@@ -1,3 +1,5 @@
+import time
+
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
@@ -54,8 +56,20 @@ class YandexDzenService(VideohostingService):
             page = context.new_page()
             page.goto('https://dzen.ru/profile/editor/create#video-editor')
 
-            #снова ничего не работает (сервера)
+            page.click('.author-studio-header__addButton-1Z.author-studio-header__rightItemButton-3a')
+
+            page.query_selector_all('.ui-lib-context-menu__item.new-publication-dropdown__button-rl')[2].click()
+
             with page.expect_file_chooser() as fc_info:
-                page.click(selector='[name="fileToUpload"]')
+                page.click('.base-button__rootElement-75.base-button__xl-28.base-button__accentPrimary-B4')
             file_chooser = fc_info.value
             file_chooser.set_files(file_path)
+            page.click('.ql-editor', click_count=3)
+
+            page.keyboard.type(text=name)
+
+            page.click(
+                '.form-actions__action-15.base-button__rootElement-75.base-button__l-3Z.base-button__accentPrimary-B4',
+                timeout=0)
+
+            time.sleep(1)

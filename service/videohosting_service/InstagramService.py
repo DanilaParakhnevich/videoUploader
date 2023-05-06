@@ -1,7 +1,6 @@
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
-from datetime import datetime
 from playwright.sync_api import sync_playwright
 from instagrapi import Client
 import re

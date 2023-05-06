@@ -42,20 +42,3 @@ class DTubeService(VideohostingService):
                 raise Exception('Неправильные данные')
 
             return page.context.cookies()
-
-    def upload_video(self, account, file_path, name, description):
-        with sync_playwright() as p:
-            context = self.new_context(p=p, headless=True)
-            context.add_cookies(account.auth)
-            page = context.new_page()
-            page.goto('https://d.tube/')
-
-            page.click(selector='.upload.icon')
-            page.click(selector='[data-uploadtype="file"]')
-            page.query_selector_all('.yt-simple-endpoint.style-scope.ytd-compact-link-renderer')[0].click()
-            with page.expect_file_chooser() as fc_info:
-                page.click(selector='[name="fileToUpload"]')
-            file_chooser = fc_info.value
-            file_chooser.set_files(file_path)
-
-            #сервера упали -_-
