@@ -3,6 +3,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from model.Hosting import Hosting
 from service.StateService import StateService
 
+
 class AccountsPageWidget(QtWidgets.QTableWidget):
     comboBox = QtWidgets.QComboBox()
 
@@ -30,13 +31,14 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
         self.comboBox.setParent(central_widget)
         for hosting in Hosting:
             self.comboBox.addItem(hosting.name)
-        self.comboBox.setMaximumWidth(50)
+        self.comboBox.setMaximumWidth(90)
         self.comboBox.setObjectName("comboBox")
 
         horizontal_layout.addWidget(self.comboBox)
         add_button = QtWidgets.QPushButton(central_widget)
         add_button.setObjectName("add_button")
         horizontal_layout.addWidget(add_button)
+        horizontal_layout.setAlignment(QtCore.Qt.AlignBottom)
 
         add_button.clicked.connect(self.on_add)
 
@@ -70,7 +72,6 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
 
         account = hosting.value[0].show_login_dialog(hosting, self.parentWidget())
         if account is not None:
-
             self.insertRow(self.rowCount())
             item1 = QtWidgets.QTableWidgetItem(self.comboBox.currentText())
             item2 = QtWidgets.QTableWidgetItem(account.login)

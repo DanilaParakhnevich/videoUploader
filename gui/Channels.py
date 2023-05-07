@@ -1,10 +1,9 @@
-import logging
-
 from PyQt5 import QtCore, QtWidgets
 
 from model.Hosting import Hosting
 from service.StateService import StateService
 from model.Channel import Channel
+from logging import *
 
 
 class ChannelsPageWidget(QtWidgets.QTableWidget):
@@ -34,7 +33,8 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
         self.comboBox.setParent(central_widget)
         for hosting in Hosting:
             self.comboBox.addItem(hosting.name)
-        self.comboBox.setMaximumWidth(50)
+        self.comboBox.setMaximumWidth(90)
+        self.comboBox.setMinimumWidth(89)
         self.comboBox.setObjectName("comboBox")
 
         horizontal_layout.addWidget(self.comboBox)
@@ -44,7 +44,8 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
         add_button = QtWidgets.QPushButton(central_widget)
         add_button.setObjectName("add_button")
         horizontal_layout.addWidget(add_button)
-
+        horizontal_layout.setAlignment(QtCore.Qt.AlignBottom)
+        self.horizontalHeader().setStyleSheet('QHeaderView::section {border-bottom: 1px solid black;}')
         add_button.clicked.connect(self.on_add)
 
         _translate = QtCore.QCoreApplication.translate
@@ -80,14 +81,16 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
         if self.state_service.get_channel_by_url(self.url_edit.text()) is not None:
             msg.setText('Такой канал уже существует')
             msg.exec_()
-            logging.info(msg.text())
+            error(msg.text())
+            return
 
         validate_result = Hosting[self.comboBox.currentText()].value[0].validate_page(self.url_edit.text())
 
         if validate_result != 1:
             msg.setText('Канал не прошел валидацию')
             msg.exec_()
-            logging.info(msg.text())
+            error(msg.text())
+            return
 
         self.channels.append(Channel(hosting=self.comboBox.currentText(), url=self.url_edit.text()))
         self.state_service.save_channels(self.channels)
