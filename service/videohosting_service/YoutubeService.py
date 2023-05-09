@@ -1,3 +1,5 @@
+import time
+
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
@@ -46,7 +48,7 @@ class YoutubeService(VideohostingService):
                                    timeout=10_000).click()
             page.query_selector_all('.yt-simple-endpoint.style-scope.ytd-compact-link-renderer')[0].click()
             with page.expect_file_chooser() as fc_info:
-                page.click(selector='#select-files-button')
+                page.query_selector(selector='#select-files-button').click()
             file_chooser = fc_info.value
             file_chooser.set_files(file_path)
 
@@ -69,9 +71,6 @@ class YoutubeService(VideohostingService):
 
             page.click(selector='[name=PUBLIC]')
 
-            page.click(selector='#done-button')
+            page.click(selector='#done-button', timeout=0)
 
-            wait = page.query_selector(selector='.ytcp-uploads-still-processing-dialog')
-
-            if wait is None:
-                page.wait_for_selector(selector='.label.style-scope.ytcp-video-share-dialog', timeout=0)
+            time.sleep(1_000)

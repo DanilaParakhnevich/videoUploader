@@ -1,7 +1,7 @@
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets
 
 from model.Hosting import Hosting
-from service.StateService import StateService
+from service.LocalizationService import *
 
 
 class AccountsPageWidget(QtWidgets.QTableWidget):
@@ -44,12 +44,12 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
 
         _translate = QtCore.QCoreApplication.translate
         item = self.horizontalHeaderItem(0)
-        item.setText(_translate("BuharVideoUploader", "Видеохостинг"))
+        item.setText(_translate("BuharVideoUploader", get_str('videohosting')))
         item = self.horizontalHeaderItem(1)
-        item.setText(_translate("BuharVideoUploader", "Логин"))
+        item.setText(_translate("BuharVideoUploader", get_str('login')))
         item = self.horizontalHeaderItem(2)
-        item.setText(_translate("BuharVideoUploader", "Удалить"))
-        add_button.setText(_translate("BuharVideoUploader", "Добавить"))
+        item.setText(_translate("BuharVideoUploader", get_str('delete')))
+        add_button.setText(_translate("BuharVideoUploader", get_str('add')))
 
         for account in self.accounts:
             self.insertRow(self.rowCount())

@@ -1,7 +1,8 @@
+import os.path
 from PyQt5 import QtCore, QtWidgets
 
-from service.StateService import StateService
 from service.QueueMediaService import QueueMediaService
+from service.LocalizationService import *
 from model.Hosting import Hosting
 from threading import Thread
 from PyQt5.QtCore import QTimer
@@ -40,15 +41,15 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
         _translate = QtCore.QCoreApplication.translate
         item = self.horizontalHeaderItem(0)
-        item.setText(_translate("BuharVideoUploader", "Видео"))
+        item.setText(get_str('video'))
         item = self.horizontalHeaderItem(1)
-        item.setText(_translate("BuharVideoUploader", "Источник выгрузки"))
+        item.setText(get_str('upload_target'))
         item = self.horizontalHeaderItem(2)
-        item.setText(_translate("BuharVideoUploader", "Статус"))
+        item.setText(get_str('status'))
         item = self.horizontalHeaderItem(3)
-        item.setText(_translate("BuharVideoUploader", "Действие"))
+        item.setText(get_str('action'))
         item = self.horizontalHeaderItem(4)
-        item.setText(_translate("BuharVideoUploader", "Удалить"))
+        item.setText(get_str('delete'))
 
         for queue_media in self.queue_media_list:
             self.insert_queue_media(queue_media)
@@ -75,16 +76,35 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
     def upload_video(self, queue_media):
         try:
-            self.set_media_status(queue_media.video_dir, 1, 'Процесс')
+
+            name = ''
+            description = ''
+
+            try:
+                f = open(os.path.splitext(queue_media.video_dir)[0] + '.info.json')
+                data = json.load(f)
+
+                name = data['title']
+
+                if 'description' in data:
+                    description = data['description']
+
+            except:
+                log_error(f'{queue_media.video_dir} - .info.json не найден')
+
+            self.set_media_status(queue_media.video_dir, 1, get_str('process'))
             Hosting[queue_media.hosting].value[0].upload_video(
                 file_path=queue_media.video_dir,
-                account=queue_media.account)
+                account=queue_media.account,
+                name=name,
+                description=description)
         except:
             log_error(traceback.format_exc())
-            self.set_media_status(queue_media.video_dir, 3, 'Ошибка')
+            self.set_media_status(queue_media.video_dir, 3, get_str('error'))
+            return
 
-        self.set_media_status(queue_media.video_dir, 2, 'Завершено')
-        self.download_thread_dict.pop(queue_media.video_dir)
+        self.set_media_status(queue_media.video_dir, 2, get_str('end'))
+        self.upload_thread_dict.pop(queue_media.video_dir)
 
     def update_queue_media(self):
         last_added_queue_media = self.queue_media_service.get_last_added_upload_queue_media()
@@ -100,27 +120,30 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         if queue_media.destination is not None:
             item2 = QtWidgets.QTableWidgetItem(queue_media.destination)
         else:
-            item2 = QtWidgets.QTableWidgetItem(f'Аккаунт: {queue_media.account.login}')
+            item2 = QtWidgets.QTableWidgetItem(f'{get_str("account")}: {queue_media.account.login}')
 
         if queue_media.status == 0:
-            item3 = QtWidgets.QTableWidgetItem('Пауза')
+            item3 = QtWidgets.QTableWidgetItem(get_str('pause'))
         elif queue_media.status == 1:
-            if self.download_thread_dict[queue_media.url] is None:
-                item3 = QtWidgets.QTableWidgetItem('Пауза')
-            else:
-                item3 = QtWidgets.QTableWidgetItem('Процесс')
+            item3 = QtWidgets.QTableWidgetItem(get_str('process'))
+
+            if queue_media.video_dir not in self.upload_thread_dict.keys():
+                upload_thread = Thread(target=self.upload_video, daemon=True, args=[queue_media])
+                self.upload_thread_dict[queue_media.video_dir] = upload_thread
+                upload_thread.start()
+
         elif queue_media.status == 2:
-            item3 = QtWidgets.QTableWidgetItem('Завершено')
+            item3 = QtWidgets.QTableWidgetItem(get_str('end'))
         else:
-            item3 = QtWidgets.QTableWidgetItem('Ошибка')
+            item3 = QtWidgets.QTableWidgetItem(get_str('error'))
 
         action_button = QtWidgets.QPushButton(self)
         action_button.setText('+')
-        self.setCellWidget(input_position, 4, action_button)
+        self.setCellWidget(input_position, 3, action_button)
 
         delete_button = QtWidgets.QPushButton(self)
         delete_button.setText('-')
-        self.setCellWidget(input_position, 5, delete_button)
+        self.setCellWidget(input_position, 4, delete_button)
 
         delete_button.clicked.connect(self.on_delete_row)
 

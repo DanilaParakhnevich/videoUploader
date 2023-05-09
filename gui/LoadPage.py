@@ -1,12 +1,17 @@
+import datetime
+from dateutil.relativedelta import relativedelta
+
 from PyQt5 import QtCore, QtWidgets
-from widgets.ChooseAccountForm import ChooseAccountForm
+from widgets.ChooseHostingForm import ChooseHostingForm
 
 from model.LoadQueuedMedia import LoadQueuedMedia
 from model.Hosting import Hosting
 from model.Tab import TabModel
 from gui.widgets.ChannelComboBox import ChannelComboBox
 from gui.widgets.SpecialSourceForm import SpecialSourceForm
-from service.StateService import StateService
+from gui.widgets.ChooseAccountForm import ChooseAccountForm
+from gui.widgets.UploadAfterDownloadForm import UploadAfterDownloadForm
+from service.LocalizationService import *
 from service.QueueMediaService import QueueMediaService
 from threading import Thread
 from service.LoggingService import *
@@ -95,18 +100,18 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         self.insertTab(len(self.tables), tab, "")
 
-        add_button.setText(self._translate("BuharVideoUploader", "Go"))
+        add_button.setText(get_str('get'))
         add_button.clicked.connect(self.create_daemon_for_getting_video_list)
         add_media_to_query_button.setObjectName("download_button")
-        add_media_to_query_button.setText(self._translate("BuharVideoUploader", "Add to queue"))
+        add_media_to_query_button.setText(get_str('add_to_the_queue'))
         item = table_widget.horizontalHeaderItem(0)
-        item.setText(self._translate("BuharVideoUploader", "Название"))
+        item.setText(get_str("name"))
         item = table_widget.horizontalHeaderItem(1)
-        item.setText(self._translate("BuharVideoUploader", "Ссылка"))
+        item.setText(get_str("link"))
         item = table_widget.horizontalHeaderItem(2)
-        item.setText(self._translate("BuharVideoUploader", "Дата"))
+        item.setText(get_str("date"))
         item = table_widget.horizontalHeaderItem(3)
-        item.setText(self._translate("BuharVideoUploader", "Качать?"))
+        item.setText(get_str("is_download"))
 
         if name:
             self.setTabText(self.indexOf(tab), name)
@@ -123,7 +128,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 if val:
                     break
 
-            tab_name = self._translate("BuharVideoUploader", f'Tab {index}')
+            tab_name = self._translate("BuharVideoUploader", f'{get_str("tab")} {index}')
             self.setTabText(self.indexOf(tab), tab_name)
 
             self.tab_models.append(TabModel(tab_name, '', Hosting.Youtube.name))
@@ -138,15 +143,44 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         if table.rowCount() == 0:
             msg = QtWidgets.QMessageBox()
-            msg.setText('Необходимо подгрузить видео с канала')
+            msg.setText(get_str('need_load_video_list'))
             msg.exec_()
             return
 
-        upload_on = True
+        upload_after_download_form = UploadAfterDownloadForm(self)
+        upload_after_download_form.exec_()
+
+        upload_on = upload_after_download_form.upload_flag
+        upload_time_type = upload_after_download_form.upload_interval_type
+        upload_interval = upload_after_download_form.upload_interval
+
+        upload_account = None
+        if upload_on:
+            choose_hosting_form = ChooseHostingForm(self)
+            choose_hosting_form.exec_()
+
+            if choose_hosting_form.hosting is None:
+                return
+
+            accounts = self.state_service.get_accounts_by_hosting(choose_hosting_form.hosting.name)
+
+            if len(accounts) == 0:
+                msg = QtWidgets.QMessageBox()
+                msg.setText(f'{get_str("not_found_accounts_for_videohosting")}: {choose_hosting_form.hosting.name}')
+                msg.exec_()
+                return
+
+            choose_account_form = ChooseAccountForm(self, accounts)
+            choose_account_form.exec_()
+
+            if choose_account_form.account is None:
+                return
+
+            upload_account = choose_account_form.account
 
         current_media_query = self.state_service.get_download_queue_media()
 
-        service = Hosting[self.hosting].value[0]
+        service = self.hosting.value[0]
 
         source = None
 
@@ -160,31 +194,44 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 return
 
         new_media = list()
+        upload_date = datetime.datetime.now()
         for i in range(0, table.rowCount()):
 
             if table.item(i, 3).checkState() == 0:
                 continue
 
-            self.channel = self.state_service.get_channel_by_url(self.tab_models[self.currentIndex()].channel)
-            self.hosting = self.channel.hosting
-
             is_exist = False
 
             for media in current_media_query:
                 if media.url == table.item(i, 1).text():
-                    log_info(f'Медиа "{media.url}" уже в списке очереди')
+                    log_info(get_str('media_already_in_the_queue').format(media.url))
                     is_exist = True
                     break
 
             if is_exist:
                 continue
 
+            self.channel = self.state_service.get_channel_by_url(self.tab_models[self.currentIndex()].channel)
+            self.hosting = Hosting[self.channel.hosting]
+
             queue_media = LoadQueuedMedia(url=table.item(i, 1).text(),
                                           account=self.account,
-                                          hosting=self.hosting,
+                                          hosting=self.hosting.name,
                                           status=0,
                                           upload_after_download=upload_on,
-                                          upload_destination=source)
+                                          upload_destination=source,
+                                          upload_date=upload_date,
+                                          upload_account=upload_account)
+
+            if upload_on:
+                if upload_time_type == 0:
+                    upload_date = upload_date + relativedelta(minutes=upload_interval)
+                elif upload_time_type == 1:
+                    upload_date = upload_date + relativedelta(hours=upload_interval)
+                elif upload_time_type == 2:
+                    upload_date = upload_date + relativedelta(days=upload_interval)
+                else:
+                    upload_date = upload_date + relativedelta(months=upload_interval)
 
             new_media.append(queue_media)
 
@@ -206,7 +253,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         if len(accounts) == 0 and self.hosting.value[1]:
             msg = QtWidgets.QMessageBox()
-            msg.setText('Необходимо авторизоваться на странице "Аккаунты"')
+            msg.setText(get_str('need_authorize'))
             msg.exec_()
             return list()
         elif len(accounts) == 1:
@@ -249,6 +296,6 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 index += 1
         except:
             msg = QtWidgets.QMessageBox()
-            msg.setText('Произошла ошибка')
+            msg.setText(get_str('happened_error'))
             msg.exec_()
             log_error(traceback.format_exc())

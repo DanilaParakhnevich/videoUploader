@@ -3,6 +3,7 @@ from PyQt5 import QtCore, QtWidgets
 from model.Hosting import Hosting
 from service.StateService import StateService
 from model.Channel import Channel
+from service.LocalizationService import *
 from logging import *
 
 
@@ -50,14 +51,14 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
 
         _translate = QtCore.QCoreApplication.translate
         item = self.horizontalHeaderItem(0)
-        item.setText(_translate("BuharVideoUploader", "Видеохостинг"))
+        item.setText(get_str('videohosting'))
         item = self.horizontalHeaderItem(1)
-        item.setText(_translate("BuharVideoUploader", "Ссылка"))
+        item.setText(get_str('link'))
         item = self.horizontalHeaderItem(2)
-        item.setText(_translate("BuharVideoUploader", "Удалить"))
-        add_button.setText(_translate("BuharVideoUploader", "Добавить"))
+        item.setText(get_str('delete'))
+        add_button.setText(get_str('add'))
 
-        self.url_edit.setPlaceholderText(_translate("BuharVideoUploader", "Ссылка на канал"))
+        self.url_edit.setPlaceholderText(_translate("BuharVideoUploader", get_str('link_on_the_channel')))
 
         for channel in self.channels:
             self.insertRow(self.rowCount())
@@ -79,7 +80,7 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
         msg = QtWidgets.QMessageBox()
 
         if self.state_service.get_channel_by_url(self.url_edit.text()) is not None:
-            msg.setText('Такой канал уже существует')
+            msg.setText(get_str('channel_already_exists'))
             msg.exec_()
             error(msg.text())
             return
@@ -87,7 +88,7 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
         validate_result = Hosting[self.comboBox.currentText()].value[0].validate_page(self.url_edit.text())
 
         if validate_result != 1:
-            msg.setText('Канал не прошел валидацию')
+            msg.setText('channel_validation_failed')
             msg.exec_()
             error(msg.text())
             return

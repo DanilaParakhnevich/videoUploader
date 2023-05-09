@@ -62,7 +62,7 @@ class VKService(VideohostingService):
                 for video in response.result['items']:
                     try:
                         videos.append(
-                            VideoModel(url=video['player'],
+                            VideoModel(url=f'https://vk.com/video?z=video{video["owner_id"]}_{video["id"]}',
                                        name=video['title'],
                                        date=str(datetime.fromtimestamp(video['date']).strftime('%Y-%m-%d %H:%M:%S'))))
                     except:
@@ -90,7 +90,7 @@ class VKService(VideohostingService):
 
         return response
 
-    def upload_video(self, account, file_path, name, description, table_item: QTableWidgetItem):
+    def upload_video(self, account, file_path, name, description):
         vk_session = vk_api.VkApi(token=account.auth['access_token'])
 
         vk_upload = vk_api.VkUpload(vk_session)

@@ -1,7 +1,7 @@
 from model.Account import Account
 
 
-class LoadQueuedMedia(object):
+class UploadQueuedMedia(object):
 
     def __init__(self, video_dir: str, hosting: str, status: int, account: Account,
                  destination=None, upload_date=None):
@@ -11,5 +11,5 @@ class LoadQueuedMedia(object):
         self.status = status
         self.account = account
         self.hosting = hosting
-        self.desctination = destination
+        self.destination = destination
         self.upload_date = upload_date

@@ -4,6 +4,7 @@ from gui.Accounts import AccountsPageWidget
 from gui.DownloadQueuePage import DownloadQueuePageWidget
 from gui.UploadQueuePage import UploadQueuePageWidget
 from gui.SettingsPage import SettingsPage
+from service.LocalizationService import *
 import LoadPage
 
 
@@ -72,12 +73,12 @@ class Ui_BuharVideoUploader(object):
     def retranslate_ui(self, BuharVideoUploader):
         _translate = QtCore.QCoreApplication.translate
         BuharVideoUploader.setWindowTitle(_translate("BuharVideoUploader", "BuharVideoUploader"))
-        self.load_button.setText(_translate("BuharVideoUploader", "Выгрузить"))
-        self.channels_button.setText(_translate("BuharVideoUploader", "Каналы"))
-        self.accounts_button.setText(_translate("BuharVideoUploader", "Аккаунты"))
-        self.download_queue_page_button.setText(_translate("BuharVideoUploader", "Очередь загрузки"))
-        self.upload_queue_page_button.setText(_translate("BuharVideoUploader", "Очередь выгрузки"))
-        self.settings_button.setText(_translate("BuharVideoUploader", "Настройки"))
+        self.load_button.setText(get_str('download_page'))
+        self.channels_button.setText(get_str('channels_page'))
+        self.accounts_button.setText(get_str('accounts_page'))
+        self.download_queue_page_button.setText(get_str('download_queue_page'))
+        self.upload_queue_page_button.setText(get_str('upload_queue_page'))
+        self.settings_button.setText(get_str('settings_page'))
 
         self.load_button.clicked.connect(self.show_main_page)
         self.channels_button.clicked.connect(self.show_channels_page)

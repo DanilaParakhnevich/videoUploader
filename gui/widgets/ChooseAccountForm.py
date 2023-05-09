@@ -6,16 +6,16 @@ from service.StateService import StateService
 class ChooseAccountForm(QDialog):
     account = None
 
-    def __init__(self, parent: QWidget, accounts):
+    def __init__(self, parent: QWidget, accounts, choose_account_text='Выберите аккаунт'):
         super().__init__(parent)
-        self.setWindowTitle('Login Form')
+        self.setWindowTitle(choose_account_text)
         self.resize(500, 120)
 
         layout = QGridLayout()
 
-        label_name = QLabel('<font size="4"> Выберите аккаунт </font>')
+        label_name = QLabel(f'<font size="4"> {choose_account_text} </font>')
         self.combo_box = QComboBox()
-        self.combo_box.setPlaceholderText('Выберите аккаунт')
+        self.combo_box.setPlaceholderText(choose_account_text)
 
         for account in accounts:
             self.combo_box.addItem(account.login, account)
@@ -23,7 +23,7 @@ class ChooseAccountForm(QDialog):
         layout.addWidget(label_name, 0, 0)
         layout.addWidget(self.combo_box, 0, 1)
 
-        button_login = QPushButton('Login')
+        button_login = QPushButton('Выбрать')
         button_login.clicked.connect(self.choose_account)
         layout.addWidget(button_login, 3, 0, 1, 2)
         layout.setRowMinimumHeight(3, 75)

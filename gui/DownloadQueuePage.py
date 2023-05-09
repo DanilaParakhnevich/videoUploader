@@ -1,11 +1,12 @@
 from PyQt5 import QtCore, QtWidgets
 
-from service.StateService import StateService
 from service.QueueMediaService import QueueMediaService
 from model.Hosting import Hosting
+from model.UploadQueueMedia import UploadQueuedMedia
 from threading import Thread
 from PyQt5.QtCore import QTimer
 from service.LoggingService import *
+from service.LocalizationService import *
 import traceback
 
 
@@ -37,13 +38,13 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
         _translate = QtCore.QCoreApplication.translate
         item = self.horizontalHeaderItem(0)
-        item.setText(_translate("BuharVideoUploader", "Ссылка"))
+        item.setText(_translate("BuharVideoUploader", get_str('link')))
         item = self.horizontalHeaderItem(1)
-        item.setText(_translate("BuharVideoUploader", "Статус"))
+        item.setText(_translate("BuharVideoUploader", get_str('status')))
         item = self.horizontalHeaderItem(2)
-        item.setText(_translate("BuharVideoUploader", "Действие"))
+        item.setText(_translate("BuharVideoUploader", get_str('action')))
         item = self.horizontalHeaderItem(3)
-        item.setText(_translate("BuharVideoUploader", "Удалить"))
+        item.setText(_translate("BuharVideoUploader", get_str('delete')))
 
         for queue_media in self.queue_media_list:
             self.insert_queue_media(queue_media)
@@ -67,7 +68,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                 if len(self.download_thread_dict) == 0 and media.status == 0:
                     media.status = 1
                     self.state_service.save_download_queue_media(self.queue_media_list)
-                    download_video_thread = Thread(target=self.download_video, daemon=True, args=[media.url, media.account, media.hosting])
+                    download_video_thread = Thread(target=self.download_video, daemon=True, args=[media])
 
                     self.download_thread_dict[media.url] = download_video_thread
                     download_video_thread.start()
@@ -76,27 +77,34 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
         if len(self.download_thread_dict) < self.settings.pack_count:
             for media in self.queue_media_list:
                 if len(self.download_thread_dict) < self.settings.pack_count and media.status == 0:
-                    media.status = 1
-                    self.state_service.save_download_queue_media(self.queue_media_list)
-                    download_video_thread = Thread(target=self.download_video, daemon=True, args=[media.url, media.account, media.hosting])
+                    download_video_thread = Thread(target=self.download_video, daemon=True, args=[media])
 
                     self.download_thread_dict[media.url] = download_video_thread
                     download_video_thread.start()
+                    media.status = 1
+                    self.state_service.save_download_queue_media(self.queue_media_list)
 
-    def download_video(self, url, account, hosting):
+    def download_video(self, media):
         try:
-            self.set_media_status(url, 1, 'Процесс')
-            Hosting[hosting].value[0].download_video(
-                url=url,
-                account=account,
-                table_item=self.item(self.get_row_index(url), 1))
+            self.set_media_status(media.url, 1, get_str('process'))
+            video_dir = Hosting[media.hosting].value[0].download_video(
+                url=media.url,
+                account=media.account,
+                hosting=media.hosting,
+                table_item=self.item(self.get_row_index(media.url), 1))
+            if media.upload_after_download:
+                self.queue_media_service.add_to_the_upload_queue(UploadQueuedMedia(video_dir=video_dir,
+                                                                                   hosting=media.upload_account.hosting,
+                                                                                   status=0, account=media.upload_account,
+                                                                                   destination=media.upload_destination,
+                                                                                   upload_date=media.upload_date))
 
         except:
             log_error(traceback.format_exc())
-            self.set_media_status(url, 3, 'Ошибка')
+            self.set_media_status(media.url, 3, get_str('error'))
 
-        self.set_media_status(url, 2, 'Завершено')
-        self.download_thread_dict.pop(url)
+        self.set_media_status(media.url, 2, get_str('end'))
+        self.download_thread_dict.pop(media.url)
 
     def update_queue_media(self):
         last_added_queue_media = self.queue_media_service.get_last_added_download_queue_media()
@@ -109,16 +117,19 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
         item1 = QtWidgets.QTableWidgetItem(queue_media.url)
         if queue_media.status == 0:
-            item2 = QtWidgets.QTableWidgetItem('Пауза')
+            item2 = QtWidgets.QTableWidgetItem(get_str('pause'))
         elif queue_media.status == 1:
-            if self.download_thread_dict[queue_media.url] is None:
-                item2 = QtWidgets.QTableWidgetItem('Пауза')
-            else:
-                item2 = QtWidgets.QTableWidgetItem('Процесс')
+            item2 = QtWidgets.QTableWidgetItem(get_str('process'))
+
+            if queue_media.url not in self.download_thread_dict.keys():
+                download_video_thread = Thread(target=self.download_video, daemon=True, args=[queue_media])
+                self.download_thread_dict[queue_media.url] = download_video_thread
+                download_video_thread.start()
+
         elif queue_media.status == 2:
-            item2 = QtWidgets.QTableWidgetItem('Завершено')
+            item2 = QtWidgets.QTableWidgetItem(get_str('end'))
         else:
-            item2 = QtWidgets.QTableWidgetItem('Ошибка')
+            item2 = QtWidgets.QTableWidgetItem(get_str('error'))
 
         action_button = QtWidgets.QPushButton(self)
         action_button.setText('+')

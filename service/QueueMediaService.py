@@ -18,12 +18,12 @@ class QueueMediaService(object):
         QueueMediaService.last_added_download_queue_media.clear()
         return result
 
-    def add_to_the_upload_queue(self, queue_media_list: list):
+    def add_to_the_upload_queue(self, queue_media):
         old_queue_media = self.state_service.get_upload_queue_media()
-        old_queue_media.extend(queue_media_list)
+        old_queue_media.append(queue_media)
 
         self.state_service.save_upload_queue_media(old_queue_media)
-        QueueMediaService.last_added_upload_queue_media.extend(queue_media_list)
+        QueueMediaService.last_added_upload_queue_media.append(queue_media)
 
     def get_last_added_upload_queue_media(self):
         result = QueueMediaService.last_added_upload_queue_media.copy()

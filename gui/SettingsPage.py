@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QIntValidator
 from model.Settings import Settings
-from service.StateService import StateService
+from service.LocalizationService import *
 
 
 class SettingsPage(QtWidgets.QDialog):
@@ -12,7 +12,7 @@ class SettingsPage(QtWidgets.QDialog):
         self.old_settings = self.state_service.get_settings()
         self.settings_box = QtWidgets.QWidget()
         self.scroll = QtWidgets.QScrollArea(self)
-        self.resize(443, 352)
+        self.resize(640, 480)
 
         self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
@@ -29,71 +29,87 @@ class SettingsPage(QtWidgets.QDialog):
         self.main_settings.setMinimumWidth(200)
         self.gridLayout.addWidget(self.settings_box, 0, 0)
 
-        self.language_label = QtWidgets.QLabel("Язык")
+        self.language_label = QtWidgets.QLabel(get_str('language'))
         self.language_box = QtWidgets.QComboBox()
         self.language_box.setCurrentText(self.old_settings.language)
+        for language in get_all_locales():
+            self.language_box.addItem(language, language)
+
         self.gridLayout.addWidget(self.language_label, 1, 0)
         self.gridLayout.addWidget(self.language_box, 1, 1)
 
         self.download_strategy_label = QtWidgets.QLabel()
         self.download_strategy_box = QtWidgets.QComboBox()
-        self.download_strategy_box.addItem('Вручную', 0)
-        self.download_strategy_box.addItem('Последовательная', 1)
-        self.download_strategy_box.addItem('Параллельная', 2)
+        self.download_strategy_box.addItem(get_str('manually_item'), 0)
+        self.download_strategy_box.addItem(get_str('serial_item'), 1)
+        self.download_strategy_box.addItem(get_str('parallel_item'), 2)
         self.download_strategy_box.setCurrentIndex(self.old_settings.download_strategy)
         self.download_strategy_box.currentIndexChanged.connect(self.on_strategy_changed)
         self.gridLayout.addWidget(self.download_strategy_label, 2, 0)
         self.gridLayout.addWidget(self.download_strategy_box, 2, 1)
 
-        self.pack_count_label = QtWidgets.QLabel("Количество пакетов")
+        self.pack_count_label = QtWidgets.QLabel(get_str('pack_count'))
         self.pack_count_edit = QtWidgets.QLineEdit()
+        self.pack_count_edit.setValidator(QIntValidator(1, 9))
         self.pack_count_edit.setMaximumWidth(150)
         self.pack_count_edit.setText(str(self.old_settings.pack_count))
         self.gridLayout.addWidget(self.pack_count_label, 3, 0)
         self.gridLayout.addWidget(self.pack_count_edit, 3, 1)
 
-        if self.download_strategy_box.currentData() == 0:
+        if self.download_strategy_box.currentData() != 2:
             self.pack_count_label.hide()
             self.pack_count_edit.hide()
 
         self.choose_dir_button = QtWidgets.QPushButton(self.settings_box)
         self.choose_dir_button.setObjectName("choose_dir_button")
-        self.choose_dir_button.setMaximumWidth(50)
+        self.choose_dir_button.setMaximumWidth(200)
+        self.choose_dir_button.clicked.connect(self.pick_new)
         self.gridLayout.addWidget(self.choose_dir_button, 5, 1)
         self.choose_dir_label = QtWidgets.QLabel(self.settings_box)
         self.choose_dir_label.setObjectName("choose_dir_label")
         self.gridLayout.addWidget(self.choose_dir_label, 5, 0)
 
+        self.rate_limit_label = QtWidgets.QLabel(get_str('download_video_speed_limit'))
+        self.rate_limit_edit = QtWidgets.QLineEdit()
+        self.rate_limit_edit.setValidator(QIntValidator(0, 99999))
+        self.rate_limit_edit.setMaximumWidth(150)
+        self.rate_limit_edit.setText(str(self.old_settings.rate_limit))
+        self.gridLayout.addWidget(self.rate_limit_label, 7, 0)
+        self.gridLayout.addWidget(self.rate_limit_edit, 7, 1)
+
         self.save_button = QtWidgets.QPushButton(self.settings_box)
         self.save_button.setObjectName("save_button")
         self.save_button.setMaximumWidth(80)
         self.save_button.clicked.connect(self.on_save)
-        self.gridLayout.addWidget(self.save_button, 6, 0)
+        self.gridLayout.addWidget(self.save_button, 8, 0)
 
         self.autostart = QtWidgets.QCheckBox(self.settings_box)
         self.autostart.setObjectName("autostart")
         self.autostart.setChecked(self.old_settings.autostart)
-        self.gridLayout.addWidget(self.autostart, 6, 1)
+        self.gridLayout.addWidget(self.autostart, 8, 1)
 
-        # self.save_label = QtWidgets.QLabel(self.settings_box)
-        # self.save_label.setObjectName("save_label")
-        # self.gridLayout.addWidget(self.save_label, 6, 1)
         self.retranslate_ui()
 
     def retranslate_ui(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("Settings", "Настройки"))
-        self.main_settings.setText(_translate("Settings", "Системные настройки:"))
-        self.language_label.setText(_translate("Settings", "Язык"))
-        self.download_strategy_label.setText(_translate("Settings", "Стратегия загрузки"))
-        self.pack_count_label.setText(_translate("Settings", "Количество медиа для одновременной загрузки"))
-        self.autostart.setText(_translate("Settings", "Автозапуск приложения"))
-        self.choose_dir_label.setText(_translate("Settings", "Выбор пути загрузки"))
-        self.save_button.setText(_translate("Settings", "Сохранить"))
-        # self.save_label.setText(_translate("Settings", "Сохранить"))
+        self.setWindowTitle(_translate("Settings", get_str('settings_page')))
+        self.main_settings.setText(f'{get_str("system_settings")}:')
+        self.language_label.setText(get_str('language'))
+        self.download_strategy_label.setText(get_str('download_strategy'))
+        self.pack_count_label.setText(get_str('count_media_for_synchronous_downloading'))
+        self.rate_limit_label.setText(get_str('download_speed_limit'))
+        self.autostart.setText(get_str('application_autostart'))
+        self.choose_dir_label.setText(get_str('choose_the_download_path'))
+        self.choose_dir_button.setText(self.old_settings.download_dir)
+        self.save_button.setText(get_str('save'))
+
+    def pick_new(self):
+        dialog = QtWidgets.QFileDialog()
+        folder_path = dialog.getExistingDirectory(None, get_str('choose_dir'))
+        self.choose_dir_button.setText(folder_path)
 
     def on_strategy_changed(self, index):
-        if index == 0:
+        if index != 2:
             self.pack_count_label.hide()
             self.pack_count_edit.hide()
         else:
@@ -102,9 +118,10 @@ class SettingsPage(QtWidgets.QDialog):
 
     def on_save(self):
 
-        if self.old_settings.download_strategy != self.download_strategy_box.currentIndex():
+        if self.old_settings.download_strategy != self.download_strategy_box.currentIndex() \
+                or self.old_settings.pack_count != int(self.pack_count_edit.text()):
             msg = QtWidgets.QMessageBox()
-            msg.setText('Для применения настроек стратегии загрузки требуется перезапуск приложения')
+            msg.setText(get_str('for_applying_settings_need_to_restart'))
             msg.exec_()
 
         self.state_service.save_settings(
@@ -112,5 +129,6 @@ class SettingsPage(QtWidgets.QDialog):
                 language=self.language_box.currentData(),
                 download_strategy=self.download_strategy_box.currentData(),
                 autostart=self.autostart.isChecked(),
-                download_dir='',
-                pack_count=int(self.pack_count_edit.text())))
+                download_dir=self.choose_dir_button.text(),
+                pack_count=int(self.pack_count_edit.text()),
+                rate_limit=int(self.rate_limit_edit.text())))

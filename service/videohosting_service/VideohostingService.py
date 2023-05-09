@@ -7,7 +7,7 @@ from playwright.sync_api import Page
 from yt_dlp import YoutubeDL
 from PyQt5.QtWidgets import QTableWidgetItem
 from moviepy.editor import VideoFileClip
-
+from service.StateService import StateService
 from service.videohosting_service.exception.DescriptionIsTooLongException import DescriptionIsTooLongException
 from service.videohosting_service.exception.FileFormatException import FileFormatException
 from service.videohosting_service.exception.FileSizeException import FileSizeException
@@ -71,7 +71,7 @@ class VideohostingService(ABC):
             return round(size, 3)
 
         def validate_format():
-            return self.upload_video_formats.__contains__(clip.filename.split('.')[1])
+            return self.upload_video_formats.__contains__(os.path.splitext(video_dir)[1])
 
         if (clip.duration / 60) > self.duration_restriction:
             raise VideoDurationException(f'Продолжительность ролика слишком большая ({clip.duration} > {self.duration_restriction})')
@@ -96,23 +96,26 @@ class VideohostingService(ABC):
         browser = p.chromium.launch(headless=headless, args=self.CHROMIUM_ARGS)
         return browser.new_context()
 
-    def download_video(self, url, account=None, table_item: QTableWidgetItem = None):
+    def download_video(self, url, hosting, account=None, table_item: QTableWidgetItem = None):
 
         def prog_hook(d, table_item):
             if d["status"] == "downloading":
                 p = d['_percent_str']
-                # p = p.replace('%', '')
-                # self.progress.setValue(float(p))
                 table_item.setText(p)
 
         download_opts = {
             'progress_hooks': [lambda d: prog_hook(d, table_item)],
-            'ffmpeg_location': '/opt/ffmpeg-master-latest-linux64-gpl/bin'
+            'ffmpeg_location': '/opt/ffmpeg-master-latest-linux64-gpl/bin',
+            'outtmpl': f'{StateService.settings.download_dir}/{hosting}/%(title)s.%(ext)s',
+            'writeinfojson': True
         }
 
+        if StateService.settings.rate_limit != 0:
+            download_opts['ratelimit'] = str(StateService.settings.rate_limit * 1024)
+
         with YoutubeDL(download_opts) as ydl:
-            # self.downloading_videos.__setattr__(url, table_item)
-            ydl.download(url)
+            info = ydl.extract_info(url)
+            return f'{StateService.settings.download_dir}/{hosting}/{info["title"]}.{info["video_ext"]}'
 
     # Возвращает: 0, если ссылка невалидна; 1, если ссылка валидна и является ссылкой на канал;
     # 2, если ссылка валидна и является ссылкой на видео
@@ -154,3 +157,15 @@ class VideohostingService(ABC):
 
     def validate_special_source(self, account, source_name) -> bool:
         raise NotImplementedError()
+
+
+
+if __name__ == '__main__':
+    download_opts = {
+        'ffmpeg_location': '/opt/ffmpeg-master-latest-linux64-gpl/bin',
+        'outtmpl': f'/home/dendil/Documents/Projects/Own/BuxarVideoUploader/temp/1.%(ext)s',
+        'writeinfojson': True
+    }
+
+    with YoutubeDL(download_opts) as ydl:
+        ydl.extract_info('https://www.youtube.com/watch?v=1_4jfqYOi6w&ab_channel=%D0%BD%D0%B5%D0%B1%D1%83%D0%B4%D0%B8')
