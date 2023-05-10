@@ -24,7 +24,7 @@ class OKService(VideohostingService):
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto(url)
-            page.wait_for_selector('#listBlockPanelAltGroupVideoMoviesPagingBlock')
+            page.wait_for_selector('.ugrid.ugrid__video.__l')
 
             self.scroll_page_to_the_bottom(page=page)
 

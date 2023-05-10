@@ -1,11 +1,11 @@
 from PyQt5 import QtCore, QtWidgets
-from gui.Channels import ChannelsPageWidget
-from gui.Accounts import AccountsPageWidget
+from gui.ChannelsPage import ChannelsPageWidget
+from gui.AccountsPage import AccountsPageWidget
 from gui.DownloadQueuePage import DownloadQueuePageWidget
 from gui.UploadQueuePage import UploadQueuePageWidget
+from gui.LoadPage import LoadPageWidget
 from gui.SettingsPage import SettingsPage
 from service.LocalizationService import *
-import LoadPage
 
 
 class Ui_BuharVideoUploader(object):
@@ -27,14 +27,14 @@ class Ui_BuharVideoUploader(object):
 
         self.vertical_layout = QtWidgets.QVBoxLayout(self.central_widget)
         self.vertical_layout.setObjectName("verticalLayout")
-        self.main_page = LoadPage.LoadPageWidget(self.central_widget)
+        self.load_page = LoadPageWidget(self.central_widget)
         self.channels_page = ChannelsPageWidget(self.central_widget)
         self.accounts_page = AccountsPageWidget(self.central_widget)
         self.download_queue_page = DownloadQueuePageWidget(self.central_widget)
         self.upload_queue_page = UploadQueuePageWidget(self.central_widget)
         self.settings_dialog = SettingsPage(self.central_widget)
         self.main_layout = QtWidgets.QVBoxLayout(self.central_widget)
-        self.main_layout.addWidget(self.main_page)
+        self.main_layout.addWidget(self.load_page)
         self.main_layout.addWidget(self.accounts_page)
         self.main_layout.addWidget(self.channels_page)
         self.main_layout.addWidget(self.download_queue_page)
@@ -72,8 +72,7 @@ class Ui_BuharVideoUploader(object):
         QtCore.QMetaObject.connectSlotsByName(ui)
 
     def retranslate_ui(self, BuharVideoUploader):
-        _translate = QtCore.QCoreApplication.translate
-        BuharVideoUploader.setWindowTitle(_translate("BuharVideoUploader", "BuharVideoUploader"))
+        BuharVideoUploader.setWindowTitle("BuharVideoUploader")
         self.load_button.setText(get_str('download_page'))
         self.channels_button.setText(get_str('channels_page'))
         self.accounts_button.setText(get_str('accounts_page'))
@@ -81,7 +80,7 @@ class Ui_BuharVideoUploader(object):
         self.upload_queue_page_button.setText(get_str('upload_queue_page'))
         self.settings_button.setText(get_str('settings_page'))
 
-        self.load_button.clicked.connect(self.show_main_page)
+        self.load_button.clicked.connect(self.show_load_page)
         self.load_button.setStyleSheet("border: 2px solid blue; border-radius: 5px")
 
         self.channels_button.clicked.connect(self.show_channels_page)
@@ -93,7 +92,7 @@ class Ui_BuharVideoUploader(object):
     def show_settings_dialog(self):
         self.settings_dialog.exec_()
 
-    def show_main_page(self):
+    def show_load_page(self):
         # Делаем кнопку с синей рамкой
         self.load_button.setStyleSheet("border: 2px solid blue; border-radius: 5px")
         # Сбросить стили других кнопок
@@ -103,7 +102,7 @@ class Ui_BuharVideoUploader(object):
         self.upload_queue_page_button.setStyleSheet("")
 
         self.channels_page.hide()
-        self.main_page.show()
+        self.load_page.show()
         self.accounts_page.hide()
         self.download_queue_page.hide()
         self.upload_queue_page.hide()
@@ -118,7 +117,7 @@ class Ui_BuharVideoUploader(object):
         self.upload_queue_page_button.setStyleSheet("")
 
         self.channels_page.show()
-        self.main_page.hide()
+        self.load_page.hide()
         self.accounts_page.hide()
         self.download_queue_page.hide()
         self.upload_queue_page.hide()
@@ -132,7 +131,7 @@ class Ui_BuharVideoUploader(object):
         self.upload_queue_page_button.setStyleSheet("")
 
         self.channels_page.hide()
-        self.main_page.hide()
+        self.load_page.hide()
         self.accounts_page.show()
         self.download_queue_page.hide()
         self.upload_queue_page.hide()
@@ -146,7 +145,7 @@ class Ui_BuharVideoUploader(object):
         self.upload_queue_page_button.setStyleSheet("")
 
         self.channels_page.hide()
-        self.main_page.hide()
+        self.load_page.hide()
         self.accounts_page.hide()
         self.download_queue_page.show()
         self.upload_queue_page.hide()
@@ -160,18 +159,7 @@ class Ui_BuharVideoUploader(object):
         self.download_queue_page_button.setStyleSheet("")
 
         self.channels_page.hide()
-        self.main_page.hide()
+        self.load_page.hide()
         self.accounts_page.hide()
         self.download_queue_page.hide()
         self.upload_queue_page.show()
-
-
-if __name__ == "__main__":
-    import sys
-
-    app = QtWidgets.QApplication(sys.argv)
-    BuharVideoUploader = QtWidgets.QMainWindow()
-    ui = Ui_BuharVideoUploader()
-    ui.setupUi(BuharVideoUploader)
-    BuharVideoUploader.show()
-    sys.exit(app.exec_())

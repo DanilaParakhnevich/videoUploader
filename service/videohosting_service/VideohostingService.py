@@ -105,17 +105,26 @@ class VideohostingService(ABC):
 
         download_opts = {
             'progress_hooks': [lambda d: prog_hook(d, table_item)],
-            'ffmpeg_location': '/opt/ffmpeg-master-latest-linux64-gpl/bin',
+            'ffmpeg_location': os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin'),
             'outtmpl': f'{StateService.settings.download_dir}/{hosting}/%(title)s.%(ext)s',
             'writeinfojson': True
         }
+
+        if account is not None and isinstance(account.auth, list):
+            cookie_str = ''
+            for auth in account.auth:
+                cookie_str += f'{auth["name"]}={auth["value"]}; '
+            download_opts["http_headers"] = {"Set-Cookie": cookie_str}
 
         if StateService.settings.rate_limit != 0:
             download_opts['ratelimit'] = str(StateService.settings.rate_limit * 1024)
 
         with YoutubeDL(download_opts) as ydl:
             info = ydl.extract_info(url)
-            return f'{StateService.settings.download_dir}/{hosting}/{info["title"]}.{info["video_ext"]}'
+            if 'video_ext' in info:
+                return f'{StateService.settings.download_dir}/{hosting}/{info["title"]}.{info["video_ext"]}'
+            else:
+                return f'{StateService.settings.download_dir}/{hosting}/{info["title"]}.{info["ext"]}'
 
     # Возвращает: 0, если ссылка невалидна; 1, если ссылка валидна и является ссылкой на канал;
     # 2, если ссылка валидна и является ссылкой на видео
@@ -157,15 +166,3 @@ class VideohostingService(ABC):
 
     def validate_special_source(self, account, source_name) -> bool:
         raise NotImplementedError()
-
-
-
-if __name__ == '__main__':
-    download_opts = {
-        'ffmpeg_location': '/opt/ffmpeg-master-latest-linux64-gpl/bin',
-        'outtmpl': f'/home/dendil/Documents/Projects/Own/BuxarVideoUploader/temp/1.%(ext)s',
-        'writeinfojson': True
-    }
-
-    with YoutubeDL(download_opts) as ydl:
-        ydl.extract_info('https://www.youtube.com/watch?v=1_4jfqYOi6w&ab_channel=%D0%BD%D0%B5%D0%B1%D1%83%D0%B4%D0%B8')

@@ -49,7 +49,6 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
         self.horizontalHeader().setStyleSheet('QHeaderView::section {border-bottom: 1px solid black;}')
         add_button.clicked.connect(self.on_add)
 
-        _translate = QtCore.QCoreApplication.translate
         item = self.horizontalHeaderItem(0)
         item.setText(get_str('videohosting'))
         item = self.horizontalHeaderItem(1)
@@ -58,7 +57,7 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
         item.setText(get_str('delete'))
         add_button.setText(get_str('add'))
 
-        self.url_edit.setPlaceholderText(_translate("BuharVideoUploader", get_str('link_on_the_channel')))
+        self.url_edit.setPlaceholderText(get_str('link_on_the_channel'))
 
         for channel in self.channels:
             self.insertRow(self.rowCount())
@@ -88,7 +87,7 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
         validate_result = Hosting[self.comboBox.currentText()].value[0].validate_page(self.url_edit.text())
 
         if validate_result != 1:
-            msg.setText('channel_validation_failed')
+            msg.setText(get_str('channel_validation_failed'))
             msg.exec_()
             error(msg.text())
             return

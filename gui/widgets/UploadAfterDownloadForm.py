@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import (QDialog, QPushButton, QLabel, QSpinBox, QGridLayout, QComboBox)
+from service.LocalizationService import *
 
 
 class UploadAfterDownloadForm(QDialog):
@@ -9,32 +10,32 @@ class UploadAfterDownloadForm(QDialog):
 
 	def __init__(self, parent):
 		super().__init__(parent)
-		self.setWindowTitle(f'Выгружать видео после скачивания?')
+		self.setWindowTitle(get_str('upload_video_after_download'))
 		self.resize(500, 120)
 
 		layout = QGridLayout()
 
-		label_name = QLabel('<font size="4"> Интервал </font>')
+		label_name = QLabel(f'<font size="4"> {get_str("interval")} </font>')
 		self.time_edit = QSpinBox()
 		layout.addWidget(label_name, 0, 0)
 		layout.addWidget(self.time_edit, 0, 1)
 		self.time_type_edit = QComboBox()
 
-		self.time_type_edit.addItem('Минуты')
-		self.time_type_edit.addItem('Часы')
-		self.time_type_edit.addItem('Дни')
-		self.time_type_edit.addItem('Месяца')
+		self.time_type_edit.addItem(get_str('minutes'))
+		self.time_type_edit.addItem(get_str('hours'))
+		self.time_type_edit.addItem(get_str('days'))
+		self.time_type_edit.addItem(get_str('months'))
 
 		self.time_type_edit.setCurrentIndex(0)
 
 		layout.addWidget(self.time_type_edit, 0, 2)
 
-		yes_button = QPushButton('Да')
+		yes_button = QPushButton(get_str('yes'))
 		yes_button.clicked.connect(self.on_yes)
 		layout.addWidget(yes_button, 2, 0, 1, 2)
 		layout.setRowMinimumHeight(2, 75)
 
-		no_button = QPushButton('Нет')
+		no_button = QPushButton(get_str('no'))
 		no_button.clicked.connect(self.on_no)
 		layout.addWidget(no_button, 2, 1, 1, 2)
 		layout.setRowMinimumHeight(2, 75)

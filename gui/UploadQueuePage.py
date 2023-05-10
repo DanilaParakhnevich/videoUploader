@@ -1,4 +1,6 @@
 import os.path
+import time
+
 from PyQt5 import QtCore, QtWidgets
 
 from service.QueueMediaService import QueueMediaService
@@ -20,8 +22,6 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
     upload_thread_dict = {}
 
     def __init__(self, central_widget):
-        _translate = QtCore.QCoreApplication.translate
-
         super(UploadQueuePageWidget, self).__init__(central_widget)
         self.setMinimumSize(QtCore.QSize(0, 440))
         self.setObjectName("upload_queue_page_widget")
@@ -39,7 +39,6 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         self.setHorizontalHeaderItem(4, item)
         self.horizontalHeader().setDefaultSectionSize(186)
 
-        _translate = QtCore.QCoreApplication.translate
         item = self.horizontalHeaderItem(0)
         item.setText(get_str('video'))
         item = self.horizontalHeaderItem(1)
@@ -67,6 +66,9 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         for queue_media in self.queue_media_list:
             if queue_media.upload_date is not None and queue_media.upload_date < datetime.now() \
                     and queue_media.status == 0:
+
+                time.sleep(5)
+
                 queue_media.status = 1
                 self.state_service.save_upload_queue_media(self.queue_media_list)
                 upload_thread = Thread(target=self.upload_video, daemon=True, args=[queue_media])

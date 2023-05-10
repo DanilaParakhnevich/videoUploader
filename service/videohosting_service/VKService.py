@@ -3,7 +3,6 @@ from service.StateService import StateService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
 from gui.widgets.AuthenticationConfirmationForm import AuthenticationConfirmationForm
-from PyQt5.QtWidgets import QTableWidgetItem
 import vk_api
 from _datetime import datetime
 import requests

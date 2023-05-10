@@ -1,3 +1,5 @@
+import time
+
 from service.videohosting_service.VideohostingService import VideohostingService
 from yt_dlp import YoutubeDL
 from model.VideoModel import VideoModel
@@ -38,6 +40,8 @@ class DTubeService(VideohostingService):
             page.type('input[name=username]', login)
             page.type('input[name=privatekey]', password)
             page.keyboard.press('Enter')
+
+            time.sleep(5)
 
             if page.url == 'https://d.tube/#!/login':
                 raise Exception('Неправильные данные')

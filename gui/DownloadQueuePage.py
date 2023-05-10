@@ -8,6 +8,7 @@ from PyQt5.QtCore import QTimer
 from service.LoggingService import *
 from service.LocalizationService import *
 import traceback
+import time
 
 
 class DownloadQueuePageWidget(QtWidgets.QTableWidget):
@@ -19,8 +20,6 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
     download_thread_dict = {}
 
     def __init__(self, central_widget):
-        _translate = QtCore.QCoreApplication.translate
-
         super(DownloadQueuePageWidget, self).__init__(central_widget)
         self.setMinimumSize(QtCore.QSize(0, 440))
         self.setObjectName("download_queue_page_widget")
@@ -36,15 +35,14 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
         self.setHorizontalHeaderItem(3, item)
         self.horizontalHeader().setDefaultSectionSize(232)
 
-        _translate = QtCore.QCoreApplication.translate
         item = self.horizontalHeaderItem(0)
-        item.setText(_translate("BuharVideoUploader", get_str('link')))
+        item.setText(get_str('link'))
         item = self.horizontalHeaderItem(1)
-        item.setText(_translate("BuharVideoUploader", get_str('status')))
+        item.setText(get_str('status'))
         item = self.horizontalHeaderItem(2)
-        item.setText(_translate("BuharVideoUploader", get_str('action')))
+        item.setText(get_str('action'))
         item = self.horizontalHeaderItem(3)
-        item.setText(_translate("BuharVideoUploader", get_str('delete')))
+        item.setText(get_str('delete'))
 
         for queue_media in self.queue_media_list:
             self.insert_queue_media(queue_media)
@@ -86,6 +84,8 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
     def download_video(self, media):
         try:
+            time.sleep(3)
+
             self.set_media_status(media.url, 1, get_str('process'))
             video_dir = Hosting[media.hosting].value[0].download_video(
                 url=media.url,
@@ -95,7 +95,8 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             if media.upload_after_download:
                 self.queue_media_service.add_to_the_upload_queue(UploadQueuedMedia(video_dir=video_dir,
                                                                                    hosting=media.upload_account.hosting,
-                                                                                   status=0, account=media.upload_account,
+                                                                                   status=0,
+                                                                                   account=media.upload_account,
                                                                                    destination=media.upload_destination,
                                                                                    upload_date=media.upload_date))
 
@@ -116,10 +117,15 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
         input_position = self.rowCount() - 1
 
         item1 = QtWidgets.QTableWidgetItem(queue_media.url)
+        action_button = QtWidgets.QPushButton(self)
         if queue_media.status == 0:
             item2 = QtWidgets.QTableWidgetItem(get_str('pause'))
+            action_button.setText('+')
         elif queue_media.status == 1:
             item2 = QtWidgets.QTableWidgetItem(get_str('process'))
+            action_button.setText('+')
+            # action_button.clicked.connect(self.start_download)
+            # action_button.clicked.connect(self)
 
             if queue_media.url not in self.download_thread_dict.keys():
                 download_video_thread = Thread(target=self.download_video, daemon=True, args=[queue_media])
@@ -128,11 +134,13 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
         elif queue_media.status == 2:
             item2 = QtWidgets.QTableWidgetItem(get_str('end'))
+            action_button.setText('+')
+            # action_button.clicked.connect()
         else:
             item2 = QtWidgets.QTableWidgetItem(get_str('error'))
+            action_button.setText('+')
+            # action_button.clicked.connect()
 
-        action_button = QtWidgets.QPushButton(self)
-        action_button.setText('+')
         self.setCellWidget(input_position, 2, action_button)
 
         delete_button = QtWidgets.QPushButton(self)
@@ -143,6 +151,22 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
         self.setItem(input_position, 0, item1)
         self.setItem(input_position, 1, item2)
+
+    def start_download(self):
+        button = self.sender()
+        if button:
+            row = self.indexAt(button.pos()).row()
+            href = self.item(row, 0).text()
+            self.set_media_status(href, 1)
+
+            for media in self.queue_media_list:
+                if media.url == href and media.status != 1:
+                    media.status = 1
+                    self.state_service.save_download_queue_media(self.queue_media_list)
+                    download_video_thread = Thread(target=self.download_video, daemon=True, args=[media])
+
+                    self.download_thread_dict[media.url] = download_video_thread
+                    download_video_thread.start()
 
     def set_media_status(self, url, status, status_name):
         i = 0
@@ -170,4 +194,4 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             self.state_service.save_download_queue_media(self.queue_media_list)
             if url in self.download_thread_dict:
                 self.download_thread_dict[url].join()
-                del self.download_thread_dict[url]
+                self.download_thread_dict[url] = None

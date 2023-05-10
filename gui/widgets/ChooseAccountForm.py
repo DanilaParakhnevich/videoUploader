@@ -1,12 +1,13 @@
 from PyQt5.QtWidgets import (QWidget, QDialog, QPushButton, QLabel, QGridLayout, QComboBox)
 
 from service.StateService import StateService
+from service.LocalizationService import *
 
 
 class ChooseAccountForm(QDialog):
     account = None
 
-    def __init__(self, parent: QWidget, accounts, choose_account_text='Выберите аккаунт'):
+    def __init__(self, parent: QWidget, accounts, choose_account_text=get_str('choose_account')):
         super().__init__(parent)
         self.setWindowTitle(choose_account_text)
         self.resize(500, 120)
@@ -23,7 +24,7 @@ class ChooseAccountForm(QDialog):
         layout.addWidget(label_name, 0, 0)
         layout.addWidget(self.combo_box, 0, 1)
 
-        button_login = QPushButton('Выбрать')
+        button_login = QPushButton(get_str('choose'))
         button_login.clicked.connect(self.choose_account)
         layout.addWidget(button_login, 3, 0, 1, 2)
         layout.setRowMinimumHeight(3, 75)

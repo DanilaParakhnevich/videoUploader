@@ -42,14 +42,13 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
 
         add_button.clicked.connect(self.on_add)
 
-        _translate = QtCore.QCoreApplication.translate
         item = self.horizontalHeaderItem(0)
-        item.setText(_translate("BuharVideoUploader", get_str('videohosting')))
+        item.setText(get_str('videohosting'))
         item = self.horizontalHeaderItem(1)
-        item.setText(_translate("BuharVideoUploader", get_str('login')))
+        item.setText(get_str('login'))
         item = self.horizontalHeaderItem(2)
-        item.setText(_translate("BuharVideoUploader", get_str('delete')))
-        add_button.setText(_translate("BuharVideoUploader", get_str('add')))
+        item.setText(get_str('delete'))
+        add_button.setText(get_str('add'))
 
         for account in self.accounts:
             self.insertRow(self.rowCount())

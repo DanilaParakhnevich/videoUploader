@@ -23,7 +23,9 @@ class TikTokService(VideohostingService):
 
             stream_boxes = page.locator("//div[contains(@class, 'tiktok-x6y88p-DivItemContainerV2')]")
             for box in stream_boxes.element_handles():
-                result.append(VideoModel(url=box.query_selector('.tiktok-yz6ijl-DivWrapper').query_selector('a').get_attribute('href'), name=box.query_selector('.tiktok-1wrhn5c-AMetaCaptionLine').get_attribute('title'), date='Нет информации'))
+                result.append(VideoModel(url=box.query_selector('.tiktok-yz6ijl-DivWrapper').query_selector('a').get_attribute('href'),
+                                         name=box.query_selector('.tiktok-1wrhn5c-AMetaCaptionLine').get_attribute('title'),
+                                         date='Нет информации'))
 
         return result
 

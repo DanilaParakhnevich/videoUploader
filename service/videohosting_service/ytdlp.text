@@ -1,2 +1,0 @@
-pip3 install yt-dlp
-python3 -m pip install -U https://github.com/flashdagger/ytdlp-plugins/archive/refs/heads/dtube.zip

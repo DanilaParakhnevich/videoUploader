@@ -41,9 +41,11 @@ class TelegramService(VideohostingService):
         app = Client(name=phone_number, api_id=self.api_id, api_hash=self.api_hash, workdir='service/videohosting_service/tmp')
 
         app.connect()
-        sent_code_info = app.send_code(phone_number)
-        phone_code = self.handle_auth()
-        app.sign_in(phone_number, sent_code_info.phone_code_hash, phone_code)
+        if app.is_connected is False:
+            sent_code_info = app.send_code(phone_number)
+            phone_code = self.handle_auth()
+
+            app.sign_in(phone_number, sent_code_info.phone_code_hash, phone_code)
 
         return True
 

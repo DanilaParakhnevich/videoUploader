@@ -16,6 +16,12 @@ class StateService(object):
     def __init__(self):
         self.q_settings = QSettings('BuharVideoUploaderSettings')
 
+    def is_first_launch(self) -> bool:
+        return self.q_settings.value('first_launch')
+
+    def set_first_launch(self, first_launch: bool):
+        self.q_settings.setValue('first_launch', first_launch)
+
     # Channels
     def save_channels(self, channels):
         StateService.channels = channels

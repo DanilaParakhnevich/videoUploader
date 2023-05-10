@@ -64,35 +64,43 @@ class SettingsPage(QtWidgets.QDialog):
         self.choose_dir_button.setObjectName("choose_dir_button")
         self.choose_dir_button.setMaximumWidth(200)
         self.choose_dir_button.clicked.connect(self.pick_new)
-        self.gridLayout.addWidget(self.choose_dir_button, 5, 1)
+        self.gridLayout.addWidget(self.choose_dir_button, 4, 1)
         self.choose_dir_label = QtWidgets.QLabel(self.settings_box)
         self.choose_dir_label.setObjectName("choose_dir_label")
-        self.gridLayout.addWidget(self.choose_dir_label, 5, 0)
+        self.gridLayout.addWidget(self.choose_dir_label, 4, 0)
+
+        self.add_localization_button = QtWidgets.QPushButton(self.settings_box)
+        self.add_localization_button.setObjectName("add_localization_button")
+        self.add_localization_button.setMaximumWidth(200)
+        self.add_localization_button.clicked.connect(self.add_locale)
+        self.gridLayout.addWidget(self.add_localization_button, 5, 1)
+        self.add_localization_label = QtWidgets.QLabel(self.settings_box)
+        self.add_localization_label.setObjectName("add_localization_label")
+        self.gridLayout.addWidget(self.add_localization_label, 5, 0)
 
         self.rate_limit_label = QtWidgets.QLabel(get_str('download_video_speed_limit'))
         self.rate_limit_edit = QtWidgets.QLineEdit()
         self.rate_limit_edit.setValidator(QIntValidator(0, 99999))
         self.rate_limit_edit.setMaximumWidth(150)
         self.rate_limit_edit.setText(str(self.old_settings.rate_limit))
-        self.gridLayout.addWidget(self.rate_limit_label, 7, 0)
-        self.gridLayout.addWidget(self.rate_limit_edit, 7, 1)
+        self.gridLayout.addWidget(self.rate_limit_label, 6, 0)
+        self.gridLayout.addWidget(self.rate_limit_edit, 6, 1)
 
         self.save_button = QtWidgets.QPushButton(self.settings_box)
         self.save_button.setObjectName("save_button")
         self.save_button.setMaximumWidth(80)
         self.save_button.clicked.connect(self.on_save)
-        self.gridLayout.addWidget(self.save_button, 8, 0)
+        self.gridLayout.addWidget(self.save_button, 7, 0)
 
         self.autostart = QtWidgets.QCheckBox(self.settings_box)
         self.autostart.setObjectName("autostart")
         self.autostart.setChecked(self.old_settings.autostart)
-        self.gridLayout.addWidget(self.autostart, 8, 1)
+        self.gridLayout.addWidget(self.autostart, 7, 1)
 
         self.retranslate_ui()
 
     def retranslate_ui(self):
-        _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("Settings", get_str('settings_page')))
+        self.setWindowTitle(get_str('settings_page'))
         self.main_settings.setText(f'{get_str("system_settings")}:')
         self.language_label.setText(get_str('language'))
         self.download_strategy_label.setText(get_str('download_strategy'))
@@ -100,6 +108,7 @@ class SettingsPage(QtWidgets.QDialog):
         self.rate_limit_label.setText(get_str('download_speed_limit'))
         self.autostart.setText(get_str('application_autostart'))
         self.choose_dir_label.setText(get_str('choose_the_download_path'))
+        self.add_localization_label.setText(get_str('add_localization'))
         self.choose_dir_button.setText(self.old_settings.download_dir)
         self.save_button.setText(get_str('save'))
 
@@ -107,6 +116,23 @@ class SettingsPage(QtWidgets.QDialog):
         dialog = QtWidgets.QFileDialog()
         folder_path = dialog.getExistingDirectory(None, get_str('choose_dir'))
         self.choose_dir_button.setText(folder_path)
+
+    def add_locale(self):
+        dialog = QtWidgets.QFileDialog()
+        folder_path = dialog.getOpenFileName(None, get_str('choose_dir'), "", "JSON (*.json)")
+
+        if folder_path[0] is not '':
+            try:
+                add_new_locale(folder_path[0])
+
+                self.language_box.clear()
+
+                for language in get_all_locales():
+                    self.language_box.addItem(language, language)
+            except:
+                msg = QtWidgets.QMessageBox()
+                msg.setText(get_str('bad_locale_file'))
+                msg.exec_()
 
     def on_strategy_changed(self, index):
         if index != 2:
@@ -121,7 +147,12 @@ class SettingsPage(QtWidgets.QDialog):
         if self.old_settings.download_strategy != self.download_strategy_box.currentIndex() \
                 or self.old_settings.pack_count != int(self.pack_count_edit.text()):
             msg = QtWidgets.QMessageBox()
-            msg.setText(get_str('for_applying_settings_need_to_restart'))
+            msg.setText(get_str('for_applying_strategy_settings_need_to_restart'))
+            msg.exec_()
+
+        if self.old_settings.language != self.language_box.currentData():
+            msg = QtWidgets.QMessageBox()
+            msg.setText(get_str('for_applying_localization_settings_need_to_restart'))
             msg.exec_()
 
         self.state_service.save_settings(

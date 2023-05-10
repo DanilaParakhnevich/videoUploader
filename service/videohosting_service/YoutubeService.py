@@ -73,4 +73,4 @@ class YoutubeService(VideohostingService):
 
             page.click(selector='#done-button', timeout=0)
 
-            time.sleep(1_000)
+            time.sleep(1)

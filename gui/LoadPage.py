@@ -2,8 +2,8 @@ import datetime
 from dateutil.relativedelta import relativedelta
 
 from PyQt5 import QtCore, QtWidgets
-from widgets.ChooseHostingForm import ChooseHostingForm
 
+from gui.widgets.ChooseHostingForm import ChooseHostingForm
 from model.LoadQueuedMedia import LoadQueuedMedia
 from model.Hosting import Hosting
 from model.Tab import TabModel
@@ -15,12 +15,9 @@ from service.LocalizationService import *
 from service.QueueMediaService import QueueMediaService
 from threading import Thread
 from service.LoggingService import *
-import asyncio
 
 
 class LoadPageWidget(QtWidgets.QTabWidget):
-
-    _translate = QtCore.QCoreApplication.translate
     state_service = StateService()
     queue_media_service = QueueMediaService()
     tab_models = state_service.get_last_tabs()
@@ -79,10 +76,10 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         tab.channel_box.setGeometry(QtCore.QRect(20, 40, 591, 30))
         tab.channel_box.setObjectName("link_edit")
         add_button = QtWidgets.QPushButton(tab)
-        add_button.setGeometry(QtCore.QRect(620, 40, 51, 30))
+        add_button.setGeometry(QtCore.QRect(620, 40, 75, 30))
         add_button.setObjectName("add_button")
         add_media_to_query_button = QtWidgets.QPushButton(tab)
-        add_media_to_query_button.setGeometry(QtCore.QRect(680, 40, 100, 30))
+        add_media_to_query_button.setGeometry(QtCore.QRect(700, 40, 150, 30))
         add_media_to_query_button.setObjectName('add_media_to_query_button')
         table_widget = QtWidgets.QTableWidget(tab)
         table_widget.setGeometry(QtCore.QRect(20, 80, 500, 421))
@@ -128,7 +125,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 if val:
                     break
 
-            tab_name = self._translate("BuharVideoUploader", f'{get_str("tab")} {index}')
+            tab_name = f'{get_str("tab")} {index}'
             self.setTabText(self.indexOf(tab), tab_name)
 
             self.tab_models.append(TabModel(tab_name, '', Hosting.Youtube.name))
@@ -243,6 +240,12 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
     def create_daemon_for_getting_video_list(self):
 
+        if self.tab_models[self.currentIndex()].channel == None:
+            msg = QtWidgets.QMessageBox()
+            msg.setText(get_str('need_pick_some_channel'))
+            msg.exec_()
+            return list()
+
         # В существующем потоке выбираем аккаунт, если требуется, тк pyqt запрещает в других потоках
         # создавать формы используя parent widget из текущего потока
         self.channel = self.state_service.get_channel_by_url(self.tab_models[self.currentIndex()].channel)
@@ -263,11 +266,10 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             self.form.exec()
             self.account = self.form.account
 
-        thread = Thread(target=self.get_video_list, daemon=True, args=[asyncio.get_event_loop()])
+        thread = Thread(target=self.get_video_list, daemon=True)
         thread.start()
 
-    def get_video_list(self, event_loop):
-        asyncio.set_event_loop(event_loop)
+    def get_video_list(self):
         service = self.hosting.value[0]
 
         table = self.tables[self.currentIndex()]
