@@ -1,5 +1,6 @@
 from loguru import logger
-import traceback
+
+# Просто обертка над loguru
 
 logger.add('log/app.log', format='{time} {level} {message}', level='DEBUG', rotation='10MB', compression='zip')
 

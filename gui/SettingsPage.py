@@ -31,9 +31,10 @@ class SettingsPage(QtWidgets.QDialog):
 
         self.language_label = QtWidgets.QLabel(get_str('language'))
         self.language_box = QtWidgets.QComboBox()
-        self.language_box.setCurrentText(self.old_settings.language)
         for language in get_all_locales():
             self.language_box.addItem(language, language)
+
+        self.language_box.setCurrentText(self.old_settings.language)
 
         self.gridLayout.addWidget(self.language_label, 1, 0)
         self.gridLayout.addWidget(self.language_box, 1, 1)
@@ -115,7 +116,8 @@ class SettingsPage(QtWidgets.QDialog):
     def pick_new(self):
         dialog = QtWidgets.QFileDialog()
         folder_path = dialog.getExistingDirectory(None, get_str('choose_dir'))
-        self.choose_dir_button.setText(folder_path)
+        if folder_path != '':
+            self.choose_dir_button.setText(folder_path)
 
     def add_locale(self):
         dialog = QtWidgets.QFileDialog()

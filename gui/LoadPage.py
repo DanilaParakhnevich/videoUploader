@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -8,26 +9,28 @@ from model.LoadQueuedMedia import LoadQueuedMedia
 from model.Hosting import Hosting
 from model.Tab import TabModel
 from gui.widgets.ChannelComboBox import ChannelComboBox
-from gui.widgets.SpecialSourceForm import SpecialSourceForm
 from gui.widgets.ChooseAccountForm import ChooseAccountForm
 from gui.widgets.UploadAfterDownloadForm import UploadAfterDownloadForm
+from gui.widgets.LoadingButton import AnimatedButton
 from service.LocalizationService import *
 from service.QueueMediaService import QueueMediaService
 from threading import Thread
 from service.LoggingService import *
+import traceback
 
 
+# Класс страницы выгрузки видео с видеохостингов
 class LoadPageWidget(QtWidgets.QTabWidget):
     state_service = StateService()
     queue_media_service = QueueMediaService()
-    tab_models = state_service.get_last_tabs()
+    tab_models = state_service.get_last_tabs()  # Используются для хранения легких и необходимых данных
     tables = list()
 
     def __init__(self, central_widget):
 
         super(LoadPageWidget, self).__init__(central_widget)
 
-        self.setObjectName("tab_widget")
+        self.setObjectName("load_page")
 
         self.tabCloseRequested.connect(self.remove_tab)
         self.setMovable(True)
@@ -67,6 +70,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         else:
             return self.create_tab(None, channels.__getitem__(0))
 
+    # Этот метод добавляет новую вкладку, либо вкладку по известным данным из tab_models
     def create_tab(self, name, selected_channel):
         tab = QtWidgets.QWidget()
         tab.setObjectName("Tab.py")
@@ -75,7 +79,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         tab.channel_box.setGeometry(QtCore.QRect(20, 40, 591, 30))
         tab.channel_box.setObjectName("link_edit")
-        add_button = QtWidgets.QPushButton(tab)
+        add_button = AnimatedButton(tab)
         add_button.setGeometry(QtCore.QRect(620, 40, 75, 30))
         add_button.setObjectName("add_button")
         add_media_to_query_button = QtWidgets.QPushButton(tab)
@@ -98,7 +102,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         self.insertTab(len(self.tables), tab, "")
 
         add_button.setText(get_str('get'))
-        add_button.clicked.connect(self.create_daemon_for_getting_video_list)
+        add_button.clicked.connect(lambda: self.create_daemon_for_getting_video_list(add_button))
         add_media_to_query_button.setObjectName("download_button")
         add_media_to_query_button.setText(get_str('add_to_the_queue'))
         item = table_widget.horizontalHeaderItem(0)
@@ -110,9 +114,11 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         item = table_widget.horizontalHeaderItem(3)
         item.setText(get_str("is_download"))
 
+        # Тут определяется, существующая вкладка ли
         if name:
             self.setTabText(self.indexOf(tab), name)
         else:
+            # Если нет, то даем ей кастомное имя
             index = len(self.tab_models) + 1
 
             while True:
@@ -124,7 +130,6 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                         break
                 if val:
                     break
-
             tab_name = f'{get_str("tab")} {index}'
             self.setTabText(self.indexOf(tab), tab_name)
 
@@ -147,12 +152,13 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         upload_after_download_form = UploadAfterDownloadForm(self)
         upload_after_download_form.exec_()
 
-        upload_on = upload_after_download_form.upload_flag
-        upload_time_type = upload_after_download_form.upload_interval_type
-        upload_interval = upload_after_download_form.upload_interval
+        upload_on = upload_after_download_form.upload_flag  # нужна ли выгрузка на хостинги после загрузки
+        upload_time_type = upload_after_download_form.upload_interval_type  # тип интервала выгрузки после загрузки (мин, часы, дни, мес)
+        upload_interval = upload_after_download_form.upload_interval  # сам интервал выгрузки после загрузки
 
         upload_account = None
         if upload_on:
+            # В случае если выгрузка необходима, нужно выбрать хостинг для выгрузки и соответственно аккаунт
             choose_hosting_form = ChooseHostingForm(self)
             choose_hosting_form.exec_()
 
@@ -177,18 +183,21 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         current_media_query = self.state_service.get_download_queue_media()
 
-        service = self.hosting.value[0]
+        hosting = Hosting[self.tab_models[self.currentIndex()].hosting]
+        service = hosting.value[0]
 
         source = None
 
-        if service.need_to_be_uploaded_to_special_source():
-            sourceForm = SpecialSourceForm(self, self.hosting, service, self.account)
-            sourceForm.exec_()
-
-            if sourceForm.passed:
-                source = sourceForm.source_edit.text()
-            else:
-                return
+        # if upload_on and service.need_to_be_uploaded_to_special_source():
+        #     # В некоторых ситуациях, допустим с Telegram, для выгрузки необходимо указать дополнительную информацию
+        #     # такую, как то, на какой именно канал по аккаунту нужно выгружать видео
+        #     source_form = SpecialSourceForm(self, hosting, service, upload_account)
+        #     source_form.exec_()
+        #
+        #     if source_form.passed:
+        #         source = source_form.source_edit.text()
+        #     else:
+        #         return
 
         new_media = list()
         upload_date = datetime.datetime.now()
@@ -208,18 +217,19 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             if is_exist:
                 continue
 
-            self.channel = self.state_service.get_channel_by_url(self.tab_models[self.currentIndex()].channel)
-            self.hosting = Hosting[self.channel.hosting]
+            channel = self.state_service.get_channel_by_url(self.tab_models[self.currentIndex()].channel)
+            hosting = Hosting[channel.hosting]
 
             queue_media = LoadQueuedMedia(url=table.item(i, 1).text(),
-                                          account=self.account,
-                                          hosting=self.hosting.name,
+                                          account=self.tab_models[self.currentIndex()].account,
+                                          hosting=hosting.name,
                                           status=0,
                                           upload_after_download=upload_on,
                                           upload_destination=source,
                                           upload_date=upload_date,
                                           upload_account=upload_account)
 
+            # Если необходима выгрузка, учитывается интервал выгрузки, исходя из типа интервала. 1 видео выгружается сразу
             if upload_on:
                 if upload_time_type == 0:
                     upload_date = upload_date + relativedelta(minutes=upload_interval)
@@ -235,12 +245,16 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         self.queue_media_service.add_to_the_download_queue(new_media)
 
     def on_channel_changed(self, item):
-        self.tab_models[self.currentIndex()].channel = item
-        self.state_service.save_tabs_state(self.tab_models)
+        if item != '':
+            self.tab_models[self.currentIndex()].channel = item
+            self.tab_models[self.currentIndex()].hosting = self.state_service.get_channel_by_url(item).hosting
+            self.state_service.save_tabs_state(self.tab_models)  # Каждый раз, когда меняются данные, они сохраняются
 
-    def create_daemon_for_getting_video_list(self):
+    def create_daemon_for_getting_video_list(self, button: AnimatedButton):
 
-        if self.tab_models[self.currentIndex()].channel == None:
+        button.start_animation()
+
+        if self.tab_models[self.currentIndex()].channel == None or self.tab_models[self.currentIndex()].channel == '':
             msg = QtWidgets.QMessageBox()
             msg.setText(get_str('need_pick_some_channel'))
             msg.exec_()
@@ -248,29 +262,39 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         # В существующем потоке выбираем аккаунт, если требуется, тк pyqt запрещает в других потоках
         # создавать формы используя parent widget из текущего потока
-        self.channel = self.state_service.get_channel_by_url(self.tab_models[self.currentIndex()].channel)
-        self.hosting = Hosting[self.channel.hosting]
-        self.account = None
+        channel = state_service.get_channel_by_url(self.tab_models[self.currentIndex()].channel)
+        hosting = Hosting[self.tab_models[self.currentIndex()].hosting]
+        account = None
 
-        accounts = self.state_service.get_accounts_by_hosting(self.hosting.name)
+        accounts = self.state_service.get_accounts_by_hosting(hosting.name)
 
-        if len(accounts) == 0 and self.hosting.value[1]:
+        if len(accounts) == 0 and hosting.value[1]:
             msg = QtWidgets.QMessageBox()
             msg.setText(get_str('need_authorize'))
             msg.exec_()
             return list()
         elif len(accounts) == 1:
-            self.account = accounts[0]
+            account = accounts[0]
         elif len(accounts) > 1:
             self.form = ChooseAccountForm(parent=self.parentWidget(), accounts=accounts)
             self.form.exec()
-            self.account = self.form.account
+            account = self.form.account
 
-        thread = Thread(target=self.get_video_list, daemon=True)
+        self.tab_models[self.currentIndex()].account = account
+
+        event_loop = None
+
+        if hosting.value[0].is_async():
+            event_loop = asyncio.get_event_loop()
+
+        thread = Thread(target=self.get_video_list, daemon=True, args=[button, hosting, channel, account, event_loop])
         thread.start()
 
-    def get_video_list(self):
-        service = self.hosting.value[0]
+    def get_video_list(self, button: AnimatedButton, hosting, channel, account, event_loop):
+        if event_loop is not None:
+            asyncio.set_event_loop(event_loop)
+
+        service = hosting.value[0]
 
         table = self.tables[self.currentIndex()]
 
@@ -279,7 +303,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         index = 0
         try:
-            for video in service.get_videos_by_url(url=self.channel.url, account=self.account):
+            for video in service.get_videos_by_url(url=channel.url, account=account):
                 table.insertRow(index)
 
                 item1 = QtWidgets.QTableWidgetItem(video.name)
@@ -301,3 +325,5 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             msg.setText(get_str('happened_error'))
             msg.exec_()
             log_error(traceback.format_exc())
+
+        button.stop_animation()

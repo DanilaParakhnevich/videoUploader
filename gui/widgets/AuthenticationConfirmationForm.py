@@ -2,6 +2,8 @@ from PyQt5.QtWidgets import (QDialog, QPushButton, QLabel, QLineEdit, QGridLayou
 from service.LocalizationService import *
 
 
+# Эта форма предназначена для автоматизированной авторизации и используется в реализациях метода login наследников
+# VideohostingService
 class AuthenticationConfirmationForm(QDialog):
 	def __init__(self, parent):
 		super().__init__(parent)
@@ -22,9 +24,6 @@ class AuthenticationConfirmationForm(QDialog):
 		layout.setRowMinimumHeight(2, 75)
 
 		self.setLayout(layout)
-
-	def close(self) -> bool:
-		return super().close()
 
 	def exit(self):
 		self.close()

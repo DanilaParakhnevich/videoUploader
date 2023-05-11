@@ -49,7 +49,7 @@ class YandexDzenService(VideohostingService):
 
             return page.context.cookies()
 
-    def upload_video(self, account, file_path, name, description):
+    def upload_video(self, account, file_path, name, description, destination=None):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=True)
             context.add_cookies(account.auth)

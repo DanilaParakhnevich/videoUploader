@@ -89,7 +89,7 @@ class VKService(VideohostingService):
 
         return response
 
-    def upload_video(self, account, file_path, name, description):
+    def upload_video(self, account, file_path, name, description, destination=None):
         vk_session = vk_api.VkApi(token=account.auth['access_token'])
 
         vk_upload = vk_api.VkUpload(vk_session)

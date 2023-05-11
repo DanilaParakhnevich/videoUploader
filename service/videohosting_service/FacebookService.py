@@ -54,7 +54,7 @@ class FacebookService(VideohostingService):
             page.wait_for_selector('#mbasic_inline_feed_composer', timeout=0)
             return page.context.cookies()
 
-    def upload_video(self, account, file_path, name, description):
+    def upload_video(self, account, file_path, name, description, destination=None):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=True)
             context.add_cookies(account.auth)

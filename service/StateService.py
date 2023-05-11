@@ -2,8 +2,7 @@ from PyQt5.QtCore import QSettings
 from model.Settings import Settings
 import os
 
-# Этот класс предназначен для сохранения данных,
-# необходимых для дальнейшей работы приложения
+# Этот класс предназначен для сохранения данных, необходимых для дальнейшей работы приложения
 class StateService(object):
 
     accounts = None
@@ -36,6 +35,13 @@ class StateService(object):
 
         return StateService.channels
 
+    def get_channel_by_hosting(self, hosting: str):
+        result = list()
+        for channel in self.channels:
+            if channel.hosting == hosting:
+                result.append(channel)
+        return result
+
     def get_channel_by_url(self, url):
         for channel in self.channels:
             if channel.url == url:
@@ -56,7 +62,7 @@ class StateService(object):
 
         return StateService.accounts
 
-    def get_accounts_by_hosting(self, hosting):
+    def get_accounts_by_hosting(self, hosting: str):
         result = list()
         for account in self.accounts:
             if account.hosting == hosting:
@@ -114,6 +120,7 @@ class StateService(object):
             StateService.settings = self.q_settings.value('settings')
 
             if StateService.settings is None:
+                # Настройки по-умолчанию
                 StateService.settings = Settings(language='Русский', download_strategy=0, autostart=False,
                                                  download_dir=os.pardir.__str__(), rate_limit=0, pack_count=5)
 

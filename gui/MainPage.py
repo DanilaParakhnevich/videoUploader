@@ -8,6 +8,7 @@ from gui.SettingsPage import SettingsPage
 from service.LocalizationService import *
 
 
+# Этот класс хранит в себе все страницы с логикой
 class Ui_BuharVideoUploader(object):
     def __init__(self):
         self.currentOption = None
@@ -93,9 +94,8 @@ class Ui_BuharVideoUploader(object):
         self.settings_dialog.exec_()
 
     def show_load_page(self):
-        # Делаем кнопку с синей рамкой
         self.load_button.setStyleSheet("border: 2px solid blue; border-radius: 5px")
-        # Сбросить стили других кнопок
+
         self.channels_button.setStyleSheet("")
         self.accounts_button.setStyleSheet("")
         self.download_queue_page_button.setStyleSheet("")
@@ -110,7 +110,6 @@ class Ui_BuharVideoUploader(object):
     def show_channels_page(self):
         self.channels_button.setStyleSheet("border: 2px solid blue; border-radius: 5px")
 
-        # Сбросить стили других кнопок
         self.load_button.setStyleSheet("")
         self.accounts_button.setStyleSheet("")
         self.download_queue_page_button.setStyleSheet("")

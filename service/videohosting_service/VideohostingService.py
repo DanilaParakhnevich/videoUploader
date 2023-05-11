@@ -17,6 +17,7 @@ import os
 import time
 
 
+# Класс-родитель всех классов с основной логикой загрузки/выгрузки/авторизации
 class VideohostingService(ABC):
 
     __metaclass__ = abc.ABCMeta
@@ -37,8 +38,7 @@ class VideohostingService(ABC):
         '--disable-blink-features=AutomationControlled',
     ]
 
-    downloading_videos = {}
-
+    # см метод validate_page
     video_regex = None
     channel_regex = None
 
@@ -89,7 +89,7 @@ class VideohostingService(ABC):
         if self.description_size_restriction is not None and size(description) > self.description_size_restriction:
             raise DescriptionIsTooLongException(f'Слишком большой размер описания(Ограничение {self.description_size_restriction} символов)')
 
-    def upload_video(self, account, file_path, name, description):
+    def upload_video(self, account, file_path, name, description, destination=None):
         raise NotImplementedError()
 
     def new_context(self, p: Playwright, headless: bool) -> BrowserContext:
@@ -110,6 +110,7 @@ class VideohostingService(ABC):
             'writeinfojson': True
         }
 
+        # Чтобы нормально добавить куки в обычном json, приходится использовать http_headers
         if account is not None and isinstance(account.auth, list):
             cookie_str = ''
             for auth in account.auth:
@@ -166,3 +167,6 @@ class VideohostingService(ABC):
 
     def validate_special_source(self, account, source_name) -> bool:
         raise NotImplementedError()
+
+    def is_async(self) -> bool:
+        return False

@@ -7,7 +7,9 @@
   "link_on_the_channel": "Ссылка на канал",
   "channel_already_exists": "Такой канал уже существует",
   "channel_validation_failed": "Канал не прошел валидацию",
-  "pause": "Пауза",
+  "start": "Начать",
+  "stop": "Стоп",
+  "stopped": "Остановлено",
   "process": "Процесс",
   "end": "Завершено",
   "error": "Ошибка",
@@ -77,5 +79,7 @@
   "source": "Источник",
   "choose_source_for": "Выбор источника выгрузки для",
   "need_pick_some_channel": "Необходимо выбрать хотя бы 1 канал",
-  "channel_validation_failed": "Ссылка не прошла валидацию на канал"
+  "adding_video_via_url": "Добавление видео по ссылке",
+  "choose_link": "Введите ссылку на видео",
+  "bad_link": "Ссылка не прошла валидацию"
 }

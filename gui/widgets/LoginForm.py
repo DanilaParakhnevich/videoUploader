@@ -19,6 +19,8 @@ class LoginForm(QDialog):
 
         layout = QGridLayout()
 
+        # В некоторых ситуациях, невозможно при помощи вебдрайвера засетать юсернейм и пароль, поэтому иногда даем
+        # возможность обойтись без пароля и просто дать название аккаунту для дальнейшего использования
         if count == 2:
             label_name = QLabel(f'<font size="4"> {username} </font>')
             self.lineEdit_username = QLineEdit()
@@ -51,6 +53,8 @@ class LoginForm(QDialog):
         msg = QMessageBox()
 
         for account in self.state_service.get_accounts_by_hosting(self.hosting.name):
+            # Логин выступает зачастую как просто название аккаунта. Исключаем возможность добавление идентичных
+            # аккаунтов по 1 хостингу
             if account.login == self.lineEdit_username.text():
                 msg.setText(get_str('account_already_exists'))
                 msg.exec_()

@@ -3,6 +3,10 @@ from pyrogram import Client
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
 from gui.widgets.AuthenticationConfirmationForm import AuthenticationConfirmationForm
+from PyQt5.QtWidgets import QTableWidgetItem
+from service.StateService import StateService
+import json
+import os
 
 
 class TelegramService(VideohostingService):
@@ -12,7 +16,7 @@ class TelegramService(VideohostingService):
 
     def __init__(self):
         self.video_regex = 'https:\/\/t.me/.*\/.*'
-        self.channel_regex = 'https:\/\/t.me\/.*'
+        self.channel_regex = '.*'
         self.upload_video_formats = list(['3g2', '3gp', '3gpp', 'asf', 'avi', 'dat', 'divx', 'dv', 'f4v', 'flv', 'gif',
                                           'm2ts', 'm4v', 'mkv', 'mod', 'mov', 'mp4', 'mpe', 'mpeg', 'mpeg4', 'mpg',
                                           'mts', 'nsv', 'ogm', 'ogv', 'qt', 'tod', 'ts', 'vob', 'wmv'])
@@ -20,12 +24,10 @@ class TelegramService(VideohostingService):
         self.size_restriction = 2 * 1024
 
     def get_videos_by_url(self, url, account=None):
-        app = Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash, workdir='service/videohosting_service/tmp')
-
         result = list()
 
-        with app:
-            for message in app.get_chat_history(chat_id='durov'):
+        with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash, workdir='service/videohosting_service/tmp') as app:
+            for message in app.get_chat_history(chat_id=url):
                 if message.video is not None:
                     result.append(VideoModel(url=message.link, name=message.caption, date=str(message.date)))
 
@@ -41,7 +43,9 @@ class TelegramService(VideohostingService):
         app = Client(name=phone_number, api_id=self.api_id, api_hash=self.api_hash, workdir='service/videohosting_service/tmp')
 
         app.connect()
-        if app.is_connected is False:
+
+        if app.is_initialized is not True:
+
             sent_code_info = app.send_code(phone_number)
             phone_code = self.handle_auth()
 
@@ -49,18 +53,33 @@ class TelegramService(VideohostingService):
 
         return True
 
-    def upload_video(self, account, file_path, name, description):
+    def upload_video(self, account, file_path, name, description, destination=None):
 
-        app = Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
-                     workdir='service/videohosting_service/tmp')
-        app.send_video()
-        # send_video нужно просить написать канал для отправки
-        # app.connect()
-        # sent_code_info = app.send_code(phone_number)
-        # phone_code = self.handle_auth()
-        # app.sign_in(phone_number, sent_code_info.phone_code_hash, phone_code)
+        with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash, workdir='service/videohosting_service/tmp') as app:
+            app.send_video(chat_id=destination, video=file_path, caption=name)
 
-        return True
+    def download_video(self, url, hosting, account=None, table_item: QTableWidgetItem = None):
+
+        with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
+                    workdir='service/videohosting_service/tmp') as app:
+            chat_id = url.split('/')[3]
+            message_id = url.split('/')[4]
+
+            def progress(current, total):
+                table_item.setText(f"{current * 100 / total:.1f}%")
+
+            msg = app.get_messages(chat_id=chat_id, message_ids=int(message_id))
+
+            result = app.download_media(msg,
+                                        file_name=f'{StateService.settings.download_dir}/{hosting}/{chat_id}_{message_id}.mp4',
+                                        progress=progress)
+
+            data = {"name": msg.caption}
+
+            with open(os.path.splitext(result)[0] + '.info.json', 'w') as f:
+                json.dump(data, f)
+
+            return result
 
     def handle_auth(self):
         form = AuthenticationConfirmationForm(self.login_form)
@@ -75,3 +94,6 @@ class TelegramService(VideohostingService):
         app = Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
                      workdir='service/videohosting_service/tmp')
         app.get_chat_history(chat_id=source_name)
+
+    def is_async(self) -> bool:
+        return True

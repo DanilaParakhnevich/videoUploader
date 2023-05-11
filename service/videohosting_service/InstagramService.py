@@ -72,7 +72,7 @@ class InstagramService(VideohostingService):
 
             return page.context.cookies()
 
-    def upload_video(self, account, file_path, name, description):
+    def upload_video(self, account, file_path, name, description, destination=None):
         cl = Client()
         cl.login(account.login, account.password)
         cl.video_upload(file_path, caption=name)

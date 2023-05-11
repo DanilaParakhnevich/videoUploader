@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 
 from model.Hosting import Hosting
+from gui.widgets.LoadingButton import AnimatedButton
 from service.LocalizationService import *
 
 
@@ -35,12 +36,12 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
         self.comboBox.setObjectName("comboBox")
 
         horizontal_layout.addWidget(self.comboBox)
-        add_button = QtWidgets.QPushButton(central_widget)
-        add_button.setObjectName("add_button")
-        horizontal_layout.addWidget(add_button)
+        self.add_button = AnimatedButton(central_widget)
+        self.add_button.setObjectName("add_button")
+        horizontal_layout.addWidget(self.add_button)
         horizontal_layout.setAlignment(QtCore.Qt.AlignBottom)
 
-        add_button.clicked.connect(self.on_add)
+        self.add_button.clicked.connect(self.on_add)
 
         item = self.horizontalHeaderItem(0)
         item.setText(get_str('videohosting'))
@@ -48,7 +49,7 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
         item.setText(get_str('login'))
         item = self.horizontalHeaderItem(2)
         item.setText(get_str('delete'))
-        add_button.setText(get_str('add'))
+        self.add_button.setText(get_str('add'))
 
         for account in self.accounts:
             self.insertRow(self.rowCount())
@@ -67,6 +68,7 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
             self.setItem(input_position, 1, item2)
 
     def on_add(self):
+        self.add_button.start_animation()
         hosting = Hosting[self.comboBox.currentText()]
 
         account = hosting.value[0].show_login_dialog(hosting, self.parentWidget())
@@ -85,6 +87,8 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
 
             self.setItem(input_position, 0, item1)
             self.setItem(input_position, 1, item2)
+
+        self.add_button.stop_animation()
 
     def on_delete_row(self):
         button = self.sender()

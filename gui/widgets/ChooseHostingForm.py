@@ -1,10 +1,10 @@
 from PyQt5.QtWidgets import (QWidget, QDialog, QPushButton, QLabel, QGridLayout, QComboBox)
 
-from service.StateService import StateService
 from service.LocalizationService import *
 from model.Hosting import Hosting
 
 
+# Этот QDialog предназначен для выбора хостинга для выгрузки
 class ChooseHostingForm(QDialog):
     hosting = None
 
@@ -32,7 +32,6 @@ class ChooseHostingForm(QDialog):
         layout.setRowMinimumHeight(3, 75)
 
         self.setLayout(layout)
-        self.state_service = StateService()
 
     def choose_hosting(self):
         self.hosting = self.combo_box.currentData()

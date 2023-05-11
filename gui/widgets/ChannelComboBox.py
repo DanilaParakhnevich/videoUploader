@@ -2,9 +2,11 @@ from PyQt5 import QtWidgets, QtGui
 from service.StateService import StateService
 
 
+# Этот ComboBox предназначен для выбора канала из числа всех доступных
 class ChannelComboBox(QtWidgets.QComboBox):
-    def __init__(self, t, selected_channel):
-        super().__init__(t)
+    # selected_channel - ссылка выбранного канала
+    def __init__(self, parent, selected_channel: str):
+        super().__init__(parent)
         self.selected_channel = selected_channel
         self.state_service = StateService()
 
@@ -17,9 +19,9 @@ class ChannelComboBox(QtWidgets.QComboBox):
     def update_channel_box(self):
         self.clear()
 
-        selected_index = 0
-
         channels = self.state_service.get_channels()
+
+        selected_index = -1
 
         for channel in channels:
             self.addItem(channel.url)

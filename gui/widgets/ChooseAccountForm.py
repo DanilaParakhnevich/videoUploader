@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import (QWidget, QDialog, QPushButton, QLabel, QGridLayout, QComboBox)
 
-from service.StateService import StateService
 from service.LocalizationService import *
 
 
+# Этот QDialog предназначен для выбора аккаунта из числа доступных (см accounts в конструкторе)
 class ChooseAccountForm(QDialog):
     account = None
 

@@ -1,7 +1,6 @@
 from PyQt5 import QtCore, QtWidgets
 
 from model.Hosting import Hosting
-from service.StateService import StateService
 from model.Channel import Channel
 from service.LocalizationService import *
 from logging import *

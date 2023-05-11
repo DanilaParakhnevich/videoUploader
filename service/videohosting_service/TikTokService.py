@@ -42,7 +42,8 @@ class TikTokService(VideohostingService):
             page.wait_for_selector(selector='#main-content-homepage_hot', timeout=0)
             return page.context.cookies()
 
-    def upload_video(self, account, file_path, name, description):
+    # Пришлось использовать готовое чужое решение для выгрузки видео для TikTok, тк на сайте хорошая защита от ботов
+    def upload_video(self, account, file_path, name, description, destination=None):
 
         for cookie in account.auth:
             if cookie['name'] == 'session_id':

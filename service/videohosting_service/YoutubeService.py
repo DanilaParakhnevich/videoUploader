@@ -10,7 +10,7 @@ import scrapetube
 class YoutubeService(VideohostingService):
 
     def __init__(self):
-        self.video_regex = 'https:\/\/www.youtube.com\/watch?v=.*'
+        self.video_regex = 'https:\/\/www.youtube.com\/watch\?v=.*'
         self.channel_regex = '(https:\/\/www.youtube.com\/@.*)|(https:\/\/www.youtube.com\/channel\/)'
 
     def get_videos_by_url(self, url, account=None):
@@ -37,7 +37,7 @@ class YoutubeService(VideohostingService):
 
             return page.context.cookies()
 
-    def upload_video(self, account, file_path, name, description):
+    def upload_video(self, account, file_path, name, description, destination=None):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=True)
             context.add_cookies(account.auth)
