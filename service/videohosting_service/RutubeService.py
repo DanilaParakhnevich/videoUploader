@@ -53,7 +53,7 @@ class RutubeService(VideohostingService):
 
     def upload_video(self, account, file_path, name, description, destination=None):
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=True)
+            context = self.new_context(p=p, headless=False)
             context.add_cookies(account.auth)
 
             page = context.new_page()

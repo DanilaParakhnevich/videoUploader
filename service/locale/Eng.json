@@ -40,7 +40,7 @@
   "choose_dir": "Choose a folder",
   "language": "Language",
   "manually_item": "Manually",
-"serial_item": "Serial",
+  "serial_item": "Serial",
   "parallel_item": "Parallel",
   "pack_count": "Number of packs",
   "download_video_speed_limit": "Video download speed limit",
@@ -81,5 +81,7 @@
   "need_pick_some_channel": "You need to pick at least 1 channel",
   "adding_video_via_url": "Добавление видео по ссылке",
   "choose_link": "Введите ссылку на видео",
-  "bad_link": "Ссылка не прошла валидацию"
+  "bad_link": "Ссылка не прошла валидацию",
+  "need_create_some_upload_channel": "No channels to upload. Needs to be added on the 'Channels' page",
+  "choose_channel_for_uploading": "Choose a channel to upload"
 }

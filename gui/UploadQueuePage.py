@@ -88,7 +88,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 event_loop = None
 
                 if Hosting[queue_media.hosting].value[0].is_async():
-                    event_loop = asyncio.get_event_loop()
+                    event_loop = asyncio.new_event_loop()
 
                 upload_thread = kthread.KThread(target=self.upload_video, daemon=True, args=[queue_media, event_loop])
 
@@ -116,18 +116,20 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 log_error(f'{queue_media.video_dir} - .info.json не найден')
 
             Hosting[queue_media.hosting].value[0].validate_video_info_for_uploading(queue_media.video_dir,
-                                                                                    queue_media.name,
-                                                                                    queue_media.description)
+                                                                                    name,
+                                                                                    description)
 
             self.set_media_status(queue_media.video_dir, 1)
             Hosting[queue_media.hosting].value[0].upload_video(
                 file_path=queue_media.video_dir,
                 account=queue_media.account,
                 name=name,
-                description=description)
+                description=description,
+                destination=queue_media.destination)
+
         except SystemExit:
             self.set_media_status(queue_media.video_dir, 0)
-            self.download_thread_dict.pop(queue_media.video_dir)
+            self.upload_thread_dict.pop(queue_media.video_dir)
             return
         except Exception:
             log_error(traceback.format_exc())
@@ -167,7 +169,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 event_loop = None
 
                 if Hosting[queue_media.hosting].value[0].is_async():
-                    event_loop = asyncio.get_event_loop()
+                    event_loop = asyncio.new_event_loop()
 
                 time.sleep(1)
 
@@ -244,7 +246,8 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             video_dir = self.queue_media_list.pop(row).video_dir
             self.state_service.save_upload_queue_media(self.queue_media_list)
             if video_dir in self.upload_thread_dict:
-                self.upload_thread_dict[video_dir].terminate()
+                if self.upload_thread_dict[video_dir].is_alive():
+                    self.upload_thread_dict[video_dir].terminate()
                 self.upload_thread_dict[video_dir] = None
 
     # Функции для кнопок остановить и начать
@@ -257,7 +260,8 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             self.set_media_status(video_dir, 0)
 
             if video_dir in self.upload_thread_dict:
-                self.upload_thread_dict[video_dir].terminate()
+                if self.upload_thread_dict[video_dir].is_alive():
+                    self.upload_thread_dict[video_dir].terminate()
                 self.upload_thread_dict[video_dir] = None
 
     def on_start_upload(self):
@@ -273,7 +277,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                     event_loop = None
 
                     if Hosting[media.hosting].value[0].is_async():
-                        event_loop = asyncio.get_event_loop()
+                        event_loop = asyncio.new_event_loop()
 
                     upload_video_thread = kthread.KThread(target=self.upload_video, daemon=True, args=[media, event_loop])
 

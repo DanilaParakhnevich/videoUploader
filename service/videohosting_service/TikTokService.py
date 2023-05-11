@@ -46,7 +46,7 @@ class TikTokService(VideohostingService):
     def upload_video(self, account, file_path, name, description, destination=None):
 
         for cookie in account.auth:
-            if cookie['name'] == 'session_id':
+            if cookie['name'] == 'sessionid':
                 uploadVideo(session_id=cookie['value'], video=file_path, title=name, tags=list())
                 return
 

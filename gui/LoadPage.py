@@ -12,6 +12,7 @@ from gui.widgets.ChannelComboBox import ChannelComboBox
 from gui.widgets.ChooseAccountForm import ChooseAccountForm
 from gui.widgets.UploadAfterDownloadForm import UploadAfterDownloadForm
 from gui.widgets.LoadingButton import AnimatedButton
+from gui.widgets.ChooseChannelForm import ChooseChannelForm
 from service.LocalizationService import *
 from service.QueueMediaService import QueueMediaService
 from threading import Thread
@@ -157,6 +158,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         upload_interval = upload_after_download_form.upload_interval  # сам интервал выгрузки после загрузки
 
         upload_account = None
+        upload_target = None
         if upload_on:
             # В случае если выгрузка необходима, нужно выбрать хостинг для выгрузки и соответственно аккаунт
             choose_hosting_form = ChooseHostingForm(self)
@@ -181,23 +183,27 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
             upload_account = choose_account_form.account
 
+            if choose_hosting_form.hosting.value[0].need_to_be_uploaded_to_special_source():
+                # В некоторых ситуациях, допустим с Telegram, для выгрузки необходимо указать дополнительную информацию
+                # такую, как то, на какой именно канал по аккаунту нужно выгружать видео
+
+                channels = self.state_service.get_channel_by_hosting(choose_hosting_form.hosting.name)
+
+                if len(channels) == 0:
+                    msg = QtWidgets.QMessageBox()
+                    msg.setText(get_str('need_create_some_channel'))
+                    msg.exec_()
+                    return
+
+                form = ChooseChannelForm(self, channels)
+                form.exec_()
+
+                if form.passed:
+                    upload_target = form.channel.url
+                else:
+                    return
+
         current_media_query = self.state_service.get_download_queue_media()
-
-        hosting = Hosting[self.tab_models[self.currentIndex()].hosting]
-        service = hosting.value[0]
-
-        source = None
-
-        # if upload_on and service.need_to_be_uploaded_to_special_source():
-        #     # В некоторых ситуациях, допустим с Telegram, для выгрузки необходимо указать дополнительную информацию
-        #     # такую, как то, на какой именно канал по аккаунту нужно выгружать видео
-        #     source_form = SpecialSourceForm(self, hosting, service, upload_account)
-        #     source_form.exec_()
-        #
-        #     if source_form.passed:
-        #         source = source_form.source_edit.text()
-        #     else:
-        #         return
 
         new_media = list()
         upload_date = datetime.datetime.now()
@@ -225,7 +231,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                           hosting=hosting.name,
                                           status=0,
                                           upload_after_download=upload_on,
-                                          upload_destination=source,
+                                          upload_destination=upload_target,
                                           upload_date=upload_date,
                                           upload_account=upload_account)
 
@@ -258,6 +264,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             msg = QtWidgets.QMessageBox()
             msg.setText(get_str('need_pick_some_channel'))
             msg.exec_()
+            button.stop_animation()
             return list()
 
         # В существующем потоке выбираем аккаунт, если требуется, тк pyqt запрещает в других потоках
@@ -272,6 +279,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             msg = QtWidgets.QMessageBox()
             msg.setText(get_str('need_authorize'))
             msg.exec_()
+            button.stop_animation()
             return list()
         elif len(accounts) == 1:
             account = accounts[0]
@@ -285,7 +293,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         event_loop = None
 
         if hosting.value[0].is_async():
-            event_loop = asyncio.get_event_loop()
+            event_loop = asyncio.new_event_loop()
 
         thread = Thread(target=self.get_video_list, daemon=True, args=[button, hosting, channel, account, event_loop])
         thread.start()

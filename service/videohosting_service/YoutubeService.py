@@ -39,7 +39,7 @@ class YoutubeService(VideohostingService):
 
     def upload_video(self, account, file_path, name, description, destination=None):
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=True)
+            context = self.new_context(p=p, headless=False)
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto('https://www.youtube.com/')
@@ -47,6 +47,9 @@ class YoutubeService(VideohostingService):
             page.wait_for_selector('.yt-simple-endpoint.style-scope.ytd-topbar-menu-button-renderer',
                                    timeout=10_000).click()
             page.query_selector_all('.yt-simple-endpoint.style-scope.ytd-compact-link-renderer')[0].click()
+
+            time.sleep(4)
+
             with page.expect_file_chooser() as fc_info:
                 page.query_selector(selector='#select-files-button').click()
             file_chooser = fc_info.value

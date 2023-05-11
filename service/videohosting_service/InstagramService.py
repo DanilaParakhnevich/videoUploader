@@ -68,7 +68,7 @@ class InstagramService(VideohostingService):
             page.type('input[name="username"]', login)
             page.type('input[name="password"]', password)
             page.click('._acap')
-            page.wait_for_selector('._aauo', timeout=0)
+            page.wait_for_selector('._aauo', timeout=10_000)
 
             return page.context.cookies()
 

@@ -74,7 +74,7 @@ class TelegramService(VideohostingService):
                                         file_name=f'{StateService.settings.download_dir}/{hosting}/{chat_id}_{message_id}.mp4',
                                         progress=progress)
 
-            data = {"name": msg.caption}
+            data = {"title": msg.caption}
 
             with open(os.path.splitext(result)[0] + '.info.json', 'w') as f:
                 json.dump(data, f)

@@ -83,7 +83,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                     event_loop = None
 
                     if Hosting[media.hosting].value[0].is_async():
-                        event_loop = asyncio.get_event_loop()
+                        event_loop = asyncio.new_event_loop()
 
                     download_video_thread = kthread.KThread(target=self.download_video, daemon=True, args=[media, event_loop])
 
@@ -98,7 +98,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                     event_loop = None
 
                     if Hosting[media.hosting].value[0].is_async():
-                        event_loop = asyncio.get_event_loop()
+                        event_loop = asyncio.new_event_loop()
 
                     download_video_thread = kthread.KThread(target=self.download_video, daemon=True, args=[media, event_loop])
 
@@ -126,7 +126,6 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                                                                                    account=media.upload_account,
                                                                                    destination=media.upload_destination,
                                                                                    upload_date=media.upload_date))
-
         except SystemExit:
             self.set_media_status(media.url, 0)
             self.download_thread_dict.pop(media.url)
@@ -164,7 +163,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                 event_loop = None
 
                 if Hosting[queue_media.hosting].value[0].is_async():
-                    event_loop = asyncio.get_event_loop()
+                    event_loop = asyncio.new_event_loop()
 
                 time.sleep(1)
 
@@ -253,6 +252,8 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             self.state_service.save_download_queue_media(self.queue_media_list)
 
             if url in self.download_thread_dict:
+                if self.download_thread_dict[url].is_alive():
+                    self.download_thread_dict[url].terminate()
                 self.download_thread_dict[url] = None
 
     # Функции для кнопок остановить и начать
@@ -265,7 +266,8 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             self.set_media_status(url, 0)
 
             if url in self.download_thread_dict:
-                self.download_thread_dict[url].terminate()
+                if self.download_thread_dict[url].is_alive():
+                    self.download_thread_dict[url].terminate()
                 self.download_thread_dict[url] = None
 
     def on_start_download(self):
@@ -281,7 +283,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                     event_loop = None
 
                     if Hosting[media.hosting].value[0].is_async():
-                        event_loop = asyncio.get_event_loop()
+                        event_loop = asyncio.new_event_loop()
 
                     download_video_thread = kthread.KThread(target=self.download_video, daemon=True, args=[media, event_loop])
 

@@ -34,7 +34,7 @@ class DTubeService(VideohostingService):
 
     def login(self, login, password):
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=False)
+            context = self.new_context(p=p, headless=True)
             page = context.new_page()
             page.goto('https://d.tube/#!/login')
             page.type('input[name=username]', login)
@@ -43,7 +43,9 @@ class DTubeService(VideohostingService):
 
             time.sleep(5)
 
-            if page.url == 'https://d.tube/#!/login':
+            try:
+                page.wait_for_selector('.ui.maingrid.content')
+            except:
                 raise Exception('Неправильные данные')
 
             return page.context.cookies()

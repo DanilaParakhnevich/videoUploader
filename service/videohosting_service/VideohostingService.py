@@ -71,13 +71,14 @@ class VideohostingService(ABC):
             return round(size, 3)
 
         def validate_format():
-            return self.upload_video_formats.__contains__(os.path.splitext(video_dir)[1])
+            if len(self.upload_video_formats) != 0:
+                return self.upload_video_formats.__contains__(os.path.splitext(video_dir)[1].replace('.', ''))
 
-        if (clip.duration / 60) > self.duration_restriction:
+        if self.duration_restriction is not None and (clip.duration / 60) > self.duration_restriction:
             raise VideoDurationException(f'Продолжительность ролика слишком большая ({clip.duration} > {self.duration_restriction})')
 
         size = get_size()
-        if size > self.size_restriction:
+        if self.size_restriction is not None and size > self.size_restriction:
             raise FileSizeException(f'Размер файла слишком большой ({size} > {self.size_restriction})')
 
         if validate_format() is False:

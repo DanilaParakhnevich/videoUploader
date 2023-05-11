@@ -18,7 +18,7 @@ from service.videohosting_service.InstagramService import InstagramService
 class Hosting(enum.Enum):
     Youtube = [YoutubeService(), False]
     TikTok = [TikTokService(), True]
-    Instagram = [InstagramService(), False]
+    Instagram = [InstagramService(), True]
     Facebook = [FacebookService(), True]
     YandexDzen = [YandexDzenService(), False]
     VK = [VKService(), True]
