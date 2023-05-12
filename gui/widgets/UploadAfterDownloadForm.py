@@ -33,7 +33,6 @@ class UploadAfterDownloadForm(QDialog):
 		yes_button = QPushButton(get_str('yes'))
 		yes_button.clicked.connect(self.on_yes)
 		layout.addWidget(yes_button, 2, 0, 1, 2)
-		layout.setRowMinimumHeight(2, 75)
 
 		no_button = QPushButton(get_str('no'))
 		no_button.clicked.connect(self.on_no)

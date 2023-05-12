@@ -14,6 +14,7 @@ class InstagramService(VideohostingService):
         self.upload_video_formats = list(['mp4', 'mov'])
         self.duration_restriction = 1
         self.size_restriction = 100
+        self.title_size_restriction = 2_200
 
     def get_videos_by_url(self, url, account=None):
         result = list()

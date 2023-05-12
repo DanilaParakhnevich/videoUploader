@@ -1,10 +1,8 @@
 import time
 
 from service.videohosting_service.VideohostingService import VideohostingService
-from yt_dlp import YoutubeDL
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
-from datetime import datetime
 from playwright.sync_api import sync_playwright
 
 
@@ -15,16 +13,23 @@ class DTubeService(VideohostingService):
         self.channel_regex = 'https:\/\/d.tube\/#!\/c\/.*'
 
     def get_videos_by_url(self, url, account=None):
-        result = list()
+        with sync_playwright() as p:
+            page = self.new_context(p=p, headless=True).new_page()
 
-        with YoutubeDL(self.extract_info_opts) as ydl:
-            info = ydl.extract_info(url)
-            for item in info['entries']:
-                result.append(VideoModel(url=f'https://d.tube/#!/v/{item["id"]}',
-                                         name=item['title'],
-                                         date=datetime.fromtimestamp(item['timestamp']).__str__()))
+            page.goto('https://d.tube/#!/c/captainbob')
 
-        return result
+            self.scroll_page_to_the_bottom(page=page)
+
+            result = list()
+
+            stream_boxes = page.locator("//div[contains(@class, 'videosnap wid-ful')]")
+            for box in stream_boxes.element_handles():
+                result.append(VideoModel(
+                    url=box.query_selector('a').get_property('href').__str__(),
+                    name=box.query_selector('.customtitlelink').text_content(),
+                    date=box.query_selector('.videosnaptime').text_content().strip()))
+
+            return result
 
     def show_login_dialog(self, hosting, form):
         self.login_form = LoginForm(form, hosting, self, 2, 'Введите логин', 'Введите код')

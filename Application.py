@@ -4,11 +4,9 @@ import os
 import requests
 
 
-
 if __name__ == "__main__":
 
     os.system('PLAYWRIGHT_BROWSERS_PATH=0 playwright install chromium')
-    # os.system('python3 -m pip install -U https://github.com/flashdagger/ytdlp-plugins/archive/refs/heads/dtube.zip')
 
     try:
         open(os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/LICENSE.txt'))

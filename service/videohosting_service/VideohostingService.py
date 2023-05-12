@@ -46,7 +46,7 @@ class VideohostingService(ABC):
     upload_video_formats = list()
     size_restriction = None  # в мегабайтах
     duration_restriction = None  # в минутах
-    name_size_restriction = None
+    title_size_restriction = None
     description_size_restriction = None
 
     @abc.abstractmethod
@@ -61,7 +61,7 @@ class VideohostingService(ABC):
     def login(self, login, password):
         raise NotImplementedError()
 
-    def validate_video_info_for_uploading(self, video_dir, name, description):
+    def validate_video_info_for_uploading(self, video_dir, title=None, description=None):
         clip = VideoFileClip(video_dir)
 
         # Получение размера в мегабайтах
@@ -84,10 +84,10 @@ class VideohostingService(ABC):
         if validate_format() is False:
             raise FileFormatException(f'Неподходящий формат для видеохостинга({clip.filename} не подходит к {self.upload_video_formats.__str__()})')
 
-        if self.name_size_restriction is not None and size(name) > self.name_size_restriction:
-            raise NameIsTooLongException(f'Слишком большой размер названия(Ограничение: {self.name_size_restriction} символов)')
+        if self.title_size_restriction is not None and title is not None and len(title) > self.title_size_restriction:
+            raise NameIsTooLongException(f'Слишком большой размер названия(Ограничение: {self.title_size_restriction} символов)')
 
-        if self.description_size_restriction is not None and size(description) > self.description_size_restriction:
+        if self.description_size_restriction is not None and description is not None and len(description) > self.description_size_restriction:
             raise DescriptionIsTooLongException(f'Слишком большой размер описания(Ограничение {self.description_size_restriction} символов)')
 
     def upload_video(self, account, file_path, name, description, destination=None):

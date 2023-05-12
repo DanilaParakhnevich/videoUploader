@@ -6,8 +6,6 @@ from gui.widgets.ChooseAccountForm import ChooseAccountForm
 from gui.widgets.ChooseLinkForm import ChooseLinkForm
 
 
-# Эта форма предназначена для автоматизированной авторизации и используется в реализациях метода login наследников
-# VideohostingService
 class AddDownloadQueueViaLinkForm(QDialog):
 
     account = None

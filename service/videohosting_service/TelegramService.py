@@ -22,6 +22,7 @@ class TelegramService(VideohostingService):
                                           'mts', 'nsv', 'ogm', 'ogv', 'qt', 'tod', 'ts', 'vob', 'wmv'])
         self.duration_restriction = 240
         self.size_restriction = 2 * 1024
+        self.title_size_restriction = 100
 
     def get_videos_by_url(self, url, account=None):
         result = list()

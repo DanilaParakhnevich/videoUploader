@@ -83,5 +83,15 @@
   "choose_link": "Введите ссылку на видео",
   "bad_link": "Ссылка не прошла валидацию",
   "need_create_some_upload_channel": "Нет каналов для выгрузки. Необходимо добавить на странице 'Каналы'",
-  "choose_channel_for_uploading": "Выберите канал для выгрузки"
+  "choose_channel_for_uploading": "Выберите канал для выгрузки",
+  "add_download_single_video_by_link": "Скачать видео по ссылке",
+  "add_upload_files_by_dir": "Выгрузить видео с директории",
+  "choose_the_dir": "Выберите путь",
+  "bad_dir": "Вы должны выбрать корректный путь",
+  "input_title": "Введите название видео",
+  "input_description": "Введите описание видео",
+  "too_long_title": "Длина названия должна быть меньше, чем ",
+  "too_long_description": "Длина описания должна быть меньше, чем ",
+  "choose_intervals": "Выберите интервал загрузки",
+  "bad_file": "1 из критериев для файла видео не выполнен"
 }

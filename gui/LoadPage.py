@@ -164,7 +164,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             choose_hosting_form = ChooseHostingForm(self)
             choose_hosting_form.exec_()
 
-            if choose_hosting_form.hosting is None:
+            if choose_hosting_form.hosting is None or choose_hosting_form.passed is False:
                 return
 
             accounts = self.state_service.get_accounts_by_hosting(choose_hosting_form.hosting.name)

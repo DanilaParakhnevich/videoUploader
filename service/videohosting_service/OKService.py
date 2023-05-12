@@ -17,6 +17,8 @@ class OKService(VideohostingService):
                                           'mts', 'nsv', 'ogm', 'ogv', 'qt', 'tod', 'ts', 'vob', 'wmv'])
         self.duration_restriction = sys.maxsize
         self.size_restriction = 2 * 1024
+        self.title_size_restriction = 9_999_999_999
+        self.description_size_restriction = 9_999_999_999
 
     def get_videos_by_url(self, url, account=None):
         with sync_playwright() as p:

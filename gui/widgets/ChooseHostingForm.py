@@ -7,6 +7,7 @@ from model.Hosting import Hosting
 # Этот QDialog предназначен для выбора хостинга для выгрузки
 class ChooseHostingForm(QDialog):
     hosting = None
+    passed = False
 
     def __init__(self, parent: QWidget, choose_hosting_text=get_str('choose_hosting')):
         super().__init__(parent)
@@ -35,4 +36,5 @@ class ChooseHostingForm(QDialog):
 
     def choose_hosting(self):
         self.hosting = self.combo_box.currentData()
+        self.passed = True
         self.close()

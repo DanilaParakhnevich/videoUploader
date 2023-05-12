@@ -13,6 +13,7 @@ class YandexDzenService(VideohostingService):
     def __init__(self):
         self.video_regex = 'https:\/\/dzen.ru\/video\/watch\/.*'
         self.channel_regex = 'https:\/\/dzen.ru\/id\/.*'
+        self.title_size_restriction = 200
 
 
     def get_videos_by_url(self, url, account=None):

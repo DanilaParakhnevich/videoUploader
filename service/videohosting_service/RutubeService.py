@@ -18,6 +18,8 @@ class RutubeService(VideohostingService):
 
         self.duration_restriction = 300
         self.size_restriction = 10 * 1024
+        self.title_size_restriction = 100
+        self.description_size_restriction = 5_000
 
     def get_videos_by_url(self, url, account=None):
         result = list()

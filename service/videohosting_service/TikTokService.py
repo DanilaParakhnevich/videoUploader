@@ -10,16 +10,19 @@ class TikTokService(VideohostingService):
     def __init__(self):
         self.video_regex = 'https://www.tiktok.com/.*/video/.*'
         self.channel_regex = 'https://www.tiktok.com/.*'
+        self.title_size_restriction = 2_200
 
     def get_videos_by_url(self, url, account=None):
         result = list()
 
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=False)
+            context = self.new_context(p=p, headless=True)
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto(url)
             page.wait_for_selector('.tiktok-833rgq-DivShareLayoutMain')
+
+            self.scroll_page_to_the_bottom(page=page)
 
             stream_boxes = page.locator("//div[contains(@class, 'tiktok-x6y88p-DivItemContainerV2')]")
             for box in stream_boxes.element_handles():
