@@ -15,7 +15,6 @@ class RutubeService(VideohostingService):
         self.channel_regex = 'https:\/\/rutube.ru\/.*\/videos\/'
         self.upload_video_formats = list(['mp4', 'flv', 'avi', 'mov', 'mpg', 'wmv', 'm4v', 'mp3',
                                           'wma', '3gp', 'mkv', 'webm'])
-
         self.duration_restriction = 300
         self.size_restriction = 10 * 1024
         self.title_size_restriction = 100
@@ -74,7 +73,7 @@ class RutubeService(VideohostingService):
             page.query_selector('[name="title"]').fill('')
             page.query_selector('[name="title"]').type(text=name)
 
-            page.query_selector('[name="description"]').type(description)
+            page.query_selector('[name="description"]').type(description if description is not None else '')
 
             page.click('[name="categories"]')
             page.click('.freyja_char-dropdown-layout__dropdownItem__x8JCK')

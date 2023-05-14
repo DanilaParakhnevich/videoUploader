@@ -14,9 +14,11 @@ class OKService(VideohostingService):
         self.channel_regex = 'https:\/\/ok.ru\/.*\/video'
         self.upload_video_formats = list(['3g2', '3gp', '3gpp', 'asf', 'avi', 'dat', 'divx', 'dv', 'f4v', 'flv', 'gif',
                                           'm2ts', 'm4v', 'mkv', 'mod', 'mov', 'mp4', 'mpe', 'mpeg', 'mpeg4', 'mpg',
-                                          'mts', 'nsv', 'ogm', 'ogv', 'qt', 'tod', 'ts', 'vob', 'wmv'])
+                                          'mts', 'nsv', 'ogm', 'ogv', 'qt', 'tod', 'ts', 'vob', 'wmv', 'webm'])
         self.duration_restriction = sys.maxsize
         self.size_restriction = 2 * 1024
+        self.upload_video_formats = list(['avi', 'mp4', '3gp', 'mpeg', 'mov', 'flv', 'f4v', 'wmv', 'mkv', 'webm', 'vob',
+                                          'rmvb', 'm4v', 'mpg', 'ogv', 'ts', 'm2ts', 'mts', 'mxf', 'torrent'])
         self.title_size_restriction = 9_999_999_999
         self.description_size_restriction = 9_999_999_999
 
@@ -78,7 +80,7 @@ class OKService(VideohostingService):
             page.query_selector('#movie-title').fill('')
             page.query_selector('#movie-title').type(text=name)
 
-            page.query_selector('#movie-description').type(text=description)
+            page.query_selector('#movie-description').type(text=description if description is not None else '')
 
             page.click('.button-pro.js-submit-annotations-form', timeout=0)
 

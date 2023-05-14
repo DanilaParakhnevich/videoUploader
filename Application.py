@@ -24,12 +24,12 @@ if __name__ == "__main__":
     #pyinstaller --add-data "service/locale/*.json:./service/locale/" --add-data "gui/widgets/button_icons/*.gif:./gui/widgets/button_icons/" Application.py
 
     app = QtWidgets.QApplication(sys.argv)
-    BuharVideoUploader = QtWidgets.QMainWindow()
-    BuharVideoUploader.setObjectName('BuharVideoUploader')
+    BuxarVideoUploader = QtWidgets.QMainWindow()
+    BuxarVideoUploader.setObjectName('BuxarVideoUploader')
 
-    from gui.MainPage import Ui_BuharVideoUploader
+    from gui.MainPage import Ui_BuxarVideoUploader
 
-    ui = Ui_BuharVideoUploader()
-    ui.setupUi(BuharVideoUploader)
-    BuharVideoUploader.show()
+    ui = Ui_BuxarVideoUploader()
+    ui.setupUi(BuxarVideoUploader)
+    BuxarVideoUploader.show()
     sys.exit(app.exec_())

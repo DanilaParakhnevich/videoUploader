@@ -9,13 +9,13 @@ from service.LocalizationService import *
 
 
 # Этот класс хранит в себе все страницы с логикой
-class Ui_BuharVideoUploader(object):
+class Ui_BuxarVideoUploader(object):
     def __init__(self):
         self.currentOption = None
         self.main_layout = None
 
     def setupUi(self, ui):
-        ui.setObjectName("BuharVideoUploader")
+        ui.setObjectName("BuxarVideoUploader")
         ui.setWindowModality(QtCore.Qt.ApplicationModal)
         ui.resize(954, 603)
         ui.setMaximumSize(1000, 620)
@@ -72,8 +72,8 @@ class Ui_BuharVideoUploader(object):
         self.retranslate_ui(ui)
         QtCore.QMetaObject.connectSlotsByName(ui)
 
-    def retranslate_ui(self, BuharVideoUploader):
-        BuharVideoUploader.setWindowTitle("BuharVideoUploader")
+    def retranslate_ui(self, BuxarVideoUploader):
+        BuxarVideoUploader.setWindowTitle("BuxarVideoUploader")
         self.load_button.setText(get_str('download_page'))
         self.channels_button.setText(get_str('channels_page'))
         self.accounts_button.setText(get_str('accounts_page'))

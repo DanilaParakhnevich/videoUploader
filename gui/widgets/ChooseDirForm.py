@@ -7,7 +7,7 @@ class ChooseDirForm(QDialog):
 
     passed = False
 
-    def __init__(self, parent: QWidget):
+    def __init__(self, parent: QWidget, file_need):
         super().__init__(parent)
         self.setWindowTitle(get_str('choose_the_dir'))
         self.resize(500, 120)
@@ -30,10 +30,12 @@ class ChooseDirForm(QDialog):
         self.ok_button.setText(get_str('choose'))
         self.ok_button.clicked.connect(self.ok)
 
+        self.file_need = file_need
         self.gridLayout.addWidget(self.ok_button, 3, 1)
 
     def ok(self):
         if self.choose_dir_button.text() != '':
+            self.passed = True
             self.close()
         else:
             msg = QMessageBox()
@@ -42,7 +44,12 @@ class ChooseDirForm(QDialog):
 
     def pick_new(self):
         dialog = QFileDialog()
-        folder_path = dialog.getOpenFileName(None, get_str('choose_dir'))
+        if self.file_need:
+            folder_path = dialog.getOpenFileName(None, get_str('choose_file'))
+        else:
+            folder_path = dialog.getExistingDirectory(None, get_str('choose_dir'))
+
         if folder_path != '':
+            if type(folder_path) is tuple:
+                folder_path = folder_path[0]
             self.choose_dir_button.setText(folder_path)
-            self.passed = True

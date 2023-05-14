@@ -11,6 +11,9 @@ class TikTokService(VideohostingService):
         self.video_regex = 'https://www.tiktok.com/.*/video/.*'
         self.channel_regex = 'https://www.tiktok.com/.*'
         self.title_size_restriction = 2_200
+        self.duration_restriction = 30
+        self.size_restriction = 2 * 1024
+        self.upload_video_formats = list(['mp4', 'webm'])
 
     def get_videos_by_url(self, url, account=None):
         result = list()

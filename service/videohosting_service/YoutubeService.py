@@ -14,6 +14,10 @@ class YoutubeService(VideohostingService):
         self.channel_regex = '(https:\/\/www.youtube.com\/@.*)|(https:\/\/www.youtube.com\/channel\/)'
         self.title_size_restriction = 100
         self.description_size_restriction = 5_000
+        self.size_restriction = 256 * 1024
+        self.duration_restriction = 12 * 60
+        self.upload_video_formats = list(['mov', 'mpeg-1', 'mpeg-2', 'mp4', 'mpg', 'avi', 'wmv', 'mpegps',
+                                          'flv', '3gpp', 'webm', 'DNxHR', 'ProRes', 'CineForm', 'hevc'])
 
     def get_videos_by_url(self, url, account=None):
         c = scrapetube.get_channel(channel_url=url)
@@ -64,7 +68,7 @@ class YoutubeService(VideohostingService):
             page.query_selector('#title-textarea').type(text=name)
 
             page.query_selector('#description-textarea').click()
-            page.query_selector('#description-textarea').type(text=description)
+            page.query_selector('#description-textarea').type(text=description if description is not None else '')
 
             page.click(selector='#next-button')
 

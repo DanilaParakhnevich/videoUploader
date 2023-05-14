@@ -14,7 +14,10 @@ class YandexDzenService(VideohostingService):
         self.video_regex = 'https:\/\/dzen.ru\/video\/watch\/.*'
         self.channel_regex = 'https:\/\/dzen.ru\/id\/.*'
         self.title_size_restriction = 200
-
+        self.size_restriction = 30 * 1024
+        self.duration_restriction = 240
+        self.upload_video_formats = list(['3gpp', 'x-fvl', 'mp4', 'webm', 'x-ms-wmv', 'x-ms-asf', 'ogg', 'mpeg',
+                                          'quicktime', 'x-m4v', 'x-msvideo', 'mkv'])
 
     def get_videos_by_url(self, url, account=None):
         result = list()

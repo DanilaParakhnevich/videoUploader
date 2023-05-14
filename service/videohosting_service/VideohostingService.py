@@ -61,8 +61,12 @@ class VideohostingService(ABC):
     def login(self, login, password):
         raise NotImplementedError()
 
-    def validate_video_info_for_uploading(self, video_dir, title=None, description=None):
-        clip = VideoFileClip(video_dir)
+    def validate_video_info_for_uploading(self, video_dir=None, filesize=None, ext=None, duration=None, title=None, description=None):
+
+        clip = None
+
+        if video_dir is not None:
+            clip = VideoFileClip(video_dir)
 
         # Получение размера в мегабайтах
         def get_size():
@@ -70,19 +74,31 @@ class VideohostingService(ABC):
             size = file_size / 1024 ** 2
             return round(size, 3)
 
-        def validate_format():
+        def validate_format(ext):
             if len(self.upload_video_formats) != 0:
-                return self.upload_video_formats.__contains__(os.path.splitext(video_dir)[1].replace('.', ''))
+                return self.upload_video_formats.__contains__(ext)
 
-        if self.duration_restriction is not None and (clip.duration / 60) > self.duration_restriction:
-            raise VideoDurationException(f'Продолжительность ролика слишком большая ({clip.duration} > {self.duration_restriction})')
+        if clip is not None:
+            if self.duration_restriction is not None and (clip.duration / 60) > self.duration_restriction:
+                raise VideoDurationException(f'Продолжительность ролика слишком большая ({clip.duration} > {self.duration_restriction})')
 
-        size = get_size()
-        if self.size_restriction is not None and size > self.size_restriction:
-            raise FileSizeException(f'Размер файла слишком большой ({size} > {self.size_restriction})')
+            size = get_size()
+            if self.size_restriction is not None and size is not None and size > self.size_restriction:
+                raise FileSizeException(f'Размер файла слишком большой ({size} > {self.size_restriction})')
 
-        if validate_format() is False:
-            raise FileFormatException(f'Неподходящий формат для видеохостинга({clip.filename} не подходит к {self.upload_video_formats.__str__()})')
+            if validate_format(os.path.splitext(video_dir)[1].replace('.', '')) is False:
+                raise FileFormatException(f'Неподходящий формат для видеохостинга({clip.filename} не подходит к {self.upload_video_formats.__str__()})')
+
+        if self.duration_restriction is not None and duration is not None and (duration / 60) > self.duration_restriction:
+            raise VideoDurationException(
+                f'Продолжительность ролика слишком большая ({duration} > {self.duration_restriction})')
+
+        if self.size_restriction is not None and filesize is not None and filesize > self.size_restriction:
+            raise FileSizeException(f'Размер файла слишком большой ({filesize} > {self.size_restriction})')
+
+        if ext is not None and validate_format(ext) is False:
+            raise FileFormatException(
+                f'Неподходящий формат для видеохостинга({ext} не подходит к {self.upload_video_formats.__str__()})')
 
         if self.title_size_restriction is not None and title is not None and len(title) > self.title_size_restriction:
             raise NameIsTooLongException(f'Слишком большой размер названия(Ограничение: {self.title_size_restriction} символов)')
@@ -97,14 +113,14 @@ class VideohostingService(ABC):
         browser = p.chromium.launch(headless=headless, args=self.CHROMIUM_ARGS)
         return browser.new_context()
 
-    def download_video(self, url, hosting, account=None, table_item: QTableWidgetItem = None):
+    def download_video(self, url, hosting, video_quality, format, account=None, table_item: QTableWidgetItem = None):
 
         def prog_hook(d, table_item):
             if d["status"] == "downloading":
                 p = d['_percent_str']
                 table_item.setText(p)
 
-        download_opts = {
+        simple_download_opts = {
             'progress_hooks': [lambda d: prog_hook(d, table_item)],
             'ffmpeg_location': os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin'),
             'outtmpl': f'{StateService.settings.download_dir}/{hosting}/%(title)s.%(ext)s',
@@ -116,17 +132,80 @@ class VideohostingService(ABC):
             cookie_str = ''
             for auth in account.auth:
                 cookie_str += f'{auth["name"]}={auth["value"]}; '
-            download_opts["http_headers"] = {"Set-Cookie": cookie_str}
+            simple_download_opts["http_headers"] = {"Set-Cookie": cookie_str}
 
         if StateService.settings.rate_limit != 0:
-            download_opts['ratelimit'] = str(StateService.settings.rate_limit * 1024)
+            simple_download_opts['ratelimit'] = str(StateService.settings.rate_limit * 1024)
+
+        info = None
+
+        if format == 'NOT_MERGE':
+            download_video_opts = {
+                'ffmpeg_location': os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin'),
+                'format': f'bestvideo[height<={video_quality}]/best[height<={video_quality}]/best',
+                '--list-formats ': True,
+                'outtmpl': f'{StateService.settings.download_dir}/{hosting}/%(title)s.%(ext)s',
+                'writeinfojson': True,
+                'http_headers': simple_download_opts['http_headers'],
+                'ratelimit': simple_download_opts['ratelimit']
+            }
+
+            with YoutubeDL(download_video_opts) as ydl:
+                info = ydl.extract_info("https://www.youtube.com/watch?v=SRdZTZE5pOA&ab_channel=Deftones")
+
+            download_audio_opts = {
+                'ffmpeg_location': os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin'),
+                'format': 'bestaudio/best',
+                '--list-formats ': True,
+                'outtmpl': f'{StateService.settings.download_dir}/{hosting}/audio_%(title)s.%(ext)s',
+                'http_headers': simple_download_opts['http_headers'],
+                'ratelimit': simple_download_opts['ratelimit']
+            }
+
+            with YoutubeDL(download_audio_opts) as ydl:
+                ydl.extract_info("https://www.youtube.com/watch?v=SRdZTZE5pOA&ab_channel=Deftones")
+
+        else:
+
+            if format == 'AUDIO':
+                simple_download_opts['format'] = 'bestaudio/best'
+            elif format == 'VIDEO':
+                simple_download_opts['format'] = f'bestvideo[height<={video_quality}]/best[height<={video_quality}]/best'
+            else:
+                simple_download_opts['format'] = f'bestvideo[height<={video_quality}]+bestaudio/best[height<={video_quality}]/best'
+
+            with YoutubeDL(simple_download_opts) as ydl:
+                info = ydl.extract_info(url)
+
+        if 'video_ext' in info:
+            return f'{StateService.settings.download_dir}/{hosting}/{info["title"]}.{info["video_ext"]}'
+        else:
+            return f'{StateService.settings.download_dir}/{hosting}/{info["title"]}.{info["ext"]}'
+
+    def get_video_info(self, url, video_quality, account=None):
+
+        download_opts = {
+            'skip_download': True,
+            'format': f'bestvideo[height<={video_quality}]+bestaudio/best[height<={video_quality}]/best'
+        }
+
+        # Чтобы нормально добавить куки в обычном json, приходится использовать http_headers
+        if account is not None and isinstance(account.auth, list):
+            cookie_str = ''
+            for auth in account.auth:
+                cookie_str += f'{auth["name"]}={auth["value"]}; '
+            download_opts["http_headers"] = {"Set-Cookie": cookie_str}
 
         with YoutubeDL(download_opts) as ydl:
             info = ydl.extract_info(url)
-            if 'video_ext' in info:
-                return f'{StateService.settings.download_dir}/{hosting}/{info["title"]}.{info["video_ext"]}'
-            else:
-                return f'{StateService.settings.download_dir}/{hosting}/{info["title"]}.{info["ext"]}'
+
+        return {
+            'title': info['title'],
+            'description': info['description'],
+            'duration': info['duration'],
+            'filesize': int(info['filesize_approx'] / 1024 ** 2) if 'filesize_approx' in info else int(info['filesize'] / 1024 ** 2),
+            'ext': info['ext'] if info['ext'] else info['video_ext']
+        }
 
     # Возвращает: 0, если ссылка невалидна; 1, если ссылка валидна и является ссылкой на канал;
     # 2, если ссылка валидна и является ссылкой на видео

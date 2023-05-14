@@ -17,12 +17,12 @@ class TelegramService(VideohostingService):
     def __init__(self):
         self.video_regex = 'https:\/\/t.me/.*\/.*'
         self.channel_regex = '.*'
-        self.upload_video_formats = list(['3g2', '3gp', '3gpp', 'asf', 'avi', 'dat', 'divx', 'dv', 'f4v', 'flv', 'gif',
-                                          'm2ts', 'm4v', 'mkv', 'mod', 'mov', 'mp4', 'mpe', 'mpeg', 'mpeg4', 'mpg',
-                                          'mts', 'nsv', 'ogm', 'ogv', 'qt', 'tod', 'ts', 'vob', 'wmv'])
+        self.title_size_restriction = 100
         self.duration_restriction = 240
         self.size_restriction = 2 * 1024
-        self.title_size_restriction = 100
+        self.upload_video_formats = list(['3g2', '3gp', '3gpp', 'asf', 'avi', 'dat', 'divx', 'dv', 'f4v', 'flv', 'gif',
+                                          'm2ts', 'm4v', 'mkv', 'mod', 'mov', 'mp4', 'mpe', 'mpeg', 'mpeg4', 'mpg',
+                                          'mts', 'nsv', 'ogm', 'ogv', 'qt', 'tod', 'ts', 'vob', 'wmv', 'webm'])
 
     def get_videos_by_url(self, url, account=None):
         result = list()
@@ -59,7 +59,7 @@ class TelegramService(VideohostingService):
         with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash, workdir='service/videohosting_service/tmp') as app:
             app.send_video(chat_id=destination, video=file_path, caption=name)
 
-    def download_video(self, url, hosting, account=None, table_item: QTableWidgetItem = None):
+    def download_video(self, url, hosting, video_quality, format, account=None, table_item: QTableWidgetItem = None):
 
         with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
                     workdir='service/videohosting_service/tmp') as app:
@@ -81,6 +81,24 @@ class TelegramService(VideohostingService):
                 json.dump(data, f)
 
             return result
+
+    def get_video_info(self, url, video_quality, account=None):
+
+        with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
+                    workdir='service/videohosting_service/tmp') as app:
+            chat_id = url.split('/')[3]
+            message_id = url.split('/')[4]
+
+
+            msg = app.get_messages(chat_id=chat_id, message_ids=int(message_id))
+
+            return {
+                'title': msg.caption,
+                'description': None,
+                'duration': msg.video.duration,
+                'filesize': msg.video.file_size/1024**2,
+                'ext': msg.video.mime_type.split('/')[1]
+            }
 
     def handle_auth(self):
         form = AuthenticationConfirmationForm(self.login_form)

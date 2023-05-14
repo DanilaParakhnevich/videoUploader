@@ -8,6 +8,7 @@ from model.Hosting import Hosting
 from service.LocalizationService import *
 from gui.widgets.ChooseAccountForm import ChooseAccountForm
 from gui.widgets.ChooseDirForm import ChooseDirForm
+from gui.widgets.DirOrFileForm import DirOrFileForm
 from gui.widgets.TypeStrForm import TypeStrForm
 from gui.widgets.ChooseIntervalsForm import ChooseIntervalForm
 import os
@@ -86,7 +87,15 @@ class AddUploadQueueByDirectoryForm(QDialog):
             else:
                 return
 
-        form = ChooseDirForm(parent=self.parentWidget())
+        form = DirOrFileForm(parent=self.parentWidget())
+        form.exec_()
+
+        if form.passed is False:
+            return
+
+        file_need = form.file_need
+
+        form = ChooseDirForm(parent=self.parentWidget(), file_need=file_need)
         form.exec_()
 
         if form.passed is False:
@@ -106,10 +115,15 @@ class AddUploadQueueByDirectoryForm(QDialog):
             form = ChooseIntervalForm(self)
             form.exec_()
 
+            if form.passed is False:
+                return
+
             upload_interval = 0
             upload_interval_type = 0
 
-            if form.passed:
+            if form.passed is False:
+                return
+            elif form.yes:
                 upload_interval_type = form.upload_interval_type
                 upload_interval = form.upload_interval
 
@@ -130,7 +144,7 @@ class AddUploadQueueByDirectoryForm(QDialog):
         else:
             handle_result = self.handle_file(self.directory)
             if handle_result is not False:
-                handle_result.add(datetime.now())
+                handle_result.append(datetime.now())
                 self.video_info.append(handle_result)
 
         self.passed = True
@@ -139,9 +153,9 @@ class AddUploadQueueByDirectoryForm(QDialog):
     def handle_file(self, file_dir):
         try:
             self.hosting.value[0].validate_video_info_for_uploading(video_dir=file_dir)
-        except:
+        except Exception as error:
             msg = QMessageBox()
-            msg.setText(get_str('bad_file'))
+            msg.setText(error.__str__())
             msg.exec_()
             return False
 

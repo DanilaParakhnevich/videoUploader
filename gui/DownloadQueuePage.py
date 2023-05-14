@@ -120,14 +120,19 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                 url=media.url,
                 account=media.account,
                 hosting=media.hosting,
-                table_item=self.item(self.get_row_index(media.url), 1))
+                table_item=self.item(self.get_row_index(media.url), 1),
+                format=media.format,
+                video_quality=media.video_quality)
             if media.upload_after_download:
                 self.queue_media_service.add_to_the_upload_queue(UploadQueuedMedia(video_dir=video_dir,
                                                                                    hosting=media.upload_account.hosting,
                                                                                    status=0,
                                                                                    account=media.upload_account,
                                                                                    destination=media.upload_destination,
-                                                                                   upload_date=media.upload_date))
+                                                                                   upload_date=media.upload_date,
+                                                                                   remove_files_after_upload=media.remove_files_after_upload,
+                                                                                   title=media.title,
+                                                                                   description=media.description))
         except SystemExit:
             self.set_media_status(media.url, 0)
             self.download_thread_dict.pop(media.url)
@@ -237,10 +242,17 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
         if form.passed is True:
             queue_media = LoadQueuedMedia(url=form.link,
-                                          hosting=form.hosting,
+                                          hosting=form.hosting.name,
                                           status=0,
-                                          upload_after_download=False,
-                                          account=form.account)
+                                          upload_after_download=form.upload_on,
+                                          account=form.account,
+                                          format=form.format,
+                                          video_quality=form.video_quality,
+                                          remove_files_after_upload=form.remove_files_after_upload.isChecked(),
+                                          upload_destination=form.upload_target,
+                                          upload_account=form.upload_account,
+                                          title=form.title,
+                                          description=form.description)
 
             self.queue_media_list.append(queue_media)
             self.insert_queue_media(queue_media)

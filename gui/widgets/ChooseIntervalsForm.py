@@ -6,6 +6,7 @@ class ChooseIntervalForm(QDialog):
 
     upload_interval = None
     upload_interval_type = None
+    yes = False
     passed = False
 
     def __init__(self, parent):
@@ -39,5 +40,6 @@ class ChooseIntervalForm(QDialog):
     def ok(self):
         self.upload_interval = int(self.time_edit.text())
         self.upload_interval_type = self.time_type_edit.currentIndex()
+        self.yes = True
         self.passed = True
         self.close()

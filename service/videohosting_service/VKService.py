@@ -1,3 +1,5 @@
+import sys
+
 from service.videohosting_service.VideohostingService import VideohostingService
 from service.StateService import StateService
 from model.VideoModel import VideoModel
@@ -31,6 +33,10 @@ class VKService(VideohostingService):
         self.channel_regex = 'https:\/\/vk.com\/.*'
         self.title_size_restriction = 3_772
         self.description_size_restriction = 9_999_999_999
+        self.duration_restriction = sys.maxsize
+        self.size_restriction = 2 * 1024
+        self.upload_video_formats = list(['avi', 'mp4', '3gp', 'mpeg', 'mov', 'flv', 'f4v', 'wmv', 'mkv', 'webm', 'vob',
+                                          'rmvb', 'm4v', 'mpg', 'ogv', 'ts', 'm2ts', 'mts', 'mxf', 'torrent'])
 
     def get_videos_by_url(self, url, account=None):
         vk_session = vk_api.VkApi(token=account.auth['access_token'])
@@ -95,7 +101,7 @@ class VKService(VideohostingService):
         vk_session = vk_api.VkApi(token=account.auth['access_token'])
 
         vk_upload = vk_api.VkUpload(vk_session)
-        vk_upload.video(video_file=file_path, name=name, description=description)
+        vk_upload.video(video_file=file_path, name=name, description=description if description is not None else '')
 
     def handle_auth(self):
         form = AuthenticationConfirmationForm(self.login_form)

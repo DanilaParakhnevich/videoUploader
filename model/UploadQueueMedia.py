@@ -3,7 +3,7 @@ from model.Account import Account
 
 class UploadQueuedMedia(object):
 
-    def __init__(self, video_dir: str, hosting: str, status: int, account: Account,
+    def __init__(self, video_dir: str, hosting: str, status: int, account: Account, remove_files_after_upload,
                  destination=None, upload_date=None, title=None, description=None):
 
         self.video_dir = video_dir
@@ -15,3 +15,4 @@ class UploadQueuedMedia(object):
         self.upload_date = upload_date
         self.title = title
         self.description = description
+        self.remove_files_after_upload = remove_files_after_upload

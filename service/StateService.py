@@ -13,7 +13,7 @@ class StateService(object):
     upload_queue_media = None
 
     def __init__(self):
-        self.q_settings = QSettings('BuharVideoUploaderSettings')
+        self.q_settings = QSettings('BuxarVideoUploaderSettings')
 
     def is_first_launch(self) -> bool:
         return self.q_settings.value('first_launch')
@@ -96,6 +96,12 @@ class StateService(object):
                 StateService.download_queue_media = list()
 
         return StateService.download_queue_media
+
+    def get_download_queue_media_by_url(self, url):
+        for queue_media in self.download_queue_media:
+            if queue_media.url == url:
+                return queue_media
+        return None
 
     # QueueMedia
     def save_upload_queue_media(self, queue_media):

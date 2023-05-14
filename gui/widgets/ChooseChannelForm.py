@@ -6,7 +6,7 @@ from service.LocalizationService import *
 # Этот QDialog предназначен для выбора аккаунта из числа доступных (см accounts в конструкторе)
 class ChooseChannelForm(QDialog):
     account = None
-    passed = True
+    passed = False
 
     def __init__(self, parent: QWidget, channels):
         super().__init__(parent)

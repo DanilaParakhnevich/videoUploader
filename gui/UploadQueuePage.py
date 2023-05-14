@@ -1,5 +1,4 @@
 import asyncio
-import os.path
 import time
 
 from PyQt5 import QtCore, QtWidgets
@@ -15,6 +14,7 @@ from PyQt5.QtCore import QTimer
 from service.LoggingService import *
 import traceback
 from datetime import datetime
+import os, glob
 
 
 class UploadQueuePageWidget(QtWidgets.QTableWidget):
@@ -125,10 +125,6 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 name = queue_media.title
                 description = queue_media.description
 
-            Hosting[queue_media.hosting].value[0].validate_video_info_for_uploading(queue_media.video_dir,
-                                                                                    name,
-                                                                                    description)
-
             self.set_media_status(key, 1)
             Hosting[queue_media.hosting].value[0].upload_video(
                 file_path=queue_media.video_dir,
@@ -136,6 +132,11 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 name=name,
                 description=description,
                 destination=queue_media.destination)
+
+            if queue_media.remove_files_after_upload:
+                for filename in glob.glob(os.path.dirname(queue_media.video_dir) + '/*'):
+                    if filename.startswith(os.path.splitext(queue_media.video_dir)[0]):
+                        os.remove(filename)
 
         except SystemExit:
             self.set_media_status(key, 4)
@@ -264,14 +265,15 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                                                                                    destination=form.destination,
                                                                                    upload_date=item[3],
                                                                                    title=item[1],
-                                                                                   description=item[2]))
+                                                                                   description=item[2],
+                                                                                   remove_files_after_upload=False))
     def on_delete_row(self):
         button = self.sender()
         if button:
             row = self.indexAt(button.pos()).row()
-            self.removeRow(row)
             video_dir = self.item(row, 0).text()
             destination = self.item(row, 1).text()
+            self.removeRow(row)
 
             self.queue_media_list.pop(row)
 
