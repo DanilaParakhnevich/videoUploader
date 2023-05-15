@@ -1,3 +1,4 @@
+import traceback
 from datetime import datetime
 
 from PyQt5.QtWidgets import (QDialog, QPushButton, QLabel, QMessageBox, QComboBox, QGridLayout)
@@ -12,6 +13,14 @@ from gui.widgets.DirOrFileForm import DirOrFileForm
 from gui.widgets.TypeStrForm import TypeStrForm
 from gui.widgets.ChooseIntervalsForm import ChooseIntervalForm
 import os
+
+from service.LoggingService import log_error
+from service.videohosting_service.exception.DescriptionIsTooLongException import DescriptionIsTooLongException
+from service.videohosting_service.exception.FileFormatException import FileFormatException
+from service.videohosting_service.exception.FileSizeException import FileSizeException
+from service.videohosting_service.exception.NameIsTooLongException import NameIsTooLongException
+from service.videohosting_service.exception.VideoDurationException import VideoDurationException
+
 
 class AddUploadQueueByDirectoryForm(QDialog):
 
@@ -112,20 +121,20 @@ class AddUploadQueueByDirectoryForm(QDialog):
                     if handle_result is not False:
                         self.video_info.append(handle_result)
 
-            form = ChooseIntervalForm(self)
-            form.exec_()
-
-            if form.passed is False:
-                return
-
             upload_interval = 0
             upload_interval_type = 0
 
-            if form.passed is False:
+            if len(self.video_info) > 1:
+                form = ChooseIntervalForm(self)
+                form.exec_()
+
+                if form.passed is False:
+                    return
+                elif form.yes:
+                    upload_interval_type = form.upload_interval_type
+                    upload_interval = form.upload_interval
+            elif len(self.video_info) == 0:
                 return
-            elif form.yes:
-                upload_interval_type = form.upload_interval_type
-                upload_interval = form.upload_interval
 
             upload_date = datetime.now()
 
@@ -163,39 +172,59 @@ class AddUploadQueueByDirectoryForm(QDialog):
         description = None
 
         if self.hosting.value[0].title_size_restriction is not None:
-            while True:
-                form = TypeStrForm(parent=self, label=get_str('input_title'))
-                form.exec_()
+            form = TypeStrForm(parent=self, label=f'{get_str("input_title")}: {file_dir}')
+            form.exec_()
 
-                title = form.str
+            title = form.str
 
-                if form.passed:
-                    try:
-                        self.hosting.value[0].validate_video_info_for_uploading(video_dir=file_dir, title=title)
-                        break
-                    except:
-                        msg = QMessageBox()
-                        msg.setText(get_str('too_long_title') + self.hosting.value[0].title_size_restriction)
-                        msg.exec_()
-                else:
-                    return False
+            if form.passed:
+                try:
+                    self.hosting.value[0].validate_video_info_for_uploading(video_dir=file_dir, title=title)
+                except VideoDurationException:
+                    log_error(traceback.format_exc())
+                    msg = QMessageBox()
+                    msg.setText(f'{get_str("bad_file_duration")}{file_dir}')
+                    msg.exec_()
+                except FileSizeException:
+                    log_error(traceback.format_exc())
+                    msg = QMessageBox()
+                    msg.setText(f'{get_str("bad_file_size")}{file_dir}')
+                    msg.exec_()
+                except FileFormatException:
+                    log_error(traceback.format_exc())
+                    msg = QMessageBox()
+                    msg.setText(f'{get_str("bad_file_format")}{file_dir}')
+                    msg.exec_()
+                except NameIsTooLongException:
+                    while len(title) > self.hosting.value[0].title_size_restriction:
+                        log_error(traceback.format_exc())
+                        form = TypeStrForm(parent=self,
+                                           label=f'{get_str("too_long_title")}{str(self.hosting.value[0].title_size_restriction)}',
+                                           current_text=title)
+                        form.exec_()
+                        title = form.str
+
+            else:
+                return False
 
         if self.hosting.value[0].description_size_restriction is not None:
-            while True:
-                form = TypeStrForm(parent=self, label=get_str('input_description'))
-                form.exec_()
+            form = TypeStrForm(parent=self, label=f'{get_str("input_description"): {file_dir}}')
+            form.exec_()
 
-                description = form.str
+            description = form.str
 
-                if form.passed:
-                    try:
-                        self.hosting.value[0].validate_video_info_for_uploading(video_dir=file_dir, description=description)
-                        break
-                    except:
-                        msg = QMessageBox()
-                        msg.setText(get_str('too_long_description') + self.hosting.value[0].description_size_restriction)
-                        msg.exec_()
-                else:
-                    return False
+            if form.passed:
+                try:
+                    self.hosting.value[0].validate_video_info_for_uploading(description=description)
+                except DescriptionIsTooLongException:
+                    while len(description) > self.hosting.value[0].description_size_restriction:
+                        log_error(traceback.format_exc())
+                        form = TypeStrForm(parent=self,
+                                           label=f'{get_str("too_long_description")}{str(self.hosting.value[0].description_size_restriction)}',
+                                           current_text=description)
+                        form.exec_()
+                        description = form.str
+            else:
+                return False
 
         return list([file_dir, title, description, datetime.now()])
