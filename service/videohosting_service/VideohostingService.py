@@ -146,21 +146,24 @@ class VideohostingService(ABC):
                 '--list-formats ': True,
                 'outtmpl': f'{StateService.settings.download_dir}/{hosting}/%(title)s.%(ext)s',
                 'writeinfojson': True,
-                'http_headers': simple_download_opts['http_headers'] if 'http_headers' in simple_download_opts.keys() else None,
-                'ratelimit': simple_download_opts['ratelimit'] if 'ratelimit' in simple_download_opts.keys() else None,
             }
-
-            with YoutubeDL(download_video_opts) as ydl:
-                info = ydl.extract_info("https://www.youtube.com/watch?v=SRdZTZE5pOA&ab_channel=Deftones")
 
             download_audio_opts = {
                 'ffmpeg_location': os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin'),
                 'format': 'bestaudio/best',
                 '--list-formats ': True,
                 'outtmpl': f'{StateService.settings.download_dir}/{hosting}/audio_%(title)s.%(ext)s',
-                'http_headers': simple_download_opts['http_headers'] if 'http_headers' in simple_download_opts.keys() else None,
-                'ratelimit': simple_download_opts['ratelimit'] if 'ratelimit' in simple_download_opts.keys() else None,
             }
+
+            if 'http_headers' in simple_download_opts.keys():
+                download_audio_opts['http_headers'] = simple_download_opts['http_headers']
+                download_video_opts['http_headers'] = simple_download_opts['http_headers']
+            if 'ratelimit' in simple_download_opts.keys():
+                download_audio_opts['ratelimit'] = simple_download_opts['ratelimit']
+                download_video_opts['ratelimit'] = simple_download_opts['ratelimit']
+
+            with YoutubeDL(download_video_opts) as ydl:
+                info = ydl.extract_info("https://www.youtube.com/watch?v=SRdZTZE5pOA&ab_channel=Deftones")
 
             with YoutubeDL(download_audio_opts) as ydl:
                 ydl.extract_info("https://www.youtube.com/watch?v=SRdZTZE5pOA&ab_channel=Deftones")
