@@ -146,8 +146,8 @@ class VideohostingService(ABC):
                 '--list-formats ': True,
                 'outtmpl': f'{StateService.settings.download_dir}/{hosting}/%(title)s.%(ext)s',
                 'writeinfojson': True,
-                'http_headers': simple_download_opts['http_headers'],
-                'ratelimit': simple_download_opts['ratelimit']
+                'http_headers': simple_download_opts['http_headers'] if 'http_headers' in simple_download_opts.keys() else None,
+                'ratelimit': simple_download_opts['ratelimit'] if 'ratelimit' in simple_download_opts.keys() else None,
             }
 
             with YoutubeDL(download_video_opts) as ydl:
@@ -158,8 +158,8 @@ class VideohostingService(ABC):
                 'format': 'bestaudio/best',
                 '--list-formats ': True,
                 'outtmpl': f'{StateService.settings.download_dir}/{hosting}/audio_%(title)s.%(ext)s',
-                'http_headers': simple_download_opts['http_headers'],
-                'ratelimit': simple_download_opts['ratelimit']
+                'http_headers': simple_download_opts['http_headers'] if 'http_headers' in simple_download_opts.keys() else None,
+                'ratelimit': simple_download_opts['ratelimit'] if 'ratelimit' in simple_download_opts.keys() else None,
             }
 
             with YoutubeDL(download_audio_opts) as ydl:

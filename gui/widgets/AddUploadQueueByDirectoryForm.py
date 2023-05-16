@@ -43,7 +43,8 @@ class AddUploadQueueByDirectoryForm(QDialog):
         self.combo_box = QComboBox()
 
         for hosting in Hosting:
-            self.combo_box.addItem(hosting.name, hosting)
+            if hosting is not Hosting.DTube:
+                self.combo_box.addItem(hosting.name, hosting)
 
         self.combo_box.setCurrentIndex(0)
 
