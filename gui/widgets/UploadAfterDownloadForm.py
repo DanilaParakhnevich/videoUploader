@@ -1,19 +1,16 @@
 from PyQt5.QtWidgets import (QDialog, QPushButton, QLabel, QSpinBox, QGridLayout, QComboBox, QMessageBox)
 
-from gui.widgets.ChooseAccountForm import ChooseAccountForm
+from gui.widgets.ChooseAccountsForUploadingForm import ChooseAccountsForUploadingForm
 from gui.widgets.ChooseChannelForm import ChooseChannelForm
-from gui.widgets.ChooseHostingForm import ChooseHostingForm
+from model.Hosting import Hosting
 from service.LocalizationService import *
 
 
 class UploadAfterDownloadForm(QDialog):
-
 	upload_flag = False
 	upload_interval = None
 	upload_interval_type = None
-	upload_account = None
-	upload_target = None
-	upload_hosting = None
+	upload_targets = None
 	passed = False
 
 	def __init__(self, parent, need_interval: bool = True):
@@ -64,54 +61,53 @@ class UploadAfterDownloadForm(QDialog):
 			self.upload_interval = int(self.time_edit.text())
 			self.upload_interval_type = self.time_type_edit.currentIndex()
 
-		# В случае если выгрузка необходима, нужно выбрать хостинг для выгрузки и соответственно аккаунт
-		choose_hosting_form = ChooseHostingForm(self)
-		choose_hosting_form.exec_()
+		# Выбираем аккаунты для выгрузки
+		choose_accounts_for_uploading_form = ChooseAccountsForUploadingForm(self)
+		choose_accounts_for_uploading_form.exec_()
 
-		if choose_hosting_form.hosting is None or choose_hosting_form.passed is False:
-			self.close()
+		if choose_accounts_for_uploading_form.passed is False:
 			return
 
-		self.upload_hosting = choose_hosting_form.hosting
-		accounts = self.state_service.get_accounts_by_hosting(choose_hosting_form.hosting.name)
+		self.upload_targets = list()
 
-		if len(accounts) == 0:
-			msg = QMessageBox()
-			msg.setText(f'{get_str("not_found_accounts_for_videohosting")}: {choose_hosting_form.hosting.name}')
-			msg.exec_()
-			self.close()
+		if len(choose_accounts_for_uploading_form.accounts) == 0:
 			return
 
-		choose_account_form = ChooseAccountForm(self, accounts)
-		choose_account_form.exec_()
+		for account in choose_accounts_for_uploading_form.accounts:
+			account_hosting = Hosting[account.hosting]
 
-		if choose_account_form.account is None:
-			self.close()
-			return
+			if account_hosting.value[0].need_to_be_uploaded_to_special_source():
+				# В некоторых ситуациях, допустим с Telegram, для выгрузки необходимо указать дополнительную информацию
+				# такую, как то, на какой именно канал по аккаунту нужно выгружать видео
 
-		self.upload_account = choose_account_form.account
+				channels = self.state_service.get_channel_by_hosting(account_hosting.name)
 
-		if choose_hosting_form.hosting.value[0].need_to_be_uploaded_to_special_source():
-			# В некоторых ситуациях, допустим с Telegram, для выгрузки необходимо указать дополнительную информацию
-			# такую, как то, на какой именно канал по аккаунту нужно выгружать видео
+				if len(channels) == 0:
+					msg = QMessageBox()
+					msg.setText(
+						f'{get_str("not_found_channels_for_videohosting")}: {account_hosting.name}')
+					msg.exec_()
+					self.close()
+					continue
 
-			channels = self.state_service.get_channel_by_hosting(choose_hosting_form.hosting.name)
+				form = ChooseChannelForm(self, channels)
+				form.exec_()
 
-			if len(channels) == 0:
-				msg = QMessageBox()
-				msg.setText(f'{get_str("not_found_channels_for_videohosting")}: {choose_hosting_form.hosting.name}')
-				msg.exec_()
-				self.close()
-				return
-
-			form = ChooseChannelForm(self, channels)
-			form.exec_()
-
-			if form.passed:
-				self.upload_target = form.channel.url
+				if form.passed:
+					self.upload_targets.append({
+						'login': account.login,
+						'hosting': account.hosting,
+						'upload_target': form.channel.url
+					})
+				else:
+					self.close()
+					continue
 			else:
-				self.close()
-				return
+				self.upload_targets.append({
+					'login': account.login,
+					'hosting': account.hosting,
+					'upload_target': None
+				})
 
 		self.upload_flag = True
 		self.passed = True

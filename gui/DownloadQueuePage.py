@@ -4,7 +4,7 @@ from PyQt5 import QtCore, QtWidgets
 
 from service.QueueMediaService import QueueMediaService
 from model.Hosting import Hosting
-from model.UploadQueueMedia import UploadQueuedMedia
+from model.UploadQueueMedia import UploadQueueMedia
 from model.LoadQueuedMedia import LoadQueuedMedia
 from gui.widgets.AddDownloadQueueViaLinkForm import AddDownloadQueueViaLinkForm
 from gui.widgets.LoadingButton import AnimatedButton
@@ -124,15 +124,16 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                 format=media.format,
                 video_quality=media.video_quality)
             if media.upload_after_download:
-                self.queue_media_service.add_to_the_upload_queue(UploadQueuedMedia(video_dir=video_dir,
-                                                                                   hosting=media.upload_account.hosting,
-                                                                                   status=0,
-                                                                                   account=media.upload_account,
-                                                                                   destination=media.upload_destination,
-                                                                                   upload_date=media.upload_date,
-                                                                                   remove_files_after_upload=media.remove_files_after_upload,
-                                                                                   title=media.title,
-                                                                                   description=media.description))
+                for upload_target in media.upload_targets:
+                    self.queue_media_service.replace_to_the_upload_queue(UploadQueueMedia(video_dir=video_dir,
+                                                                                      hosting=upload_target['hosting'],
+                                                                                      status=0,
+                                                                                      account=self.state_service.get_account_by_hosting_and_login(upload_target['hosting'], upload_target['login']),
+                                                                                      destination=upload_target['upload_target'],
+                                                                                      upload_date=media.upload_date,
+                                                                                      remove_files_after_upload=media.remove_files_after_upload,
+                                                                                      title=media.title,
+                                                                                      description=media.description))
         except SystemExit:
             self.set_media_status(media.url, 0)
             self.download_thread_dict.pop(media.url)

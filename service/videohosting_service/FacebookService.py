@@ -24,7 +24,7 @@ class FacebookService(VideohostingService):
             context = self.new_context(p=p, headless=True)
             context.add_cookies(account.auth)
             page = context.new_page()
-            page.goto(url, wait_until='commit')
+            page.goto(url)
             time.sleep(5)
             self.scroll_page_to_the_bottom(page=page, timeout=3)
             stream_boxes = page.locator("//div[contains(@class,'x6s0dn4 x78zum5 x1q0g3np x1qughib')]")

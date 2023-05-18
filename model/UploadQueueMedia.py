@@ -1,7 +1,7 @@
 from model.Account import Account
 
 
-class UploadQueuedMedia(object):
+class UploadQueueMedia(object):
 
     def __init__(self, video_dir: str, hosting: str, status: int, account: Account, remove_files_after_upload,
                  destination=None, upload_date=None, title=None, description=None):

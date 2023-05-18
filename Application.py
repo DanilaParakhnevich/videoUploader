@@ -1,12 +1,16 @@
 import sys
+import traceback
+
 from PyQt5 import QtWidgets
 import os
 import requests
 
 
 if __name__ == "__main__":
-
-    os.system('PLAYWRIGHT_BROWSERS_PATH=0 playwright install chromium')
+    try:
+        os.system('PLAYWRIGHT_BROWSERS_PATH=0 sh playwright/driver/playwright.sh install chromium')
+    except:
+        print(traceback.format_exc())
 
     try:
         open(os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/LICENSE.txt'))

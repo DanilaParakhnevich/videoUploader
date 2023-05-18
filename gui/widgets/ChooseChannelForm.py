@@ -3,7 +3,6 @@ from PyQt5.QtWidgets import (QWidget, QDialog, QPushButton, QLabel, QGridLayout,
 from service.LocalizationService import *
 
 
-# Этот QDialog предназначен для выбора аккаунта из числа доступных (см accounts в конструкторе)
 class ChooseChannelForm(QDialog):
     account = None
     passed = False

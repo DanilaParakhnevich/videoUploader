@@ -62,6 +62,12 @@ class StateService(object):
 
         return StateService.accounts
 
+    def get_account_by_hosting_and_login(self, hosting: str, login: str):
+        for account in self.accounts:
+            if account.hosting == hosting and account.login == login:
+                return account
+        return None
+
     def get_accounts_by_hosting(self, hosting: str):
         result = list()
         for account in self.accounts:
@@ -116,6 +122,7 @@ class StateService(object):
                 StateService.upload_queue_media = list()
 
         return StateService.upload_queue_media
+
     # Settings
     def save_settings(self, settings):
         StateService.settings = settings

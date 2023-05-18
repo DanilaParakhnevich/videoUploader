@@ -15,6 +15,7 @@
   "error": "Ошибка",
   "status": "Статус",
   "action": "Действие",
+  "on_download": "Видео загружается",
   "add_to_the_queue": "Добавить в очередь",
   "get": "Получить",
   "name": "Название",
@@ -86,6 +87,7 @@
   "bad_link": "Ссылка не прошла валидацию",
   "need_create_some_upload_channel": "Нет каналов для выгрузки. Необходимо добавить на странице 'Каналы'",
   "choose_channel_for_uploading": "Выберите канал для выгрузки",
+  "choose_channels_for_uploading": "Выберите каналы для выгрузки",
   "add_download_single_video_by_link": "Скачать видео по ссылке",
   "add_upload_files_by_dir": "Выгрузить видео с директории",
   "choose_the_dir": "Выберите путь",
@@ -106,5 +108,8 @@
   "remove_files_after_upload": "Удалять файлы после выгрузки?",
   "bad_file_duration": "Длительность видео не подходит: ",
   "bad_file_size": "Слишком большой размер видео: ",
-  "bad_file_format": "Неподходящий формат видео: "
+  "bad_file_format": "Неподходящий формат видео: ",
+  "for_account": "для канала: ",
+  "upload": "Выгружать?",
+  "upload_yet": "Ещё не загружено"
 }

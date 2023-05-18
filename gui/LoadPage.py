@@ -4,7 +4,7 @@ from dateutil.relativedelta import relativedelta
 
 from PyQt5 import QtCore, QtWidgets
 
-from gui.widgets.ChooseHostingForm import ChooseHostingForm
+from gui.widgets.ChooseAccountsForUploadingForm import ChooseAccountsForUploadingForm
 from gui.widgets.ChooseVideoQualityComboBox import ChooseVideoQualityComboBox
 from gui.widgets.FormatChooserComboBox import FormatChooserComboBox
 from gui.widgets.TypeStrForm import TypeStrForm
@@ -15,7 +15,7 @@ from gui.widgets.ChannelComboBox import ChannelComboBox
 from gui.widgets.ChooseAccountForm import ChooseAccountForm
 from gui.widgets.UploadAfterDownloadForm import UploadAfterDownloadForm
 from gui.widgets.LoadingButton import AnimatedButton
-from gui.widgets.ChooseChannelForm import ChooseChannelForm
+from model.UploadQueueMedia import UploadQueueMedia
 from service.LocalizationService import *
 from service.QueueMediaService import QueueMediaService
 from threading import Thread
@@ -183,12 +183,11 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             msg.exec_()
             return
 
+        upload_after_download_form = None
         upload_on = False
         upload_time_type = None
         upload_interval = None
-        upload_hosting = None
-        upload_account = None
-        upload_target = None
+        upload_targets = None
 
         if self.tab_models[self.currentIndex()].format[0] != 3:
             upload_after_download_form = UploadAfterDownloadForm(self)
@@ -200,9 +199,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             upload_on = upload_after_download_form.upload_flag  # нужна ли выгрузка на хостинги после загрузки
             upload_time_type = upload_after_download_form.upload_interval_type  # тип интервала выгрузки после загрузки (мин, часы, дни, мес)
             upload_interval = upload_after_download_form.upload_interval  # сам интервал выгрузки после загрузки
-            upload_hosting = upload_after_download_form.upload_hosting
-            upload_target = upload_after_download_form.upload_target
-            upload_account = upload_after_download_form.upload_account
+            upload_targets = list()  # выбранные канали для выгрузки
 
         current_media_query = self.state_service.get_download_queue_media()
 
@@ -234,67 +231,75 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                                              self.tab_models[
                                                                  self.currentIndex()].video_quality[1],
                                                              self.tab_models[self.currentIndex()].account)
-                try:
-                    upload_hosting.value[0].validate_video_info_for_uploading(title=video_info['title'],
-                                                                              description=video_info[
-                                                                                  'description'],
-                                                                              duration=video_info[
-                                                                                  'duration'],
-                                                                              filesize=video_info[
-                                                                                  'filesize'],
-                                                                              ext=video_info['ext'])
-                except VideoDurationException:
-                    log_error(traceback.format_exc())
-                    msg = QtWidgets.QMessageBox()
-                    msg.setText(f'{get_str("bad_file_duration")}{video_info["title"]}')
-                    msg.exec_()
-                    upload_on = False
-                except FileSizeException:
-                    log_error(traceback.format_exc())
-                    msg = QtWidgets.QMessageBox()
-                    msg.setText(f'{get_str("bad_file_size")}{video_info["title"]}')
-                    msg.exec_()
-                    upload_on = False
-                except FileFormatException:
-                    log_error(traceback.format_exc())
-                    msg = QtWidgets.QMessageBox()
-                    msg.setText(f'{get_str("bad_file_format")}{video_info["title"]}')
-                    msg.exec_()
-                    upload_on = False
-                except NameIsTooLongException:
-                    title = video_info['title']
-                    while len(title) > upload_hosting.value[0].title_size_restriction:
-                        log_error(traceback.format_exc())
-                        form = TypeStrForm(parent=self,
-                                           label=f'{get_str("too_long_title")}{str(upload_hosting.value[0].title_size_restriction)}',
-                                           current_text=title)
-                        form.exec_()
-                        title = form.str
 
-                except DescriptionIsTooLongException:
-                    description = video_info['description']
-                    while len(description) > upload_hosting.value[0].description_size_restriction:
+                # Если необходимо выгружать видео после загрузки, проводим валидацию
+                for upload_target in upload_after_download_form.upload_targets:
+                    upload_hosting = Hosting[upload_target['hosting']]
+                    try:
+                        upload_hosting.value[0].validate_video_info_for_uploading(title=video_info['title'],
+                                                                                  description=video_info[
+                                                                                      'description'],
+                                                                                  duration=video_info[
+                                                                                      'duration'],
+                                                                                  filesize=video_info[
+                                                                                      'filesize'],
+                                                                                  ext=video_info['ext'])
+                    except VideoDurationException:
                         log_error(traceback.format_exc())
-                        form = TypeStrForm(parent=self,
-                                           label=f'{get_str("too_long_description")}{str(upload_hosting.value[0].description_size_restriction)}',
-                                           current_text=description)
-                        form.exec_()
-                        description = form.str
+                        msg = QtWidgets.QMessageBox()
+                        msg.setText(f'{get_str("bad_file_duration")}{video_info["title"]} {video_info["for_account"]}'
+                                    f'{upload_hosting.name}, {upload_target["login"]}')
+                        msg.exec_()
+                        continue
+                    except FileSizeException:
+                        log_error(traceback.format_exc())
+                        msg = QtWidgets.QMessageBox()
+                        msg.setText(f'{get_str("bad_file_size")}{video_info["title"]} {video_info["for_account"]}'
+                                    f'{upload_hosting.name}, {upload_target["login"]}')
+                        msg.exec_()
+                        continue
+                    except FileFormatException:
+                        log_error(traceback.format_exc())
+                        msg = QtWidgets.QMessageBox()
+                        msg.setText(f'{get_str("bad_file_format")}{video_info["title"]} {video_info["for_account"]}'
+                                    f'{upload_hosting.name}, {upload_target["login"]}')
+                        msg.exec_()
+                        continue
+                    except NameIsTooLongException:
+                        title = video_info['title']
+                        while len(title) > upload_hosting.value[0].title_size_restriction:
+                            log_error(traceback.format_exc())
+                            form = TypeStrForm(parent=self,
+                                               label=f'{get_str("too_long_title")}{str(upload_hosting.value[0].title_size_restriction)}',
+                                               current_text=title)
+                            form.exec_()
+                            title = form.str
+                    except DescriptionIsTooLongException:
+                        description = video_info['description']
+                        while len(description) > upload_hosting.value[0].description_size_restriction:
+                            log_error(traceback.format_exc())
+                            form = TypeStrForm(parent=self,
+                                               label=f'{get_str("too_long_description")}{str(upload_hosting.value[0].description_size_restriction)}',
+                                               current_text=description)
+                            form.exec_()
+                            description = form.str
+
+                    upload_targets.append(upload_target)
 
             queue_media = LoadQueuedMedia(url=table.item(i, 1).text(),
                                           account=self.tab_models[self.currentIndex()].account,
                                           hosting=hosting.name,
                                           status=0,
                                           upload_after_download=upload_on,
-                                          upload_destination=upload_target,
+                                          upload_targets=upload_targets,
                                           upload_date=upload_date,
-                                          upload_account=upload_account,
                                           format=self.tab_models[self.currentIndex()].format[1],
                                           video_quality=self.tab_models[self.currentIndex()].video_quality[1],
                                           remove_files_after_upload=self.tab_models[
                                               self.currentIndex()].remove_files_after_upload,
                                           title=title,
                                           description=description)
+            upload_targets = list()
 
             # Если необходима выгрузка, учитывается интервал выгрузки, исходя из типа интервала. 1 видео выгружается сразу
             if upload_on:
@@ -306,6 +311,15 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                     upload_date = upload_date + relativedelta(days=upload_interval)
                 else:
                     upload_date = upload_date + relativedelta(months=upload_interval)
+
+                for target in queue_media.upload_targets:
+                    self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(video_dir=get_str('upload_yet'),
+                                                                                      hosting=target['hosting'],
+                                                                                      status=5,
+                                                                                      account=self.state_service.get_account_by_hosting_and_login(
+                                                                                          target['hosting'],
+                                                                                          target['login']),
+                                                                                      remove_files_after_upload=queue_media.remove_files_after_upload))
 
             new_media.append(queue_media)
 

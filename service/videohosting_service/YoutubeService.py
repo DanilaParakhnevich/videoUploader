@@ -36,7 +36,7 @@ class YoutubeService(VideohostingService):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=False)
             page = context.new_page()
-            page.goto('https://youtube.com', wait_until='commit')
+            page.goto('https://youtube.com')
             page.wait_for_selector('a[aria-label="Sign in"]')
             page.click('a[aria-label="Sign in"]')
             page.wait_for_selector('#avatar-btn', timeout=0)
