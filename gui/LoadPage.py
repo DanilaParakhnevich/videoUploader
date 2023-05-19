@@ -4,7 +4,6 @@ from dateutil.relativedelta import relativedelta
 
 from PyQt5 import QtCore, QtWidgets
 
-from gui.widgets.ChooseAccountsForUploadingForm import ChooseAccountsForUploadingForm
 from gui.widgets.ChooseVideoQualityComboBox import ChooseVideoQualityComboBox
 from gui.widgets.FormatChooserComboBox import FormatChooserComboBox
 from gui.widgets.TypeStrForm import TypeStrForm

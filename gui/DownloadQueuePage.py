@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 
 from PyQt5 import QtCore, QtWidgets
 
@@ -250,8 +251,8 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                                           format=form.format,
                                           video_quality=form.video_quality,
                                           remove_files_after_upload=form.remove_files_after_upload.isChecked(),
-                                          upload_destination=form.upload_target,
-                                          upload_account=form.upload_account,
+                                          upload_date=datetime.datetime.now(),
+                                          upload_targets=form.upload_targets,
                                           title=form.title,
                                           description=form.description)
 

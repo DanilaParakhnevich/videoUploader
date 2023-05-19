@@ -1,3 +1,5 @@
+from io import BytesIO
+
 from service.videohosting_service.VideohostingService import VideohostingService
 from pyrogram import Client
 from model.VideoModel import VideoModel

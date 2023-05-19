@@ -8,10 +8,12 @@ from gui.widgets.FormatChooserComboBox import FormatChooserComboBox
 from gui.widgets.TypeStrForm import TypeStrForm
 from gui.widgets.UploadAfterDownloadForm import UploadAfterDownloadForm
 from model.Hosting import Hosting
+from model.UploadQueueMedia import UploadQueueMedia
 from service.LocalizationService import *
 from gui.widgets.ChooseAccountForm import ChooseAccountForm
 from gui.widgets.ChooseLinkForm import ChooseLinkForm
 from service.LoggingService import log_error
+from service.QueueMediaService import QueueMediaService
 from service.videohosting_service.exception.DescriptionIsTooLongException import DescriptionIsTooLongException
 from service.videohosting_service.exception.FileFormatException import FileFormatException
 from service.videohosting_service.exception.FileSizeException import FileSizeException
@@ -28,9 +30,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
     passed = False
     format = None
     upload_on = False
-    upload_account = None
-    upload_target = None
-    upload_hosting = None
+    upload_targets = None
     title = None
     description = None
 
@@ -88,6 +88,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
 
         self.setLayout(layout)
         self.state_service = StateService()
+        self.queue_media_service = QueueMediaService()
 
     def choose(self):
         accounts = self.state_service.get_accounts_by_hosting(self.hosting_combo_box.currentText())
@@ -97,15 +98,14 @@ class AddDownloadQueueViaLinkForm(QDialog):
             msg.setText(get_str('need_authorize'))
             msg.exec_()
             return
-        else:
+        elif len(accounts) != 0:
             form = ChooseAccountForm(parent=self.parentWidget(),
                                      accounts=accounts)
             form.exec_()
-
+            self.account = form.account
             if form.account is None and Hosting[self.hosting_combo_box.currentText()].value[1]:
                 return
 
-        self.account = form.account
         self.hosting = self.hosting_combo_box.itemData(self.hosting_combo_box.currentIndex())
 
         form = ChooseLinkForm(parent=self.parentWidget(), hosting=self.hosting_combo_box.currentText())
@@ -124,61 +124,75 @@ class AddDownloadQueueViaLinkForm(QDialog):
                 return
 
             self.upload_on = form.upload_flag
-            self.upload_hosting = form.upload_hosting
+            self.upload_targets = list()
 
             if self.upload_on:
                 video_info = self.hosting.value[0].get_video_info(self.link,
                                                              self.choose_video_quality_combo_box.itemData(self.choose_video_quality_combo_box.currentIndex()),
                                                              self.account)
-                try:
-                    self.upload_hosting.value[0].validate_video_info_for_uploading(title=video_info['title'],
-                                                                              description=video_info[
-                                                                                  'description'],
-                                                                              duration=video_info[
-                                                                                  'duration'],
-                                                                              filesize=video_info[
-                                                                                  'filesize'],
-                                                                              ext=video_info['ext'])
-                except VideoDurationException:
-                    log_error(traceback.format_exc())
-                    msg = QMessageBox()
-                    msg.setText(f'{get_str("bad_file_duration")}{video_info["title"]}')
-                    msg.exec_()
-                    self.upload_on = False
-                except FileSizeException:
-                    log_error(traceback.format_exc())
-                    msg = QMessageBox()
-                    msg.setText(f'{get_str("bad_file_size")}{video_info["title"]}')
-                    msg.exec_()
-                    self.upload_on = False
-                except FileFormatException:
-                    log_error(traceback.format_exc())
-                    msg = QMessageBox()
-                    msg.setText(f'{get_str("bad_file_format")}{video_info["title"]}')
-                    msg.exec_()
-                    self.upload_on = False
-                except NameIsTooLongException:
-                    self.title = video_info['title']
-                    while len(self.title) > self.upload_hosting.value[0].title_size_restriction:
+                # Если необходимо выгружать видео после загрузки, проводим валидацию
+                for upload_target in form.upload_targets:
+                    upload_hosting = Hosting[upload_target['hosting']]
+                    try:
+                        upload_hosting.value[0].validate_video_info_for_uploading(title=video_info['title'],
+                                                                                  description=video_info[
+                                                                                      'description'],
+                                                                                  duration=video_info[
+                                                                                      'duration'],
+                                                                                  filesize=video_info[
+                                                                                      'filesize'],
+                                                                                  ext=video_info['ext'])
+                    except VideoDurationException:
                         log_error(traceback.format_exc())
-                        form = TypeStrForm(parent=self,
-                                           label=f'{get_str("too_long_title")}{str(self.upload_hosting.value[0].title_size_restriction)}',
-                                           current_text=self.title)
-                        form.exec_()
-                        self.title = form.str
-
-                except DescriptionIsTooLongException:
-                    self.description = video_info['description']
-                    while len(self.description) > self.upload_hosting.value[0].description_size_restriction:
+                        msg = QMessageBox()
+                        msg.setText(f'{get_str("bad_file_duration")}{video_info["title"]} {video_info["for_account"]}'
+                                    f'{upload_hosting.name}, {upload_target["login"]}')
+                        msg.exec_()
+                        self.upload_on = False
+                    except FileSizeException:
                         log_error(traceback.format_exc())
-                        form = TypeStrForm(parent=self,
-                                           label=f'{get_str("too_long_description")}{str(self.upload_hosting.value[0].description_size_restriction)}',
-                                           current_text=self.description)
-                        form.exec_()
-                        self.description = form.str
+                        msg = QMessageBox()
+                        msg.setText(f'{get_str("bad_file_size")}{video_info["title"]} {video_info["for_account"]}'
+                                    f'{upload_hosting.name}, {upload_target["login"]}')
+                        msg.exec_()
+                        self.upload_on = False
+                    except FileFormatException:
+                        log_error(traceback.format_exc())
+                        msg = QMessageBox()
+                        msg.setText(f'{get_str("bad_file_format")}{video_info["title"]} {video_info["for_account"]}'
+                                    f'{upload_hosting.name}, {upload_target["login"]}')
+                        msg.exec_()
+                        self.upload_on = False
+                    except NameIsTooLongException:
+                        self.title = video_info['title']
+                        while len(self.title) > self.upload_hosting.value[0].title_size_restriction:
+                            log_error(traceback.format_exc())
+                            form = TypeStrForm(parent=self,
+                                               label=f'{get_str("too_long_title")}{str(upload_hosting.value[0].title_size_restriction)}',
+                                               current_text=self.title)
+                            form.exec_()
+                            self.title = form.str
 
-            self.upload_account = form.upload_account
-            self.upload_target = form.upload_target
+                    except DescriptionIsTooLongException:
+                        self.description = video_info['description']
+                        while len(self.description) > self.upload_hosting.value[0].description_size_restriction:
+                            log_error(traceback.format_exc())
+                            form = TypeStrForm(parent=self,
+                                               label=f'{get_str("too_long_description")}{str(upload_hosting.value[0].description_size_restriction)}',
+                                               current_text=self.description)
+                            form.exec_()
+                            self.description = form.str
+                    self.upload_targets.append(upload_target)
+
+                for target in self.upload_targets:
+                    self.queue_media_service.add_to_the_upload_queue(
+                        UploadQueueMedia(video_dir=get_str('upload_yet'),
+                                         hosting=target['hosting'],
+                                         status=5,
+                                         account=self.state_service.get_account_by_hosting_and_login(
+                                             target['hosting'],
+                                             target['login']),
+                                         remove_files_after_upload=self.remove_files_after_upload.checkState() != 0))
 
         self.video_quality = self.choose_video_quality_combo_box.itemData(self.choose_video_quality_combo_box.currentIndex())
         self.format = self.choose_video_format_combo_box.itemData(self.choose_video_format_combo_box.currentIndex())

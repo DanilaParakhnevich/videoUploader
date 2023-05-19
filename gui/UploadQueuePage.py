@@ -288,15 +288,16 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
         if form.passed is True:
             for item in form.video_info:
-                self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(video_dir=item[0],
-                                                                                  hosting=form.hosting.name,
-                                                                                  status=0,
-                                                                                  account=form.account,
-                                                                                  destination=form.destination,
-                                                                                  upload_date=item[3],
-                                                                                  title=item[1],
-                                                                                  description=item[2],
-                                                                                  remove_files_after_upload=False))
+                for target in form.upload_targets:
+                    self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(video_dir=item[0],
+                                                                                      hosting=target['hosting'],
+                                                                                      status=0,
+                                                                                      account=self.state_service.get_account_by_hosting_and_login(target['hosting'], target['login']),
+                                                                                      destination=target['upload_target'],
+                                                                                      upload_date=item[3],
+                                                                                      title=item[1],
+                                                                                      description=item[2],
+                                                                                      remove_files_after_upload=False))
 
     def on_delete_row(self):
         button = self.sender()

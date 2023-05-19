@@ -21,13 +21,13 @@ class ChooseAccountsForUploadingForm(QDialog):
         layout.addWidget(self.accounts_list_widget, 0, 0)
 
         button_login = QPushButton(get_str('choose'))
-        button_login.clicked.connect(self.choose_account)
+        button_login.clicked.connect(self.choose_accounts)
         layout.addWidget(button_login, 3, 0, 1, 2)
         layout.setRowMinimumHeight(3, 75)
 
         self.setLayout(layout)
 
-    def choose_account(self):
+    def choose_accounts(self):
         for i in range(0, self.accounts_list_widget.rowCount()):
             if self.accounts_list_widget.item(i, 2).checkState() != 0:
                 hosting = self.accounts_list_widget.item(i, 1).text()

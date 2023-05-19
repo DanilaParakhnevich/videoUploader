@@ -7,6 +7,7 @@ import requests
 
 
 if __name__ == "__main__":
+    
     try:
         os.system('PLAYWRIGHT_BROWSERS_PATH=0 sh playwright/driver/playwright.sh install chromium')
     except:
@@ -35,5 +36,8 @@ if __name__ == "__main__":
 
     ui = Ui_BuxarVideoUploader()
     ui.setupUi(BuxarVideoUploader)
-    BuxarVideoUploader.show()
-    sys.exit(app.exec_())
+    try:
+        BuxarVideoUploader.show()
+        sys.exit(app.exec_())
+    except:
+        print(traceback.format_exc())
