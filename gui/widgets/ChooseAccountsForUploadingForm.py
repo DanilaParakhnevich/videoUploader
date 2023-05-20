@@ -25,6 +25,7 @@ class ChooseAccountsForUploadingForm(QDialog):
         layout.addWidget(button_login, 3, 0, 1, 2)
         layout.setRowMinimumHeight(3, 75)
 
+        self.accounts = list()
         self.setLayout(layout)
 
     def choose_accounts(self):

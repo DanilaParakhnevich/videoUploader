@@ -1,5 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QIntValidator
+
+from gui.widgets.EventsListForm import EventsListForm
 from model.Settings import Settings
 from service.LocalizationService import *
 
@@ -87,16 +89,25 @@ class SettingsPage(QtWidgets.QDialog):
         self.gridLayout.addWidget(self.rate_limit_label, 6, 0)
         self.gridLayout.addWidget(self.rate_limit_edit, 6, 1)
 
+        self.events_page_button = QtWidgets.QPushButton(self.settings_box)
+        self.events_page_button.setObjectName("events_page_button")
+        self.events_page_button.setMaximumWidth(200)
+        self.events_page_button.clicked.connect(self.open_events_page)
+        self.gridLayout.addWidget(self.events_page_button, 7, 1)
+        self.events_label = QtWidgets.QLabel(self.settings_box)
+        self.events_label.setObjectName("add_localization_label")
+        self.gridLayout.addWidget(self.events_label, 7, 0)
+
         self.save_button = QtWidgets.QPushButton(self.settings_box)
         self.save_button.setObjectName("save_button")
         self.save_button.setMaximumWidth(80)
         self.save_button.clicked.connect(self.on_save)
-        self.gridLayout.addWidget(self.save_button, 7, 0)
+        self.gridLayout.addWidget(self.save_button, 8, 0)
 
-        self.autostart = QtWidgets.QCheckBox(self.settings_box)
-        self.autostart.setObjectName("autostart")
-        self.autostart.setChecked(self.old_settings.autostart)
-        self.gridLayout.addWidget(self.autostart, 7, 1)
+        self.autostart_button = QtWidgets.QPushButton(self.settings_box)
+        self.autostart_button.clicked.connect(self.add_autostart)
+        self.autostart_button.setObjectName("autostart")
+        self.gridLayout.addWidget(self.autostart_button, 8, 1)
 
         self.retranslate_ui()
 
@@ -107,7 +118,8 @@ class SettingsPage(QtWidgets.QDialog):
         self.download_strategy_label.setText(get_str('download_strategy'))
         self.pack_count_label.setText(get_str('count_media_for_synchronous_downloading'))
         self.rate_limit_label.setText(get_str('download_speed_limit'))
-        self.autostart.setText(get_str('application_autostart'))
+        self.autostart_button.setText(get_str('application_autostart'))
+        self.events_label.setText(get_str('events'))
         self.choose_dir_label.setText(get_str('choose_the_download_path'))
         self.add_localization_label.setText(get_str('add_localization'))
         self.choose_dir_button.setText(self.old_settings.download_dir)
@@ -121,7 +133,7 @@ class SettingsPage(QtWidgets.QDialog):
 
     def add_locale(self):
         dialog = QtWidgets.QFileDialog()
-        folder_path = dialog.getOpenFileName(None, get_str('choose_dir'), "", "JSON (*.json)")
+        folder_path = dialog.getOpenFileName(None, get_str('choose_loc_file'), "", "JSON (*.json)")
 
         if folder_path[0] is not '':
             try:
@@ -135,6 +147,13 @@ class SettingsPage(QtWidgets.QDialog):
                 msg = QtWidgets.QMessageBox()
                 msg.setText(get_str('bad_locale_file'))
                 msg.exec_()
+
+    def open_events_page(self):
+        events = EventsListForm(self)
+        events.exec_()
+
+    def add_autostart(self):
+        return
 
     def on_strategy_changed(self, index):
         if index != 2:
@@ -161,7 +180,6 @@ class SettingsPage(QtWidgets.QDialog):
             Settings(
                 language=self.language_box.currentData(),
                 download_strategy=self.download_strategy_box.currentData(),
-                autostart=self.autostart.isChecked(),
                 download_dir=self.choose_dir_button.text(),
                 pack_count=int(self.pack_count_edit.text()),
                 rate_limit=int(self.rate_limit_edit.text())))

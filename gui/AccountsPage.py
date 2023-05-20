@@ -1,7 +1,9 @@
 from PyQt5 import QtCore, QtWidgets
 
+from model.Event import Event
 from model.Hosting import Hosting
 from gui.widgets.LoadingButton import AnimatedButton
+from service.EventService import EventService
 from service.LocalizationService import *
 
 
@@ -9,6 +11,7 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
     comboBox = QtWidgets.QComboBox()
 
     state_service = StateService()
+    event_service = EventService()
 
     accounts = state_service.get_accounts()
 
@@ -87,6 +90,8 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
 
             self.setItem(input_position, 0, item1)
             self.setItem(input_position, 1, item2)
+            self.event_service.add_event(Event(
+                f'{get_str("event_loginned")} {account.login}, {self.comboBox.currentText()}'))
 
         self.add_button.stop_animation()
 

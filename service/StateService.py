@@ -9,6 +9,7 @@ class StateService(object):
     channels = None
     tabs = None
     settings = None
+    events = None
     download_queue_media = None
     upload_queue_media = None
 
@@ -123,6 +124,21 @@ class StateService(object):
 
         return StateService.upload_queue_media
 
+    # Events
+    def save_events(self, events):
+        StateService.events = events
+        self.q_settings.setValue('events', events)
+
+    def get_events(self):
+        if StateService.events is None:
+            StateService.events = self.q_settings.value('events')
+
+            if StateService.events is None:
+                # Настройки по-умолчанию
+                StateService.events = list()
+
+        return StateService.events
+
     # Settings
     def save_settings(self, settings):
         StateService.settings = settings
@@ -134,7 +150,7 @@ class StateService(object):
 
             if StateService.settings is None:
                 # Настройки по-умолчанию
-                StateService.settings = Settings(language='Русский', download_strategy=0, autostart=False,
+                StateService.settings = Settings(language='Русский', download_strategy=0,
                                                  download_dir=os.pardir.__str__(), rate_limit=0, pack_count=5)
 
         return StateService.settings

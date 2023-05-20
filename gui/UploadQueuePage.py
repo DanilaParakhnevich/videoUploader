@@ -3,7 +3,9 @@ import time
 
 from PyQt5 import QtCore, QtWidgets
 
+from model.Event import Event
 from model.UploadQueueMedia import UploadQueueMedia
+from service.EventService import EventService
 from service.QueueMediaService import QueueMediaService
 from service.LocalizationService import *
 from model.Hosting import Hosting
@@ -19,6 +21,7 @@ import os, glob
 
 class UploadQueuePageWidget(QtWidgets.QTableWidget):
     state_service = StateService()
+    event_service = EventService()
     queue_media_service = QueueMediaService()
     queue_media_list = state_service.get_upload_queue_media()
     settings = state_service.get_settings()
@@ -142,7 +145,14 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             if queue_media.remove_files_after_upload:
                 for filename in glob.glob(os.path.dirname(queue_media.video_dir) + '/*'):
                     if filename.startswith(os.path.splitext(queue_media.video_dir)[0]):
-                        os.remove(filename)
+                        remove = True
+                        for item in self.queue_media_list:
+                            if (item.hosting != queue_media.hosting or item.account != queue_media.account) \
+                                    and item.video_dir == queue_media.video_dir and item.status != 2:
+                                remove = False
+                                break
+                        if remove:
+                            os.remove(filename)
 
         except SystemExit:
             self.set_media_status(key, 4)
@@ -153,6 +163,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             self.set_media_status(key, 3)
             return
 
+        self.event_service.add_event(Event(f'{get_str("event_uploaded")} {queue_media.video_dir} {get_str("to")} {queue_media.hosting}, {key_part}'))
         self.set_media_status(key, 2)
         self.upload_thread_dict.pop(key)
 
@@ -219,8 +230,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
         elif queue_media.status == 2:
             item4 = QtWidgets.QTableWidgetItem(get_str('end'))
-            action_button.setText(get_str('start'))
-            action_button.clicked.connect(self.on_start_upload)
+            action_button.setText('-')
         elif queue_media.status == 3:
             item4 = QtWidgets.QTableWidgetItem(get_str('error'))
             action_button.setText(get_str('start'))
@@ -228,6 +238,11 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         elif queue_media.status == 5:
             item4 = QtWidgets.QTableWidgetItem(get_str('on_download'))
             action_button.setText('-')
+
+            def do_nothing():
+                return
+
+            action_button.clicked.connect(do_nothing)
 
         self.setCellWidget(input_position, 4, action_button)
 
@@ -264,9 +279,8 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                     self.cellWidget(i, 4).clicked.connect(self.on_stop_upload)
                 elif status == 2:
                     self.item(i, 3).setText(get_str('end'))
-                    self.cellWidget(i, 4).setText(get_str('start'))
+                    self.cellWidget(i, 4).setText('-')
                     self.cellWidget(i, 4).clicked.disconnect()
-                    self.cellWidget(i, 4).clicked.connect(self.on_start_upload)
                 elif status == 3:
                     self.item(i, 3).setText(get_str('error'))
                     self.cellWidget(i, 4).setText(get_str('start'))
@@ -288,7 +302,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
         if form.passed is True:
             for item in form.video_info:
-                for target in form.upload_targets:
+                for target in item[4]:
                     self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(video_dir=item[0],
                                                                                       hosting=target['hosting'],
                                                                                       status=0,

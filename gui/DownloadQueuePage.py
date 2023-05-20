@@ -3,6 +3,8 @@ import datetime
 
 from PyQt5 import QtCore, QtWidgets
 
+from model.Event import Event
+from service.EventService import EventService
 from service.QueueMediaService import QueueMediaService
 from model.Hosting import Hosting
 from model.UploadQueueMedia import UploadQueueMedia
@@ -19,6 +21,7 @@ import time
 
 class DownloadQueuePageWidget(QtWidgets.QTableWidget):
     state_service = StateService()
+    event_service = EventService()
     queue_media_service = QueueMediaService()
     queue_media_list = state_service.get_download_queue_media()
     settings = state_service.get_settings()
@@ -144,6 +147,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             self.set_media_status(media.url, 3)
             return
 
+        self.event_service.add_event(Event(f'{get_str("event_downloaded")} {media.url}'))
         self.set_media_status(media.url, 2)
         self.download_thread_dict.pop(media.url)
 
@@ -182,8 +186,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
         elif queue_media.status == 2:
             item2 = QtWidgets.QTableWidgetItem(get_str('end'))
-            action_button.setText(get_str('start'))
-            action_button.clicked.connect(self.on_start_download)
+            action_button.setText('-')
         else:
             item2 = QtWidgets.QTableWidgetItem(get_str('error'))
             action_button.setText(get_str('start'))
@@ -220,9 +223,8 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                     self.cellWidget(i, 2).clicked.connect(self.on_stop_download)
                 elif status == 2:
                     self.item(i, 1).setText(get_str('end'))
-                    self.cellWidget(i, 2).setText(get_str('start'))
+                    self.cellWidget(i, 2).setText('-')
                     self.cellWidget(i, 2).clicked.disconnect()
-                    self.cellWidget(i, 2).clicked.connect(self.on_start_download)
                 elif status == 3:
                     self.item(i, 1).setText(get_str('error'))
                     self.cellWidget(i, 2).setText(get_str('start'))

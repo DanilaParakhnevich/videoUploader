@@ -53,7 +53,34 @@ class AddUploadQueueByDirectoryForm(QDialog):
         if choose_accounts_for_uploading_form.passed is False or len(choose_accounts_for_uploading_form.accounts) == 0:
             return
 
-        self.accounts = choose_accounts_for_uploading_form.accounts
+        accounts = choose_accounts_for_uploading_form.accounts
+        for account in accounts:
+            if Hosting[account.hosting].value[0].need_to_be_uploaded_to_special_source():
+                # В некоторых ситуациях, допустим с Telegram, для выгрузки необходимо указать дополнительную информацию
+                # такую, как то, на какой именно канал по аккаунту нужно выгружать видео
+
+                channels = self.state_service.get_channel_by_hosting(account.hosting)
+
+                if len(channels) == 0:
+                    msg = QMessageBox()
+                    msg.setText(
+                        f'{get_str("not_found_channels_for_videohosting")}: {account.hosting}')
+                    msg.exec_()
+                    self.close()
+                    continue
+
+                form = ChooseChannelForm(self, channels)
+                form.exec_()
+
+                if form.passed:
+                    self.upload_targets.append({'login': account.login,
+                    'hosting': account.hosting,
+                    'upload_target': form.channel.url})
+            else:
+                self.upload_targets.append({
+                    'login': account.login,
+                    'hosting': account.hosting,
+                    'upload_target': None})
 
         form = DirOrFileForm(parent=self.parentWidget())
         form.exec_()
@@ -121,17 +148,17 @@ class AddUploadQueueByDirectoryForm(QDialog):
     def handle_file(self, file_dir):
         title = None
         description = None
+        upload = False
+        upload_targets = list()
 
-        for account in self.accounts:
+        for target in self.upload_targets:
             try:
-                Hosting[account.hosting].value[0].validate_video_info_for_uploading(video_dir=file_dir)
-            except Exception as error:
-                msg = QMessageBox()
-                msg.setText(error.__str__())
-                msg.exec_()
+                Hosting[target['hosting']].value[0].validate_video_info_for_uploading(video_dir=file_dir)
+            except:
+                log_error(traceback.format_exc())
                 continue
 
-            if Hosting[account.hosting].value[0].title_size_restriction is not None and title is None:
+            if Hosting[target['hosting']].value[0].title_size_restriction is not None and title is None:
                 form = TypeStrForm(parent=self, label=f'{get_str("input_title")}: {file_dir}')
                 form.exec_()
 
@@ -139,7 +166,7 @@ class AddUploadQueueByDirectoryForm(QDialog):
 
                 if form.passed:
                     try:
-                        Hosting[account.hosting].value[0].validate_video_info_for_uploading(video_dir=file_dir, title=title)
+                        Hosting[target['hosting']].value[0].validate_video_info_for_uploading(video_dir=file_dir, title=title)
                     except VideoDurationException:
                         log_error(traceback.format_exc())
                         msg = QMessageBox()
@@ -156,10 +183,10 @@ class AddUploadQueueByDirectoryForm(QDialog):
                         msg.setText(f'{get_str("bad_file_format")}{file_dir}')
                         msg.exec_()
                     except NameIsTooLongException:
-                        while len(title) > Hosting[account.hosting].value[0].title_size_restriction:
+                        while len(title) > Hosting[target['hosting']].value[0].title_size_restriction:
                             log_error(traceback.format_exc())
                             form = TypeStrForm(parent=self,
-                                               label=f'{get_str("too_long_title")}{str(Hosting[account.hosting].value[0].title_size_restriction)}',
+                                               label=f'{get_str("too_long_title")}{str(Hosting[target["hosting"]].value[0].title_size_restriction)}',
                                                current_text=title)
                             form.exec_()
                             title = form.str
@@ -167,7 +194,7 @@ class AddUploadQueueByDirectoryForm(QDialog):
                 else:
                     continue
 
-            if Hosting[account.hosting].value[0].description_size_restriction is not None and description is None:
+            if Hosting[target['hosting']].value[0].description_size_restriction is not None and description is None:
                 form = TypeStrForm(parent=self, label=f'{get_str("input_description")}: {file_dir}')
                 form.exec_()
 
@@ -175,49 +202,21 @@ class AddUploadQueueByDirectoryForm(QDialog):
 
                 if form.passed:
                     try:
-                        Hosting[account.hosting].value[0].validate_video_info_for_uploading(description=description)
+                        Hosting[target['hosting']].value[0].validate_video_info_for_uploading(description=description)
                     except DescriptionIsTooLongException:
-                        while len(description) > Hosting[account.hosting].value[0].description_size_restriction:
+                        while len(description) > Hosting[target['hosting']].value[0].description_size_restriction:
                             log_error(traceback.format_exc())
                             form = TypeStrForm(parent=self,
-                                               label=f'{get_str("too_long_description")}{str(Hosting[account.hosting].value[0].description_size_restriction)}',
+                                               label=f'{get_str("too_long_description")}{str(Hosting[target["hosting"]].value[0].description_size_restriction)}',
                                                current_text=description)
                             form.exec_()
                             description = form.str
                 else:
                     continue
 
-            if Hosting[account.hosting].value[0].need_to_be_uploaded_to_special_source():
-                # В некоторых ситуациях, допустим с Telegram, для выгрузки необходимо указать дополнительную информацию
-                # такую, как то, на какой именно канал по аккаунту нужно выгружать видео
-
-                channels = self.state_service.get_channel_by_hosting(account.hosting)
-
-                if len(channels) == 0:
-                    msg = QMessageBox()
-                    msg.setText(
-                        f'{get_str("not_found_channels_for_videohosting")}: {account.hosting}')
-                    msg.exec_()
-                    self.close()
-                    continue
-
-                form = ChooseChannelForm(self, channels)
-                form.exec_()
-
-                if form.passed:
-                    self.upload_targets.append({
-                        'login': account.login,
-                        'hosting': account.hosting,
-                        'upload_target': form.channel.url
-                    })
-                else:
-                    self.close()
-                    continue
-            else:
-                self.upload_targets.append({
-                    'login': account.login,
-                    'hosting': account.hosting,
-                    'upload_target': None
-                })
-
-        return list([file_dir, title, description, datetime.now()])
+            upload_targets.append(target)
+            upload = True
+        if upload:
+            return list([file_dir, title, description, datetime.now(), upload_targets])
+        else:
+            return False

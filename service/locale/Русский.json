@@ -111,5 +111,12 @@
   "bad_file_format": "Неподходящий формат видео: ",
   "for_account": "для канала: ",
   "upload": "Выгружать?",
-  "upload_yet": "Ещё не загружено"
+  "upload_yet": "Ещё не загружено",
+  "event": "Событие",
+  "events": "События",
+  "choose_loc_file": "Выберите файл локализации",
+  "event_downloaded": "Файл скачан:",
+  "event_uploaded": "Файл выгружен:",
+  "to": "В",
+  "event_loginned": "Произошла авторизация:"
 }
