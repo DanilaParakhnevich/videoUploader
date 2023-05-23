@@ -1,5 +1,6 @@
 from gui.widgets.LoginForm import LoginForm
 from model.VideoModel import VideoModel
+from service.LocalizationService import get_str
 from service.videohosting_service.VideohostingService import VideohostingService
 from playwright.sync_api import sync_playwright
 from service.Tiktok_uploader import uploadVideo
@@ -23,7 +24,7 @@ class TikTokService(VideohostingService):
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto(url)
-            page.wait_for_selector('.tiktok-833rgq-DivShareLayoutMain')
+            page.wait_for_selector('.tiktok-833rgq-DivShareLayoutMain', timeout=0)
 
             self.scroll_page_to_the_bottom(page=page)
 
@@ -31,7 +32,7 @@ class TikTokService(VideohostingService):
             for box in stream_boxes.element_handles():
                 result.append(VideoModel(url=box.query_selector('.tiktok-yz6ijl-DivWrapper').query_selector('a').get_attribute('href'),
                                          name=box.query_selector('.tiktok-1wrhn5c-AMetaCaptionLine').get_attribute('title'),
-                                         date='Нет информации'))
+                                         date=get_str('no_info')))
 
         return result
 

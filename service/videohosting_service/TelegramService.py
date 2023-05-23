@@ -111,10 +111,5 @@ class TelegramService(VideohostingService):
     def need_to_be_uploaded_to_special_source(self) -> bool:
         return True
 
-    def validate_special_source(self, account, source_name) -> bool:
-        app = Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
-                     workdir='service/videohosting_service/tmp')
-        app.get_chat_history(chat_id=source_name)
-
     def is_async(self) -> bool:
         return True

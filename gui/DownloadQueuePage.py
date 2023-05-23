@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+from threading import Lock
 
 from PyQt5 import QtCore, QtWidgets
 
@@ -78,6 +79,8 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             self.timer = QTimer(self)
             self.timer.timeout.connect(self.downloading_parallel_hook)
             self.timer.start(3_000)
+
+        self.lock = Lock()
 
     def downloading_serial_hook(self):
         if len(self.download_thread_dict) == 0:
@@ -205,7 +208,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
     def set_media_status(self, url, status):
         i = 0
-        time.sleep(0.2)
+        self.lock.acquire()
         for media in self.queue_media_list:
             if media.url == url:
                 media.status = status
@@ -232,6 +235,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                     self.cellWidget(i, 2).clicked.connect(self.on_start_download)
                 break
             i += 1
+        self.lock.release()
 
     def get_row_index(self, url):
         i = 0

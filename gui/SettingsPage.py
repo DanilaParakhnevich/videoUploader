@@ -10,11 +10,12 @@ class SettingsPage(QtWidgets.QDialog):
     state_service = StateService()
 
     def __init__(self, central_widget):
+
         super(SettingsPage, self).__init__(central_widget)
         self.old_settings = self.state_service.get_settings()
         self.settings_box = QtWidgets.QWidget()
         self.scroll = QtWidgets.QScrollArea(self)
-        self.resize(640, 480)
+        self.resize(700, 480)
 
         self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
@@ -98,16 +99,21 @@ class SettingsPage(QtWidgets.QDialog):
         self.events_label.setObjectName("add_localization_label")
         self.gridLayout.addWidget(self.events_label, 7, 0)
 
+        self.send_crash_notifications = QtWidgets.QCheckBox(self.settings_box)
+        self.send_crash_notifications.setObjectName("autostart")
+        self.send_crash_notifications.setChecked(self.old_settings.send_crash_notifications)
+        self.gridLayout.addWidget(self.send_crash_notifications, 8, 0)
+
         self.save_button = QtWidgets.QPushButton(self.settings_box)
         self.save_button.setObjectName("save_button")
         self.save_button.setMaximumWidth(80)
         self.save_button.clicked.connect(self.on_save)
-        self.gridLayout.addWidget(self.save_button, 8, 0)
+        self.gridLayout.addWidget(self.save_button, 9, 0)
 
         self.autostart_button = QtWidgets.QPushButton(self.settings_box)
         self.autostart_button.clicked.connect(self.add_autostart)
         self.autostart_button.setObjectName("autostart")
-        self.gridLayout.addWidget(self.autostart_button, 8, 1)
+        self.gridLayout.addWidget(self.autostart_button, 9, 1)
 
         self.retranslate_ui()
 
@@ -121,6 +127,7 @@ class SettingsPage(QtWidgets.QDialog):
         self.autostart_button.setText(get_str('application_autostart'))
         self.events_label.setText(get_str('events'))
         self.choose_dir_label.setText(get_str('choose_the_download_path'))
+        self.send_crash_notifications.setText(get_str('send_crash_notifications'))
         self.add_localization_label.setText(get_str('add_localization'))
         self.choose_dir_button.setText(self.old_settings.download_dir)
         self.save_button.setText(get_str('save'))
@@ -182,4 +189,5 @@ class SettingsPage(QtWidgets.QDialog):
                 download_strategy=self.download_strategy_box.currentData(),
                 download_dir=self.choose_dir_button.text(),
                 pack_count=int(self.pack_count_edit.text()),
-                rate_limit=int(self.rate_limit_edit.text())))
+                rate_limit=int(self.rate_limit_edit.text()),
+                send_crash_notifications=self.send_crash_notifications.checkState() != 0))

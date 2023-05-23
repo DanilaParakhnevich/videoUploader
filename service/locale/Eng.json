@@ -104,7 +104,7 @@
   "choose_file": "Choose a file",
   "audio": "Audio",
   "video_and_audio": "Audio and Video",
-"not_merge_video_and_audio": "Audio and video (don't merge)",
+  "not_merge_video_and_audio": "Audio and video (don't merge)",
   "remove_files_after_upload": "Do you want to delete files after upload?",
   "bad_file_duration": "Video length is not suitable: ",
   "bad_file_size": "Video size too big: ",
@@ -118,5 +118,7 @@
   "event_downloaded": "File downloaded:",
   "event_uploaded": "File Uploaded:",
   "to": "to",
-  "event_loginned": "Logged in:"
+  "event_loginned": "Logged in:",
+  "send_crash_notifications": "Send a critical bug report to the developer?",
+  "no_info": "No info"
 }

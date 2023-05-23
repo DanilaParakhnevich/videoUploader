@@ -386,6 +386,9 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         thread.start()
 
     def get_video_list(self, button: AnimatedButton, hosting, channel, account, event_loop):
+        if channel is None:
+            print()
+
         if event_loop is not None:
             asyncio.set_event_loop(event_loop)
 

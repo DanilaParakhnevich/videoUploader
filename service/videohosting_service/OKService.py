@@ -11,7 +11,7 @@ class OKService(VideohostingService):
 
     def __init__(self):
         self.video_regex = 'https://ok.ru/video/.*'
-        self.channel_regex = 'https:\/\/ok.ru\/.*\/video'
+        self.channel_regex = 'https:\/\/ok.ru\/.*\/.*'
         self.upload_video_formats = list(['3g2', '3gp', '3gpp', 'asf', 'avi', 'dat', 'divx', 'dv', 'f4v', 'flv', 'gif',
                                           'm2ts', 'm4v', 'mkv', 'mod', 'mov', 'mp4', 'mpe', 'mpeg', 'mpeg4', 'mpg',
                                           'mts', 'nsv', 'ogm', 'ogv', 'qt', 'tod', 'ts', 'vob', 'wmv', 'webm'])
@@ -22,13 +22,21 @@ class OKService(VideohostingService):
         self.title_size_restriction = 9_999_999_999
         self.description_size_restriction = 9_999_999_999
 
-    def get_videos_by_url(self, url, account=None):
+    def get_videos_by_url(self, url: str, account=None):
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=True)
+            context = self.new_context(p=p, headless=False)
             context.add_cookies(account.auth)
             page = context.new_page()
-            page.goto(url)
-            page.wait_for_selector('.ugrid.ugrid__video.__l')
+            page.goto(url, timeout=0)
+            if url.__contains__('group'):
+                page.click('a[data-l="outlandermenu,altGroupVideoAll"]', timeout=0)
+            elif url.__contains__('feed'):
+                page.click('[href*="/video/showcase"]', timeout=0)
+                page.click('#mctc_navMenuDropdownSec_vv-myVideo')
+            else:
+                page.click('a[data-l="outlandermenu,userFriendVideoNew"]', timeout=0)
+
+            page.wait_for_selector('.ugrid.ugrid__video', timeout=0)
 
             self.scroll_page_to_the_bottom(page=page)
 
@@ -37,7 +45,8 @@ class OKService(VideohostingService):
 
             for box in stream_boxes.element_handles():
                 if str(box.get_property('href')).__contains__('video'):
-                    result.append(VideoModel(url=str(box.get_property('href')), name=box.inner_html(), date='Нет информации'))
+                    result.append(
+                        VideoModel(url=str(box.get_property('href')), name=box.inner_html(), date='Нет информации'))
 
         return result
 
@@ -52,21 +61,25 @@ class OKService(VideohostingService):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=False)
             page = context.new_page()
-            page.goto('https://ok.ru/')
+            page.goto('https://ok.ru/', timeout=0)
             page.type('#field_email', login)
             page.type('#field_password', password)
             page.keyboard.press('Enter')
             page.wait_for_selector('.html5-upload-link', timeout=0)
             return page.context.cookies()
 
-    def upload_video(self, account, file_path, name, description, destination=None):
+    def upload_video(self, account, file_path, name, description, destination:str = None):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=True)
             context.add_cookies(account.auth)
             page = context.new_page()
-            page.goto('https://ok.ru/video/showcase')
-
-            page.click('.svg-ico_video_add_16')
+            page.goto(destination)
+            if destination.__contains__('feed'):
+                page.click('[href="/video/showcase"]')
+                page.click('.svg-ico_video_add_16')
+            else:
+                page.click('a[data-l="outlandermenu,altGroupVideoAll"]', timeout=0)
+                page.click(selector='a[hrefattrs*="GroupVideo_upload_stubUpload"]')
 
             with page.expect_file_chooser() as fc_info:
                 page.click(selector='.button-pro.js-upload-button')
@@ -85,3 +98,6 @@ class OKService(VideohostingService):
             page.click('.button-pro.js-submit-annotations-form', timeout=0)
 
             time.sleep(0.5)
+
+    def need_to_be_uploaded_to_special_source(self) -> bool:
+        return True

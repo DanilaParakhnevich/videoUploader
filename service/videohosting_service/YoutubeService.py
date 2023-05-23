@@ -34,24 +34,24 @@ class YoutubeService(VideohostingService):
 
     def login(self, login, password):
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=False)
+            context = self.new_context(p=p, headless=False,use_user_agent_arg=True)
             page = context.new_page()
-            page.goto('https://youtube.com')
-            page.wait_for_selector('a[aria-label="Sign in"]')
-            page.click('a[aria-label="Sign in"]')
+            page.goto('https://youtube.com', timeout=0)
+            page.wait_for_selector('a[aria-label="Sign in"]', timeout=0)
+            page.click('a[aria-label="Sign in"]', timeout=0)
             page.wait_for_selector('#avatar-btn', timeout=0)
 
             return page.context.cookies()
 
     def upload_video(self, account, file_path, name, description, destination=None):
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=False)
+            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
             context.add_cookies(account.auth)
             page = context.new_page()
-            page.goto('https://www.youtube.com/')
+            page.goto('https://www.youtube.com/', timeout=0)
 
             page.wait_for_selector('.yt-simple-endpoint.style-scope.ytd-topbar-menu-button-renderer',
-                                   timeout=10_000).click()
+                                   timeout=0).click()
             page.query_selector_all('.yt-simple-endpoint.style-scope.ytd-compact-link-renderer')[0].click()
 
             time.sleep(4)
@@ -61,7 +61,7 @@ class YoutubeService(VideohostingService):
             file_chooser = fc_info.value
             file_chooser.set_files(file_path)
 
-            page.wait_for_selector('#input', timeout=300_000)
+            page.wait_for_selector('#input', timeout=0)
 
             page.query_selector('#title-textarea').click(click_count=3)
             page.keyboard.press("Backspace")
@@ -70,15 +70,15 @@ class YoutubeService(VideohostingService):
             page.query_selector('#description-textarea').click()
             page.query_selector('#description-textarea').type(text=description if description is not None else '')
 
-            page.click(selector='#next-button')
+            page.click(selector='#next-button', timeout=0)
 
-            page.click(selector='[name=VIDEO_MADE_FOR_KIDS_NOT_MFK]')
+            page.click(selector='[name=VIDEO_MADE_FOR_KIDS_NOT_MFK]', timeout=0)
 
-            page.click(selector='#next-button')
-            page.click(selector='#next-button')
-            page.click(selector='#next-button')
+            page.click(selector='#next-button', timeout=0)
+            page.click(selector='#next-button', timeout=0)
+            page.click(selector='#next-button', timeout=0)
 
-            page.click(selector='[name=PUBLIC]')
+            page.click(selector='[name=PUBLIC]', timeout=0)
 
             page.click(selector='#done-button', timeout=0)
 

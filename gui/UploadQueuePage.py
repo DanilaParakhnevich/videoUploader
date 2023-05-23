@@ -1,5 +1,6 @@
 import asyncio
 import time
+from threading import Lock
 
 from PyQt5 import QtCore, QtWidgets
 
@@ -82,6 +83,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         self.uploading_by_schedule_timer = QTimer(self)
         self.uploading_by_schedule_timer.timeout.connect(self.upload_by_schedule)
         self.uploading_by_schedule_timer.start(10_000)
+        self.lock = Lock()
 
     def upload_by_schedule(self):
         for queue_media in self.queue_media_list:
@@ -107,7 +109,6 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 upload_thread.start()
 
     def upload_video(self, queue_media, event_loop):
-        time.sleep(3)
         key_part = queue_media.destination if queue_media.destination is not None else queue_media.account.login
         key = frozenset({queue_media.video_dir, key_part, queue_media.hosting})
 
@@ -129,7 +130,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                         description = data['description']
 
                 except:
-                    log_error(f'{queue_media.video_dir} - .info.json не найден')
+                    log_error(f'{os.path.splitext(queue_media.video_dir)[0]} - .info.json не найден')
             else:
                 name = queue_media.title
                 description = queue_media.description
@@ -259,7 +260,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
     def set_media_status(self, key, status):
         i = 0
-        time.sleep(0.2)
+        self.lock.acquire()
         for media in self.queue_media_list:
             if media.video_dir in key and media.hosting in key and (
                     media.destination in key or media.account.login in key) and (
@@ -288,6 +289,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                     self.cellWidget(i, 4).clicked.connect(self.on_start_upload)
                 break
             i += 1
+        self.lock.release()
 
     def get_row_index(self, video_dir):
         i = 0

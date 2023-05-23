@@ -12,7 +12,7 @@ class RutubeService(VideohostingService):
 
     def __init__(self):
         self.video_regex = 'https:/\/rutube.ru\/video\/.*'
-        self.channel_regex = 'https:\/\/rutube.ru\/.*\/videos\/'
+        self.channel_regex = 'https:\/\/rutube.ru\/channel\/.*\/'
         self.upload_video_formats = list(['mp4', 'flv', 'avi', 'mov', 'mpg', 'wmv', 'm4v', 'mp3',
                                           'wma', '3gp', 'mkv', 'webm'])
         self.duration_restriction = 300
@@ -20,10 +20,11 @@ class RutubeService(VideohostingService):
         self.title_size_restriction = 100
         self.description_size_restriction = 5_000
 
-    def get_videos_by_url(self, url, account=None):
+    def get_videos_by_url(self, url: str, account=None):
         result = list()
 
         with YoutubeDL(self.extract_info_opts) as ydl:
+            url = url if url.__contains__('videos') else url + 'videos'
             info = ydl.extract_info(url)
             for item in info['entries']:
                 result.append(VideoModel(item['url'], item['title']
@@ -41,24 +42,23 @@ class RutubeService(VideohostingService):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=False)
             page = context.new_page()
-            page.goto('https://rutube.ru')
-            page.wait_for_selector('.freyja_char-base-button__pointerCursor__JNA7y')
-            page.click('.freyja_char-base-button__pointerCursor__JNA7y')
-            page.wait_for_selector('.freyja_char-button__button__c4Dm-')
-            page.click('.freyja_char-button__button__c4Dm-')
+            page.goto('https://rutube.ru', timeout=0)
+            page.wait_for_selector('.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
+            page.click('.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
+            page.wait_for_selector('.freyja_char-button__button__c4Dm-', timeout=0)
+            page.click('.freyja_char-button__button__c4Dm-', timeout=0)
 
-            page.wait_for_selector('.freyja_char-header-user-menu__userAvatar__p5-3v.freyja_char-header-user-menu__userAvatarNoMargin__6zVk8', timeout=0)
+            page.wait_for_selector('.wdp-header-right-module__userWrapper', timeout=0)
 
-            page.screenshot(path="s1.jpg")
             return page.context.cookies()
 
     def upload_video(self, account, file_path, name, description, destination=None):
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=False)
+            context = self.new_context(p=p, headless=True)
             context.add_cookies(account.auth)
 
             page = context.new_page()
-            page.goto('https://studio.rutube.ru/uploader/')
+            page.goto('https://studio.rutube.ru/uploader/', timeout=0)
 
             with page.expect_file_chooser() as fc_info:
                 page.click(
@@ -66,7 +66,7 @@ class RutubeService(VideohostingService):
             file_chooser = fc_info.value
             file_chooser.set_files(file_path)
 
-            page.wait_for_selector('[name=title]', timeout=20_000)
+            page.wait_for_selector('[name=title]', timeout=0)
 
             time.sleep(1)
 
@@ -82,4 +82,5 @@ class RutubeService(VideohostingService):
                 '.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__regular__ksZLL.freyja_char-base-button__pointerCursor__JNA7y')
 
             page.click(
-                selector='.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__regular__ksZLL.freyja_char-base-button__pointerCursor__JNA7y')
+                selector='.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__regular__ksZLL.freyja_char-base-button__pointerCursor__JNA7y',
+                timeout=0)

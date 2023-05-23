@@ -1,3 +1,4 @@
+from service.LocalizationService import get_str
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
@@ -46,11 +47,11 @@ class InstagramService(VideohostingService):
                         if re.search(' on (.*).', str(not_parsed_date)) is not None:
                             date = re.search(' on (.*).', str(aagu.query_selector('img').get_property('alt'))).group(1)
                         else:
-                            date = 'Нет информации'
+                            date = get_str('no_info')
 
                         result.append(
                             VideoModel(url=f'https://www.instagram.com{box.get_attribute("href")}',
-                                       name='Нет информации',
+                                       name=get_str('no_info'),
                                        date=date))
 
             return result
@@ -69,7 +70,7 @@ class InstagramService(VideohostingService):
             page.type('input[name="username"]', login)
             page.type('input[name="password"]', password)
             page.click('._acap')
-            page.wait_for_selector('._aauo', timeout=10_000)
+            page.wait_for_selector('._aauo', timeout=0)
 
             return page.context.cookies()
 

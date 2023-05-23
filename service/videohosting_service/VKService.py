@@ -100,11 +100,24 @@ class VKService(VideohostingService):
     def upload_video(self, account, file_path, name, description, destination=None):
         vk_session = vk_api.VkApi(token=account.auth['access_token'])
 
+        with vk_api.VkRequestsPool(vk_session) as pool:
+            response = pool.method('utils.resolveScreenName', {
+                'screen_name': destination.split('/')[3]
+            })
+
+        if response.result['type'] == 'group':
+            object_id = response.result["object_id"]
+        else:
+            object_id = None
+
         vk_upload = vk_api.VkUpload(vk_session)
-        vk_upload.video(video_file=file_path, name=name, description=description if description is not None else '')
+        vk_upload.video(video_file=file_path, name=name, group_id=object_id, description=description if description is not None else '')
 
     def handle_auth(self):
         form = AuthenticationConfirmationForm(self.login_form)
         form.exec_()
 
         return form.code_edit.text()
+
+    def need_to_be_uploaded_to_special_source(self) -> bool:
+        return True

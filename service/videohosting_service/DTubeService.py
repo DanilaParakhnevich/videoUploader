@@ -16,7 +16,7 @@ class DTubeService(VideohostingService):
         with sync_playwright() as p:
             page = self.new_context(p=p, headless=True).new_page()
 
-            page.goto('https://d.tube/#!/c/captainbob')
+            page.goto(url)
 
             self.scroll_page_to_the_bottom(page=page)
 
@@ -41,7 +41,7 @@ class DTubeService(VideohostingService):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=True)
             page = context.new_page()
-            page.goto('https://d.tube/#!/login')
+            page.goto('https://d.tube/#!/login', timeout=0)
             page.type('input[name=username]', login)
             page.type('input[name=privatekey]', password)
             page.keyboard.press('Enter')
@@ -49,7 +49,7 @@ class DTubeService(VideohostingService):
             time.sleep(5)
 
             try:
-                page.wait_for_selector('.ui.maingrid.content')
+                page.wait_for_selector('.ui.maingrid.content', timeout=60_000)
             except:
                 raise Exception('Неправильные данные')
 

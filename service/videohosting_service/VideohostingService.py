@@ -38,6 +38,8 @@ class VideohostingService(ABC):
         '--disable-blink-features=AutomationControlled',
     ]
 
+    user_agent_arg = '--user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36"'
+
     # см метод validate_page
     video_regex = None
     channel_regex = None
@@ -109,8 +111,14 @@ class VideohostingService(ABC):
     def upload_video(self, account, file_path, name, description, destination=None):
         raise NotImplementedError()
 
-    def new_context(self, p: Playwright, headless: bool) -> BrowserContext:
-        browser = p.chromium.launch(headless=headless, args=self.CHROMIUM_ARGS)
+    def new_context(self, p: Playwright, headless: bool, use_user_agent_arg: bool = False) -> BrowserContext:
+
+        args = self.CHROMIUM_ARGS.copy()
+
+        if use_user_agent_arg:
+            args.append(self.user_agent_arg)
+
+        browser = p.chromium.launch(headless=headless, args=args)
         return browser.new_context()
 
     def download_video(self, url, hosting, video_quality, format, account=None, table_item: QTableWidgetItem = None):
@@ -247,9 +255,6 @@ class VideohostingService(ABC):
     # Методы для определения конечного источника выгрузки видео для некоторых видеохостингов
     def need_to_be_uploaded_to_special_source(self) -> bool:
         return False  # False - видеохостингу не нужна эта логика
-
-    def validate_special_source(self, account, source_name) -> bool:
-        raise NotImplementedError()
 
     def is_async(self) -> bool:
         return False
