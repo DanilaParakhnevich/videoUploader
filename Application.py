@@ -43,7 +43,7 @@ if __name__ == "__main__":
                     form.close()
                     continue
             else:
-                sys.exit(app.exec_())
+                sys.exit(0)
             form.close()
             break
 
