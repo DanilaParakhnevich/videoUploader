@@ -152,5 +152,12 @@ class StateService(object):
                 # Настройки по-умолчанию
                 StateService.settings = Settings(language='Русский', download_strategy=0,
                                                  download_dir=os.pardir.__str__(), rate_limit=0, pack_count=5)
+            else:
+                if StateService.settings.send_crash_notifications is None:
+                    StateService.settings.send_crash_notifications = True
+                if StateService.settings.rate_limit is None:
+                    StateService.settings.rate_limit = 0
+                if StateService.settings.download_strategy is None:
+                    StateService.settings.download_strategy = 0
 
         return StateService.settings
