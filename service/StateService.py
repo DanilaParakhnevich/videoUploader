@@ -153,11 +153,11 @@ class StateService(object):
                 StateService.settings = Settings(language='Русский', download_strategy=0,
                                                  download_dir=os.pardir.__str__(), rate_limit=0, pack_count=5)
             else:
-                if StateService.settings.send_crash_notifications is None:
+                if hasattr(StateService.settings, 'send_crash_notifications') is False:
                     StateService.settings.send_crash_notifications = True
-                if StateService.settings.rate_limit is None:
+                if hasattr(StateService.settings, 'rate_limit') is False:
                     StateService.settings.rate_limit = 0
-                if StateService.settings.download_strategy is None:
+                if hasattr(StateService.settings, 'download_strategy') is False:
                     StateService.settings.download_strategy = 0
 
         return StateService.settings
