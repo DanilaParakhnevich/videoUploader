@@ -36,10 +36,8 @@ class YoutubeService(VideohostingService):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=False,use_user_agent_arg=True)
             page = context.new_page()
-            page.goto('https://youtube.com', timeout=0)
-            page.wait_for_selector('a[aria-label="Sign in"]', timeout=0)
-            page.click('a[aria-label="Sign in"]', timeout=0)
-            page.wait_for_selector('#avatar-btn', timeout=0)
+            page.goto('https://accounts.google.com/signin', timeout=0)
+            page.wait_for_selector('.XY0ASe', timeout=0)
 
             return page.context.cookies()
 
@@ -48,11 +46,25 @@ class YoutubeService(VideohostingService):
             context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
             context.add_cookies(account.auth)
             page = context.new_page()
+
+            page.goto(destination)
+
+            channel_id = page.query_selector('#channel-handle').text_content()
+
+            page.goto('https://www.youtube.com/channel_switcher?next=%2Faccount&feature=settings', timeout=0)
+
+            page.wait_for_url('https://www.youtube.com/account', timeout=0)
+
+            for title_element in page.query_selector_all('.ytd-account-item-renderer'):
+                if title_element.text_content() == channel_id:
+                    title_element.click()
+                    break
+
             page.goto('https://www.youtube.com/', timeout=0)
 
             page.wait_for_selector('.yt-simple-endpoint.style-scope.ytd-topbar-menu-button-renderer',
                                    timeout=0).click()
-            page.query_selector_all('.yt-simple-endpoint.style-scope.ytd-compact-link-renderer')[0].click()
+            page.query_selector_all('.yt-simple-endpoint.style-scope.ytd-compact-link-renderer')[0].click(timeout=0)
 
             time.sleep(4)
 
@@ -83,3 +95,6 @@ class YoutubeService(VideohostingService):
             page.click(selector='#done-button', timeout=0)
 
             time.sleep(1)
+
+    def need_to_be_uploaded_to_special_source(self) -> bool:
+        return True

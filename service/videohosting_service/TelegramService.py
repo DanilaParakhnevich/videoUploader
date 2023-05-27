@@ -32,7 +32,8 @@ class TelegramService(VideohostingService):
         with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash, workdir='service/videohosting_service/tmp') as app:
             for message in app.get_chat_history(chat_id=url):
                 if message.video is not None:
-                    result.append(VideoModel(url=message.link, name=message.caption, date=str(message.date)))
+                    message_url = f'https://t.me/c/me/{message.id}' if url == 'me' else message.link
+                    result.append(VideoModel(url=message_url, name=message.caption, date=str(message.date)))
 
         return result
 
@@ -65,8 +66,9 @@ class TelegramService(VideohostingService):
 
         with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
                     workdir='service/videohosting_service/tmp') as app:
-            chat_id = url.split('/')[3]
-            message_id = url.split('/')[4]
+            url_splitted = url.split('/')
+            chat_id = url_splitted[len(url_splitted) - 2]
+            message_id = url_splitted[len(url_splitted) - 1]
 
             def progress(current, total):
                 table_item.setText(f"{current * 100 / total:.1f}%")
@@ -88,9 +90,9 @@ class TelegramService(VideohostingService):
 
         with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
                     workdir='service/videohosting_service/tmp') as app:
-            chat_id = url.split('/')[3]
-            message_id = url.split('/')[4]
-
+            url_splitted = url.split('/')
+            chat_id = url_splitted[len(url_splitted) - 2]
+            message_id = url_splitted[len(url_splitted) - 1]
 
             msg = app.get_messages(chat_id=chat_id, message_ids=int(message_id))
 
