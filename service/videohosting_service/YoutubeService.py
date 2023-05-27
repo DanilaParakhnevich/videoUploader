@@ -43,17 +43,21 @@ class YoutubeService(VideohostingService):
 
     def upload_video(self, account, file_path, name, description, destination=None):
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+            context = self.new_context(p=p, headless=False, use_user_agent_arg=True)
             context.add_cookies(account.auth)
             page = context.new_page()
 
             page.goto(destination)
 
-            channel_id = page.query_selector('#channel-handle').text_content()
+            for channel_handle in page.query_selector_all('#channel-handle'):
+                if channel_handle is not None:
+                    channel_id = channel_handle.text_content()
+                    break
 
             page.goto('https://www.youtube.com/channel_switcher?next=%2Faccount&feature=settings', timeout=0)
 
             page.wait_for_url('https://www.youtube.com/account', timeout=0)
+            page.wait_for_selector('.ytd-account-item-renderer', timeout=0)
 
             for title_element in page.query_selector_all('.ytd-account-item-renderer'):
                 if title_element.text_content() == channel_id:
@@ -77,7 +81,7 @@ class YoutubeService(VideohostingService):
 
             page.query_selector('#title-textarea').click(click_count=3)
             page.keyboard.press("Backspace")
-            page.query_selector('#title-textarea').type(text=name)
+            page.query_selector('#title-textarea').type(text=name if name is not None else 'a')
 
             page.query_selector('#description-textarea').click()
             page.query_selector('#description-textarea').type(text=description if description is not None else '')
