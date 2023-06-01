@@ -54,3 +54,6 @@ class DTubeService(VideohostingService):
                 raise Exception('Неправильные данные')
 
             return page.context.cookies()
+
+    def need_to_pass_channel_after_login(self):
+        return False

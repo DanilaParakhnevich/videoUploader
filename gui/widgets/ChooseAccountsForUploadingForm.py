@@ -33,6 +33,8 @@ class ChooseAccountsForUploadingForm(QDialog):
             if self.accounts_list_widget.item(i, 2).checkState() != 0:
                 hosting = self.accounts_list_widget.item(i, 1).text()
                 login = self.accounts_list_widget.item(i, 0).text()
-                self.accounts.append(self.state_service.get_account_by_hosting_and_login(hosting, login))
+                by_login = self.state_service.get_account_by_hosting_and_login(hosting, login)
+                by_url = self.state_service.get_account_by_hosting_and_url(hosting, login)
+                self.accounts.append(by_url if by_url is not None else by_login)
         self.passed = True
         self.close()

@@ -1,5 +1,8 @@
 import sys
 
+from playwright.sync_api import sync_playwright
+
+from service.LocalizationService import get_str
 from service.videohosting_service.VideohostingService import VideohostingService
 from service.StateService import StateService
 from model.VideoModel import VideoModel
@@ -25,7 +28,6 @@ def auth(login: str, password: str, session: requests.Session, two_fa: bool = Fa
 
 
 class VKService(VideohostingService):
-
     state_service = StateService()
 
     def __init__(self):
@@ -39,41 +41,70 @@ class VKService(VideohostingService):
                                           'rmvb', 'm4v', 'mpg', 'ogv', 'ts', 'm2ts', 'mts', 'mxf', 'torrent'])
 
     def get_videos_by_url(self, url, account=None):
-        vk_session = vk_api.VkApi(token=account.auth['access_token'])
-        i = 0
-        prev_size = 1
         videos = list()
-        with vk_api.VkRequestsPool(vk_session) as pool:
-            response = pool.method('utils.resolveScreenName', {
-                'screen_name': url.split('/')[3]
-            })
 
-        if response.result['type'] == 'group':
-            object_id = f'-{response.result["object_id"]}'
+        if account is None:
+            result = list()
+
+            with sync_playwright() as p:
+                context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+
+                page = context.new_page()
+                page.goto(url, timeout=0, wait_until='domcontentloaded')
+                page.wait_for_selector('.page_block.redesigned-cover-block')
+                button = page.query_selector('li[data-tab="videos"]')
+
+                if button is None:
+                    raise Exception()
+
+                button.click()
+                page.click('a[href*="/video/"]', timeout=0)
+
+                self.scroll_page_to_the_bottom(page=page)
+                stream_boxes = page.locator("//div[contains(@class,'_video_item ge_video_item_')]")
+                for box in stream_boxes.element_handles():
+                    result.append(
+                        VideoModel(url=str(box.query_selector("a").get_property("href")),
+                                   name=str(box.query_selector(".VideoCard__title").text_content()),
+                                   date=str(box.query_selector('.VideoCard__extendedInfoUpdated').text_content())))
+
+            return result
         else:
-            object_id = response.result['object_id']
-
-        with vk_api.VkRequestsPool(vk_session) as pool:
-
-            while prev_size != 0:
-                response = pool.method('video.get', {
-                    'owner_id': object_id,
-                    'count': 200,
-                    'offset': 200 * i
+            vk_session = vk_api.VkApi(token=account.auth['access_token'])
+            i = 0
+            prev_size = 1
+            with vk_api.VkRequestsPool(vk_session) as pool:
+                response = pool.method('utils.resolveScreenName', {
+                    'screen_name': url.split('/')[3]
                 })
-                i += 1
 
-                pool.execute()
+            if response.result['type'] == 'group':
+                object_id = f'-{response.result["object_id"]}'
+            else:
+                object_id = response.result['object_id']
 
-                prev_size = len(response.result['items'])
-                for video in response.result['items']:
-                    try:
-                        videos.append(
-                            VideoModel(url=f'https://vk.com/video?z=video{video["owner_id"]}_{video["id"]}',
-                                       name=video['title'],
-                                       date=str(datetime.fromtimestamp(video['date']).strftime('%Y-%m-%d %H:%M:%S'))))
-                    except:
-                        print(video)
+            with vk_api.VkRequestsPool(vk_session) as pool:
+
+                while prev_size != 0:
+                    response = pool.method('video.get', {
+                        'owner_id': object_id,
+                        'count': 200,
+                        'offset': 200 * i
+                    })
+                    i += 1
+
+                    pool.execute()
+
+                    prev_size = len(response.result['items'])
+                    for video in response.result['items']:
+                        try:
+                            videos.append(
+                                VideoModel(url=f'https://vk.com/video?z=video{video["owner_id"]}_{video["id"]}',
+                                           name=video['title'],
+                                           date=str(
+                                               datetime.fromtimestamp(video['date']).strftime('%Y-%m-%d %H:%M:%S'))))
+                        except:
+                            print(video)
 
         return videos
 
@@ -97,6 +128,24 @@ class VKService(VideohostingService):
 
         return response
 
+    def validate_url_by_account(self, url: str, account) -> int:
+        vk_session = vk_api.VkApi(token=account.auth['access_token'])
+
+        user_id = account['user_id']
+
+        with vk_api.VkRequestsPool(vk_session) as pool:
+            response = pool.method('utils.resolveScreenName', {
+                'screen_name': url.split('/')[3]
+            })
+
+        if response.result['type'] == 'group':
+            response = pool.method('groups.getById', {
+                'group_id': response.result['object_id']
+            })
+            return response.result['is_admin'] == 1
+        else:
+            return response.result["object_id"] == user_id
+
     def upload_video(self, account, file_path, name, description, destination=None):
         vk_session = vk_api.VkApi(token=account.auth['access_token'])
 
@@ -111,7 +160,8 @@ class VKService(VideohostingService):
             object_id = None
 
         vk_upload = vk_api.VkUpload(vk_session)
-        vk_upload.video(video_file=file_path, name=name, group_id=object_id, description=description if description is not None else '')
+        vk_upload.video(video_file=file_path, name=name, group_id=object_id,
+                        description=description if description is not None else '')
 
     def handle_auth(self):
         form = AuthenticationConfirmationForm(self.login_form)

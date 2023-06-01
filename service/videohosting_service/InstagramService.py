@@ -21,7 +21,7 @@ class InstagramService(VideohostingService):
         result = list()
 
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True, args=self.CHROMIUM_ARGS)
+            browser = p.chromium.launch(headless=False, args=self.CHROMIUM_ARGS)
             context = browser.new_context()
 
             if account is not None:
@@ -73,6 +73,9 @@ class InstagramService(VideohostingService):
             page.wait_for_selector('._aauo', timeout=0)
 
             return page.context.cookies()
+
+    def need_to_pass_channel_after_login(self):
+        return False
 
     def upload_video(self, account, file_path, name, description, destination=None):
         cl = Client()

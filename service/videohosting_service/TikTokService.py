@@ -49,6 +49,9 @@ class TikTokService(VideohostingService):
             page.wait_for_selector(selector='#main-content-homepage_hot', timeout=0)
             return page.context.cookies()
 
+    def need_to_pass_channel_after_login(self):
+        return False
+
     # Пришлось использовать готовое чужое решение для выгрузки видео для TikTok, тк на сайте хорошая защита от ботов
     def upload_video(self, account, file_path, name, description, destination=None):
 

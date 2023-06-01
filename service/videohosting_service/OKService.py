@@ -24,17 +24,20 @@ class OKService(VideohostingService):
 
     def get_videos_by_url(self, url: str, account=None):
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=False)
-            context.add_cookies(account.auth)
+            context = self.new_context(p=p, headless=True)
+
+            if account is not None:
+                context.add_cookies(account.auth)
+
             page = context.new_page()
             page.goto(url, timeout=0)
             if url.__contains__('group'):
-                page.click('a[data-l="outlandermenu,altGroupVideoAll"]', timeout=0)
+                page.click('a[data-l="outlandermenu,altGroupVideoAll"]', timeout=60_000)
             elif url.__contains__('feed'):
-                page.click('[href*="/video/showcase"]', timeout=0)
+                page.click('[href*="/video/showcase"]', timeout=60_000)
                 page.click('#mctc_navMenuDropdownSec_vv-myVideo')
             else:
-                page.click('a[data-l="outlandermenu,userFriendVideoNew"]', timeout=0)
+                page.click('a[data-l="outlandermenu,userFriendVideoNew"]', timeout=60_000)
 
             page.wait_for_selector('.ugrid.ugrid__video', timeout=0)
 
@@ -68,18 +71,36 @@ class OKService(VideohostingService):
             page.wait_for_selector('.html5-upload-link', timeout=0)
             return page.context.cookies()
 
+    def validate_url_by_account(self, url: str, account) -> int:
+        with sync_playwright() as p:
+            context = self.new_context(p=p, headless=False)
+            context.add_cookies(account.auth)
+            page = context.new_page()
+            page.goto('https://ok.ru/', timeout=0)
+            page.goto(url, timeout=0)
+
+            page.wait_for_selector('.portlet_h')
+            user_item = page.query_selector('.u-menu.__items-count-2.header-action-menu.__v4.__small.__user')
+            group_item = page.query_selector('.ugrid_i.__invite_friends.group-onboarding_i')
+
+            if user_item is None and group_item is None:
+                return False
+            else:
+                return True
+        self.add_button.stop_animation()
+
     def upload_video(self, account, file_path, name, description, destination:str = None):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=True)
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto(destination)
-            if destination.__contains__('feed'):
+            if page.query_selector('.u-menu.__items-count-2.header-action-menu.__v4.__small.__user') is not None:
                 page.click('[href="/video/showcase"]')
                 page.click('.svg-ico_video_add_16')
             else:
                 page.click('a[data-l="outlandermenu,altGroupVideoAll"]', timeout=0)
-                page.click(selector='a[hrefattrs*="GroupVideo_upload_stubUpload"]')
+                page.click(selector='a[hrefattrs*="GroupVideo_upload_leftButton"]')
 
             with page.expect_file_chooser() as fc_info:
                 page.click(selector='.button-pro.js-upload-button')

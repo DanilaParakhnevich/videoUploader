@@ -1,5 +1,6 @@
 instagrapi
 moviepy
+pillow
 PyQt5
 activesoup
 requests

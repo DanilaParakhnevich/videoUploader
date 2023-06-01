@@ -52,13 +52,12 @@ class LoginForm(QDialog):
     def check_password(self):
         msg = QMessageBox()
 
-        for account in self.state_service.get_accounts_by_hosting(self.hosting.name):
-            # Логин выступает зачастую как просто название аккаунта. Исключаем возможность добавление идентичных
-            # аккаунтов по 1 хостингу
-            if account.login == self.lineEdit_username.text():
-                msg.setText(get_str('account_already_exists'))
-                msg.exec_()
-                return
+        if self.hosting.value[0].need_to_pass_channel_after_login() is False:
+            for account in self.state_service.get_accounts_by_hosting(self.hosting.name):
+                if account.login == self.lineEdit_username.text():
+                    msg.setText(get_str('account_already_exists'))
+                    msg.exec_()
+                    return
 
         try:
             auth = self.service.login(self.lineEdit_username.text(), self.lineEdit_password.text())
@@ -69,8 +68,6 @@ class LoginForm(QDialog):
             self.close()
             return
 
-        msg.setText(get_str('authorized_successfully'))
-
         current_accounts = self.state_service.get_accounts()
         self.account = Account(hosting=self.hosting.name,
                                login=self.lineEdit_username.text(),
@@ -80,6 +77,4 @@ class LoginForm(QDialog):
         current_accounts.append(self.account)
 
         self.state_service.save_accounts(current_accounts)
-
-        msg.exec_()
         self.close()

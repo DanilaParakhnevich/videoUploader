@@ -1,7 +1,9 @@
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QIntValidator
 
+from gui.widgets.ChooseVideoQualityComboBox import ChooseVideoQualityComboBox
 from gui.widgets.EventsListForm import EventsListForm
+from gui.widgets.FormatChooserComboBox import FormatChooserComboBox
 from model.Settings import Settings
 from service.LocalizationService import *
 
@@ -15,7 +17,7 @@ class SettingsPage(QtWidgets.QDialog):
         self.old_settings = self.state_service.get_settings()
         self.settings_box = QtWidgets.QWidget()
         self.scroll = QtWidgets.QScrollArea(self)
-        self.resize(700, 480)
+        self.resize(700, 700)
 
         self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
@@ -27,10 +29,14 @@ class SettingsPage(QtWidgets.QDialog):
         self.gridLayout = QtWidgets.QGridLayout(self.settings_box)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.main_settings = QtWidgets.QLabel(self)
         self.main_settings.setObjectName("main_settings")
         self.main_settings.setMinimumWidth(200)
-        self.gridLayout.addWidget(self.settings_box, 0, 0)
+        self.gridLayout.addWidget(self.settings_box, 0, 0, 200, 20)
+
+        self.gridLayout.setSpacing(-100)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0);
 
         self.language_label = QtWidgets.QLabel(get_str('language'))
         self.language_box = QtWidgets.QComboBox()
@@ -90,30 +96,98 @@ class SettingsPage(QtWidgets.QDialog):
         self.gridLayout.addWidget(self.rate_limit_label, 6, 0)
         self.gridLayout.addWidget(self.rate_limit_edit, 6, 1)
 
+        self.choose_video_format_combo_box = FormatChooserComboBox(self)
+        self.choose_video_format_combo_box.setGeometry(QtCore.QRect(620, 100, 300, 30))
+        self.choose_video_format_combo_box.setObjectName('choose_video_format_combo_box')
+        self.choose_video_format_combo_box.setCurrentIndex(self.old_settings.format)
+        self.choose_video_format_combo_label = QtWidgets.QLabel(self.settings_box)
+        self.choose_video_format_combo_label.setObjectName("choose_video_format_combo_label")
+        self.gridLayout.addWidget(self.choose_video_format_combo_label, 7, 0)
+        self.gridLayout.addWidget(self.choose_video_format_combo_box, 7, 1)
+
+        self.choose_video_quality_form = ChooseVideoQualityComboBox(self)
+        self.choose_video_quality_form.setGeometry(QtCore.QRect(620, 150, 300, 30))
+        self.choose_video_quality_form.setObjectName('choose_video_quality_form')
+        self.choose_video_quality_form.setCurrentIndex(self.old_settings.video_quality)
+        self.choose_video_quality_label = QtWidgets.QLabel(self.settings_box)
+        self.choose_video_quality_label.setObjectName("choose_video_quality_label")
+        self.gridLayout.addWidget(self.choose_video_quality_label, 8, 0)
+        self.gridLayout.addWidget(self.choose_video_quality_form, 8, 1)
+
+        self.retries_label = QtWidgets.QLabel('retries')
+        self.retries_edit = QtWidgets.QLineEdit()
+        self.retries_edit.setValidator(QIntValidator(0, 100))
+        self.retries_edit.setMaximumWidth(150)
+        self.retries_edit.setText(str(self.old_settings.retries))
+        self.gridLayout.addWidget(self.retries_label, 9, 0)
+        self.gridLayout.addWidget(self.retries_edit, 9, 1)
+
+        self.no_check_certificate = QtWidgets.QCheckBox(self)
+        self.no_check_certificate.setGeometry(QtCore.QRect(620, 200, 30, 30))
+        self.no_check_certificate.setObjectName('remove_files_after_upload')
+        self.no_check_certificate.setChecked(self.old_settings.no_check_certificate)
+        self.no_check_certificate_label = QtWidgets.QLabel(self.settings_box)
+        self.no_check_certificate_label.setObjectName("remove_files_after_upload_label")
+        self.gridLayout.addWidget(self.no_check_certificate_label, 10, 0)
+        self.gridLayout.addWidget(self.no_check_certificate, 10, 1)
+
+        self.audio_quality_label = QtWidgets.QLabel('audio_quality')
+        self.audio_quality = QtWidgets.QLineEdit()
+        self.audio_quality.setValidator(QIntValidator(1, 9))
+        self.audio_quality.setMaximumWidth(150)
+        self.audio_quality.setText(str(self.old_settings.audio_quality))
+        self.gridLayout.addWidget(self.audio_quality_label, 11, 0)
+        self.gridLayout.addWidget(self.audio_quality, 11, 1)
+
+        self.no_cache_dir = QtWidgets.QCheckBox(self)
+        self.no_cache_dir.setGeometry(QtCore.QRect(620, 200, 30, 30))
+        self.no_cache_dir.setObjectName('remove_files_after_upload')
+        self.no_cache_dir.setChecked(self.old_settings.no_cache_dir)
+        self.no_cache_dir_label = QtWidgets.QLabel(self.settings_box)
+        self.no_cache_dir_label.setObjectName("no_cache_dir_label")
+        self.gridLayout.addWidget(self.no_cache_dir_label, 12, 0)
+        self.gridLayout.addWidget(self.no_cache_dir, 12, 1)
+
+        self.referer_label = QtWidgets.QLabel('referer')
+        self.referer = QtWidgets.QLineEdit()
+        self.referer.setMaximumWidth(150)
+        self.referer.setText(str(self.old_settings.referer))
+        self.gridLayout.addWidget(self.referer_label, 13, 0)
+        self.gridLayout.addWidget(self.referer, 13, 1)
+
+        self.remove_files_after_upload = QtWidgets.QCheckBox(self)
+        self.remove_files_after_upload.setGeometry(QtCore.QRect(620, 200, 30, 30))
+        self.remove_files_after_upload.setObjectName('remove_files_after_upload')
+        self.remove_files_after_upload.setChecked(self.old_settings.remove_files_after_upload)
+        self.remove_files_after_upload_label = QtWidgets.QLabel(self.settings_box)
+        self.remove_files_after_upload_label.setObjectName("remove_files_after_upload_label")
+        self.gridLayout.addWidget(self.remove_files_after_upload_label, 14, 0)
+        self.gridLayout.addWidget(self.remove_files_after_upload, 14, 1)
+
         self.events_page_button = QtWidgets.QPushButton(self.settings_box)
         self.events_page_button.setObjectName("events_page_button")
         self.events_page_button.setMaximumWidth(200)
         self.events_page_button.clicked.connect(self.open_events_page)
-        self.gridLayout.addWidget(self.events_page_button, 7, 1)
         self.events_label = QtWidgets.QLabel(self.settings_box)
         self.events_label.setObjectName("add_localization_label")
-        self.gridLayout.addWidget(self.events_label, 7, 0)
+        self.gridLayout.addWidget(self.events_label, 15, 0)
+        self.gridLayout.addWidget(self.events_page_button, 15, 1)
 
         self.send_crash_notifications = QtWidgets.QCheckBox(self.settings_box)
         self.send_crash_notifications.setObjectName("autostart")
         self.send_crash_notifications.setChecked(self.old_settings.send_crash_notifications)
-        self.gridLayout.addWidget(self.send_crash_notifications, 8, 0)
+        self.gridLayout.addWidget(self.send_crash_notifications, 16, 0)
 
         self.save_button = QtWidgets.QPushButton(self.settings_box)
         self.save_button.setObjectName("save_button")
         self.save_button.setMaximumWidth(80)
         self.save_button.clicked.connect(self.on_save)
-        self.gridLayout.addWidget(self.save_button, 9, 0)
+        self.gridLayout.addWidget(self.save_button, 17, 0)
 
-        self.autostart_button = QtWidgets.QPushButton(self.settings_box)
-        self.autostart_button.clicked.connect(self.add_autostart)
-        self.autostart_button.setObjectName("autostart")
-        self.gridLayout.addWidget(self.autostart_button, 9, 1)
+        self.autostart = QtWidgets.QCheckBox(self.settings_box)
+        self.autostart.setObjectName("autostart")
+        self.autostart.setChecked(self.old_settings.autostart)
+        self.gridLayout.addWidget(self.autostart, 17, 1)
 
         self.retranslate_ui()
 
@@ -124,7 +198,13 @@ class SettingsPage(QtWidgets.QDialog):
         self.download_strategy_label.setText(get_str('download_strategy'))
         self.pack_count_label.setText(get_str('count_media_for_synchronous_downloading'))
         self.rate_limit_label.setText(get_str('download_speed_limit'))
-        self.autostart_button.setText(get_str('application_autostart'))
+        self.autostart.setText(get_str('application_autostart'))
+        self.retries_label.setText(get_str('retries'))
+        self.no_check_certificate_label.setText(get_str('no_check_certificate'))
+        self.audio_quality_label.setText(get_str('audio_quality'))
+        self.no_cache_dir_label.setText(get_str('no_cache_dir'))
+        self.referer_label.setText(get_str('referer'))
+        self.remove_files_after_upload_label.setText(get_str('remove_files_after_upload'))
         self.events_label.setText(get_str('events'))
         self.choose_dir_label.setText(get_str('choose_the_download_path'))
         self.send_crash_notifications.setText(get_str('send_crash_notifications'))
@@ -190,4 +270,12 @@ class SettingsPage(QtWidgets.QDialog):
                 download_dir=self.choose_dir_button.text(),
                 pack_count=int(self.pack_count_edit.text()),
                 rate_limit=int(self.rate_limit_edit.text()),
-                send_crash_notifications=self.send_crash_notifications.checkState() != 0))
+                send_crash_notifications=self.send_crash_notifications.checkState() != 0,
+                video_quality=self.choose_video_quality_form.currentIndex(),
+                format=self.choose_video_format_combo_box.currentIndex(),
+                remove_files_after_upload=self.remove_files_after_upload.checkState() != 0,
+                retries=int(self.retries_edit.text()),
+                no_check_certificate=self.no_check_certificate.checkState() != 0,
+                audio_quality=int(self.audio_quality.text()),
+                no_cache_dir=self.no_cache_dir.checkState() != 0,
+                referer=self.referer.text()))

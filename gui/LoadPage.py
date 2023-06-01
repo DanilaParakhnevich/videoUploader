@@ -4,9 +4,11 @@ from dateutil.relativedelta import relativedelta
 
 from PyQt5 import QtCore, QtWidgets
 
+from gui.widgets.AddDownloadQueueViaLinkForm import AddDownloadQueueViaLinkForm
 from gui.widgets.ChooseVideoQualityComboBox import ChooseVideoQualityComboBox
 from gui.widgets.FormatChooserComboBox import FormatChooserComboBox
 from gui.widgets.TypeStrForm import TypeStrForm
+from model.Event import Event
 from model.LoadQueuedMedia import LoadQueuedMedia
 from model.Hosting import Hosting
 from model.Tab import TabModel
@@ -55,13 +57,14 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         self.setTabEnabled(0, False)
 
         self.tabBar().setTabButton(0, QtWidgets.QTabBar.RightSide, add_button)
-
+        self.currentChanged.connect(self.set_current_table)
         if len(self.tab_models) == 0:
             self.create_empty_tab()
         else:
             for tab in self.tab_models:
                 self.create_tab(tab.tab_name, tab.channel, tab.format[0], tab.video_quality[0],
-                                tab.remove_files_after_upload)
+                                tab.remove_files_after_upload, tab.download_dir if hasattr(tab, 'download_dir')
+                                else self.state_service.get_settings().download_dir)
 
         self.setCurrentIndex(0)
 
@@ -75,13 +78,17 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
     def create_empty_tab(self):
         channels = self.state_service.get_channels()
+        settings = self.state_service.get_settings()
         if len(channels) == 0:
-            return self.create_tab(None, None, 0, 0, 0)
+            return self.create_tab(None, None, settings.format, settings.video_quality,
+                                   settings.remove_files_after_upload, settings.download_dir)
         else:
-            return self.create_tab(None, channels.__getitem__(0), 0, 0, 0)
+            return self.create_tab(None, channels.__getitem__(0), settings.format, settings.video_quality,
+                                   settings.remove_files_after_upload, settings.download_dir)
 
     # Этот метод добавляет новую вкладку, либо вкладку по известным данным из tab_models
-    def create_tab(self, name, selected_channel, format_index, video_quality_index, remove_files_after_upload):
+    def create_tab(self, name, selected_channel, format_index, video_quality_index, remove_files_after_upload,
+                   download_dir):
         tab = QtWidgets.QWidget()
         tab.setObjectName("Tab.py")
 
@@ -95,25 +102,71 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         add_media_to_query_button = QtWidgets.QPushButton(tab)
         add_media_to_query_button.setGeometry(QtCore.QRect(700, 40, 150, 30))
         add_media_to_query_button.setObjectName('add_media_to_query_button')
+        tab.add_button = AnimatedButton(tab)
+        tab.add_button.setObjectName("add_button")
+        tab.add_button.setGeometry(QtCore.QRect(620, 100, 300, 30))
+        tab.add_button.setText(get_str('add_download_single_video_by_link'))
         tab.choose_video_format_combo_box = FormatChooserComboBox(tab)
-        tab.choose_video_format_combo_box.setGeometry(QtCore.QRect(620, 100, 300, 30))
+        tab.choose_video_format_combo_box.setGeometry(QtCore.QRect(620, 150, 300, 30))
         tab.choose_video_format_combo_box.setObjectName('choose_video_format_combo_box')
         tab.choose_video_format_combo_box.setCurrentIndex(format_index)
         tab.choose_video_format_combo_box.currentIndexChanged.connect(self.on_video_format_changed)
         tab.choose_video_quality_form = ChooseVideoQualityComboBox(tab)
-        tab.choose_video_quality_form.setGeometry(QtCore.QRect(620, 150, 300, 30))
+        tab.choose_video_quality_form.setGeometry(QtCore.QRect(620, 200, 300, 30))
         tab.choose_video_quality_form.setObjectName('choose_video_quality_form')
         tab.choose_video_quality_form.setCurrentIndex(video_quality_index)
         tab.choose_video_quality_form.currentIndexChanged.connect(self.on_video_quality_changed)
+        tab.choose_dir_button = QtWidgets.QPushButton(tab)
+        tab.choose_dir_button.setObjectName("choose_dir_button")
+        tab.choose_dir_button.setMaximumWidth(350)
+        tab.choose_dir_button.setText(download_dir)
+
+        def pick_new():
+            dialog = QtWidgets.QFileDialog()
+            folder_path = dialog.getExistingDirectory(None, get_str('choose_dir'))
+            if folder_path != '':
+                self.tab_models[self.currentIndex()].download_dir = folder_path
+                self.state_service.save_tabs_state(self.tab_models)
+                tab.choose_dir_button.setText(folder_path)
+
+        tab.choose_dir_button.clicked.connect(pick_new)
+        tab.choose_dir_button.setGeometry(QtCore.QRect(620, 250, 300, 30))
         tab.remove_files_after_upload = QtWidgets.QCheckBox(tab)
-        tab.remove_files_after_upload.setGeometry(QtCore.QRect(620, 200, 30, 30))
+        tab.remove_files_after_upload.setGeometry(QtCore.QRect(620, 300, 30, 30))
         tab.remove_files_after_upload.setObjectName('remove_files_after_upload')
         tab.remove_files_after_upload.setChecked(remove_files_after_upload)
         tab.remove_files_after_upload.clicked.connect(self.on_remove_files_after_upload_changed)
         remove_files_after_upload_label = QtWidgets.QLabel(tab)
         remove_files_after_upload_label.setText(get_str('remove_files_after_upload'))
-        remove_files_after_upload_label.setGeometry(QtCore.QRect(670, 200, 250, 30))
+        remove_files_after_upload_label.setGeometry(QtCore.QRect(670, 300, 250, 30))
         remove_files_after_upload_label.setObjectName('remove_files_after_upload_label')
+
+        def on_add():
+            form = AddDownloadQueueViaLinkForm(self, self.tab_models[self.current_table_index].format[0],
+                                               self.tab_models[self.current_table_index].video_quality[0],
+                                               self.tab_models[self.current_table_index].remove_files_after_upload)
+            form.exec_()
+
+            if form.passed is True:
+                queue_media = LoadQueuedMedia(url=form.link,
+                                              hosting=form.hosting.name,
+                                              status=0,
+                                              upload_after_download=form.upload_on,
+                                              account=form.account,
+                                              format=tab.choose_video_format_combo_box.currentData(),
+                                              video_quality=tab.choose_video_quality_form.currentData(),
+                                              remove_files_after_upload=tab.remove_files_after_upload.isChecked(),
+                                              upload_date=datetime.datetime.now(),
+                                              upload_targets=form.upload_targets,
+                                              title=form.title,
+                                              description=form.description,
+                                              download_dir=tab.choose_dir_button.text())
+
+
+                self.queue_media_service.add_to_the_download_queue(list([queue_media]))
+
+        tab.add_button.clicked.connect(on_add)
+
         table_widget = QtWidgets.QTableWidget(tab)
         table_widget.setGeometry(QtCore.QRect(20, 80, 500, 421))
         table_widget.setObjectName("table_widget")
@@ -129,6 +182,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         table_widget.setHorizontalHeaderItem(3, item)
         item = QtWidgets.QTableWidgetItem()
         table_widget.setHorizontalHeaderItem(4, item)
+        table_widget.horizontalHeader().sectionClicked.connect(self.section_clicked)
 
         self.insertTab(len(self.tables), tab, "")
 
@@ -168,10 +222,23 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
             self.tab_models.append(TabModel(tab_name, '', Hosting.Youtube.name, [0, None], [0, '144'], False))
             self.state_service.save_tabs_state(self.tab_models)
+
         self.tables.append(table_widget)
 
         add_media_to_query_button.clicked.connect(self.on_add_media_to_query)
         tab.channel_box.currentTextChanged.connect(self.on_channel_changed)
+
+    def set_current_table(self, index):
+        self.current_table_index = index
+
+    def section_clicked(self, index):
+        if index == 3:
+
+            if self.tables[self.current_table_index].rowCount() > 0:
+                to_set = QtCore.Qt.Checked if self.tables[self.current_table_index].item(0, 3).checkState() == 0 else 0
+
+            for index in range(0, self.tables[self.current_table_index].rowCount()):
+                self.tables[self.current_table_index].item(index, 3).setCheckState(to_set)
 
     def on_add_media_to_query(self):
         table = self.tables[self.currentIndex()]
@@ -245,24 +312,21 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                                                                   ext=video_info['ext'])
                     except VideoDurationException:
                         log_error(traceback.format_exc())
-                        msg = QtWidgets.QMessageBox()
-                        msg.setText(f'{get_str("bad_file_duration")}{video_info["title"]} {video_info["for_account"]}'
-                                    f'{upload_hosting.name}, {upload_target["login"]}')
-                        msg.exec_()
+                        self.event_service.add_event(
+                            Event(f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
+                                  f'{upload_hosting.name}, {upload_target["login"]}'))
                         continue
                     except FileSizeException:
                         log_error(traceback.format_exc())
-                        msg = QtWidgets.QMessageBox()
-                        msg.setText(f'{get_str("bad_file_size")}{video_info["title"]} {video_info["for_account"]}'
-                                    f'{upload_hosting.name}, {upload_target["login"]}')
-                        msg.exec_()
+                        self.event_service.add_event(
+                            Event(f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
+                                  f'{upload_hosting.name}, {upload_target["login"]}'))
                         continue
                     except FileFormatException:
                         log_error(traceback.format_exc())
-                        msg = QtWidgets.QMessageBox()
-                        msg.setText(f'{get_str("bad_file_format")}{video_info["title"]} {video_info["for_account"]}'
-                                    f'{upload_hosting.name}, {upload_target["login"]}')
-                        msg.exec_()
+                        self.event_service.add_event(
+                            Event(f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
+                                  f'{upload_hosting.name}, {upload_target["login"]}'))
                         continue
                     except NameIsTooLongException:
                         title = video_info['title']
@@ -297,7 +361,9 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                           remove_files_after_upload=self.tab_models[
                                               self.currentIndex()].remove_files_after_upload,
                                           title=title,
-                                          description=description)
+                                          description=description,
+                                          download_dir=self.tab_models[
+                                              self.currentIndex()].download_dir)
             upload_targets = list()
 
             # Если необходима выгрузка, учитывается интервал выгрузки, исходя из типа интервала. 1 видео выгружается сразу

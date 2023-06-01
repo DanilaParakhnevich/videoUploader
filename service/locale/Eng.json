@@ -120,5 +120,14 @@
   "to": "to",
   "event_loginned": "Logged in:",
   "send_crash_notifications": "Send a critical bug report to the developer?",
-  "no_info": "No info"
+  "no_info": "No info",
+  "channel": "Channel",
+  "type_url_for": "Write a link for the current account for",
+  "retype_url_for": "The link is invalid. Please retype it",
+  "no_free_space": "No free space",
+  "retries": "Number of download attempts",
+  "no_check_certificate": "Remove HTTPS certificate check",
+  "audio_quality": "Audio quality selection (1-9)",
+  "no_cache_dir": "Disable file system caching",
+  "referer": "Referrer if video is restricted to one domain"
 }

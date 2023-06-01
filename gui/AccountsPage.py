@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtWidgets
 
+from gui.widgets.TypeUrlForm import TypeUrlForm
 from model.Event import Event
 from model.Hosting import Hosting
 from gui.widgets.LoadingButton import AnimatedButton
@@ -49,7 +50,7 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
         item = self.horizontalHeaderItem(0)
         item.setText(get_str('videohosting'))
         item = self.horizontalHeaderItem(1)
-        item.setText(get_str('login'))
+        item.setText(get_str('channel'))
         item = self.horizontalHeaderItem(2)
         item.setText(get_str('delete'))
         self.add_button.setText(get_str('add'))
@@ -57,7 +58,7 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
         for account in self.accounts:
             self.insertRow(self.rowCount())
             item1 = QtWidgets.QTableWidgetItem(account.hosting)
-            item2 = QtWidgets.QTableWidgetItem(account.login)
+            item2 = QtWidgets.QTableWidgetItem(account.url if hasattr(account, 'url') and account.url is not None else account.login)
 
             input_position = self.rowCount() - 1
 
@@ -74,11 +75,35 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
         self.add_button.start_animation()
         hosting = Hosting[self.comboBox.currentText()]
 
+        if hosting.value[0].need_to_pass_channel_after_login():
+            form = TypeUrlForm(self, hosting)
+            form.exec_()
+
+            if form.passed is False:
+                self.add_button.stop_animation()
+                return
+
         account = hosting.value[0].show_login_dialog(hosting, self.parentWidget())
+        msg = QtWidgets.QMessageBox(self)
+        msg.setText(get_str('authorized_successfully'))
+
+        if hosting.value[0].need_to_pass_channel_after_login():
+            while hosting.value[0].validate_url_by_account(form.url, account) is False:
+                form = TypeUrlForm(self, hosting, title=get_str("retype_url_for"))
+                form.exec_()
+
+                if form.passed is False:
+                    self.add_button.stop_animation()
+                    return
+
+            account.url = form.url
+
+        msg.exec_()
+
         if account is not None:
             self.insertRow(self.rowCount())
             item1 = QtWidgets.QTableWidgetItem(self.comboBox.currentText())
-            item2 = QtWidgets.QTableWidgetItem(account.login)
+            item2 = QtWidgets.QTableWidgetItem(account.url if account.url is not None else account.login)
 
             input_position = self.rowCount() - 1
 

@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QSettings
+from PyQt5.QtCore import QSettings, QSize
 from model.Settings import Settings
 import os
 
@@ -68,6 +68,13 @@ class StateService(object):
             if account.hosting == hosting and account.login == login:
                 return account
         return None
+
+    def get_account_by_hosting_and_url(self, hosting: str, url: str):
+        for account in self.accounts:
+            if account.hosting == hosting and account.url == url:
+                return account
+        return None
+
 
     def get_accounts_by_hosting(self, hosting: str):
         result = list()
@@ -159,5 +166,35 @@ class StateService(object):
                     StateService.settings.rate_limit = 0
                 if hasattr(StateService.settings, 'download_strategy') is False:
                     StateService.settings.download_strategy = 0
+                if hasattr(StateService.settings, 'video_quality') is False:
+                    StateService.settings.video_quality = 0
+                if hasattr(StateService.settings, 'remove_files_after_upload') is False:
+                    StateService.settings.remove_files_after_upload = False
+                if hasattr(StateService.settings, 'format') is False:
+                    StateService.settings.format = 0
+                if hasattr(StateService.settings, 'autostart') is False:
+                    StateService.settings.autostart = False
+                if hasattr(StateService.settings, 'retries') is False:
+                    StateService.settings.retries = 10
+                if hasattr(StateService.settings, 'no_check_certificate') is False:
+                    StateService.settings.no_check_certificate = False
+                if hasattr(StateService.settings, 'audio_quality') is False:
+                    StateService.settings.audio_quality = 9
+                if hasattr(StateService.settings, 'no_cache_dir') is False:
+                    StateService.settings.no_cache_dir = False
+                if hasattr(StateService.settings, 'referer') is False:
+                    StateService.settings.referer = ''
 
         return StateService.settings
+
+    # GUI
+
+    def get_type_url_form_size(self):
+        size = self.q_settings.value('type_url_form_size')
+
+        if size is None:
+            return QSize(500, 120)
+        return size
+
+    def save_type_url_form_size(self, size: QSize):
+        self.q_settings.setValue('type_url_form_size', size)

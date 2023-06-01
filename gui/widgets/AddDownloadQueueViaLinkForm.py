@@ -1,14 +1,13 @@
 import traceback
 
-from PyQt5.QtWidgets import (QDialog, QPushButton, QLabel, QMessageBox, QComboBox, QGridLayout, QCheckBox)
-from PyQt5.QtCore import QRect
+from PyQt5.QtWidgets import (QDialog, QPushButton, QLabel, QMessageBox, QComboBox, QGridLayout)
 
-from gui.widgets.ChooseVideoQualityComboBox import ChooseVideoQualityComboBox
-from gui.widgets.FormatChooserComboBox import FormatChooserComboBox
 from gui.widgets.TypeStrForm import TypeStrForm
 from gui.widgets.UploadAfterDownloadForm import UploadAfterDownloadForm
+from model.Event import Event
 from model.Hosting import Hosting
 from model.UploadQueueMedia import UploadQueueMedia
+from service.EventService import EventService
 from service.LocalizationService import *
 from gui.widgets.ChooseAccountForm import ChooseAccountForm
 from gui.widgets.ChooseLinkForm import ChooseLinkForm
@@ -22,7 +21,6 @@ from service.videohosting_service.exception.VideoDurationException import VideoD
 
 
 class AddDownloadQueueViaLinkForm(QDialog):
-
     video_quality = None
     account = None
     hosting = None
@@ -34,7 +32,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
     title = None
     description = None
 
-    def __init__(self, parent):
+    def __init__(self, parent, format, quality, remove_files_after_upload):
 
         super().__init__(parent)
         self.setWindowTitle(get_str('adding_video_via_url'))
@@ -52,43 +50,19 @@ class AddDownloadQueueViaLinkForm(QDialog):
 
         layout.addWidget(label_name, 0, 0)
         layout.addWidget(self.hosting_combo_box, 0, 1)
-        
-        self.choose_video_format_combo_box = FormatChooserComboBox(self)
-        self.choose_video_format_combo_box.setGeometry(QRect(620, 100, 300, 30))
-        self.choose_video_format_combo_box.setObjectName('choose_video_format_combo_box')
-        self.choose_video_format_combo_box.setCurrentIndex(0)
-
-        layout.addWidget(self.choose_video_format_combo_box, 1, 1)
-
-        self.choose_video_quality_combo_box = ChooseVideoQualityComboBox(self)
-        self.choose_video_quality_combo_box.setGeometry(QRect(620, 150, 300, 30))
-        self.choose_video_quality_combo_box.setObjectName('choose_video_quality_form')
-        self.choose_video_quality_combo_box.setCurrentIndex(0)
-
-        layout.addWidget(self.choose_video_quality_combo_box, 2, 1)
-
-        remove_files_after_upload_label = QLabel()
-        remove_files_after_upload_label.setText(get_str('remove_files_after_upload'))
-        remove_files_after_upload_label.setGeometry(QRect(670, 200, 250, 30))
-        remove_files_after_upload_label.setObjectName('remove_files_after_upload_label')
-
-        layout.addWidget(remove_files_after_upload_label, 3, 0)
-
-        self.remove_files_after_upload = QCheckBox()
-        self.remove_files_after_upload.setGeometry(QRect(620, 200, 30, 30))
-        self.remove_files_after_upload.setObjectName('remove_files_after_upload')
-        self.remove_files_after_upload.setChecked(False)
-
-        layout.addWidget(self.remove_files_after_upload, 3, 1)
 
         button_choose = QPushButton(get_str('choose'))
         button_choose.clicked.connect(self.choose)
-        layout.addWidget(button_choose, 4, 0, 1, 2)
+        layout.addWidget(button_choose, 2, 0, 1, 2)
         layout.setRowMinimumHeight(4, 75)
 
         self.setLayout(layout)
         self.state_service = StateService()
         self.queue_media_service = QueueMediaService()
+        self.format = format
+        self.video_quality = quality
+        self.remove_files_after_upload = remove_files_after_upload
+        self.event_service = EventService()
 
     def choose(self):
         accounts = self.state_service.get_accounts_by_hosting(self.hosting_combo_box.currentText())
@@ -115,7 +89,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
             return
 
         self.link = form.link_edit.text()
-        if self.choose_video_format_combo_box.currentIndex() != 3:
+        if self.format != 3:
             form = UploadAfterDownloadForm(self, need_interval=False)
             form.exec_()
 
@@ -128,8 +102,8 @@ class AddDownloadQueueViaLinkForm(QDialog):
 
             if self.upload_on:
                 video_info = self.hosting.value[0].get_video_info(self.link,
-                                                             self.choose_video_quality_combo_box.itemData(self.choose_video_quality_combo_box.currentIndex()),
-                                                             self.account)
+                                                                  self.video_quality,
+                                                                  self.account)
                 # Если необходимо выгружать видео после загрузки, проводим валидацию
                 for upload_target in form.upload_targets:
                     upload_hosting = Hosting[upload_target['hosting']]
@@ -144,24 +118,21 @@ class AddDownloadQueueViaLinkForm(QDialog):
                                                                                   ext=video_info['ext'])
                     except VideoDurationException:
                         log_error(traceback.format_exc())
-                        msg = QMessageBox()
-                        msg.setText(f'{get_str("bad_file_duration")}{video_info["title"]} {video_info["for_account"]}'
-                                    f'{upload_hosting.name}, {upload_target["login"]}')
-                        msg.exec_()
+                        self.event_service.add_event(
+                            Event(f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
+                                  f'{upload_hosting.name}, {upload_target["login"]}'))
                         self.upload_on = False
                     except FileSizeException:
                         log_error(traceback.format_exc())
-                        msg = QMessageBox()
-                        msg.setText(f'{get_str("bad_file_size")}{video_info["title"]} {video_info["for_account"]}'
-                                    f'{upload_hosting.name}, {upload_target["login"]}')
-                        msg.exec_()
+                        self.event_service.add_event(
+                            Event(f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
+                                  f'{upload_hosting.name}, {upload_target["login"]}'))
                         self.upload_on = False
                     except FileFormatException:
                         log_error(traceback.format_exc())
-                        msg = QMessageBox()
-                        msg.setText(f'{get_str("bad_file_format")}{video_info["title"]} {video_info["for_account"]}'
-                                    f'{upload_hosting.name}, {upload_target["login"]}')
-                        msg.exec_()
+                        self.event_service.add_event(
+                            Event(f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
+                                  f'{upload_hosting.name}, {upload_target["login"]}'))
                         self.upload_on = False
                     except NameIsTooLongException:
                         self.title = video_info['title']
@@ -192,9 +163,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
                                          account=self.state_service.get_account_by_hosting_and_login(
                                              target['hosting'],
                                              target['login']),
-                                         remove_files_after_upload=self.remove_files_after_upload.checkState() != 0))
+                                         remove_files_after_upload=self.remove_files_after_upload))
 
-        self.video_quality = self.choose_video_quality_combo_box.itemData(self.choose_video_quality_combo_box.currentIndex())
-        self.format = self.choose_video_format_combo_box.itemData(self.choose_video_format_combo_box.currentIndex())
         self.passed = True
         self.close()

@@ -13,7 +13,7 @@ class YandexDzenService(VideohostingService):
 
     def __init__(self):
         self.video_regex = 'https:\/\/dzen.ru\/video\/watch\/.*'
-        self.channel_regex = 'https:\/\/dzen.ru\/id\/.*'
+        self.channel_regex = '(https:\/\/dzen.ru\/id\/.*)|(https:\/\/dzen.ru\/.*\/)'
         self.title_size_restriction = 200
         self.size_restriction = 30 * 1024
         self.duration_restriction = 240
@@ -46,6 +46,9 @@ class YandexDzenService(VideohostingService):
 
             return page.context.cookies()
 
+    def need_to_pass_channel_after_login(self):
+        return False
+    
     def upload_video(self, account, file_path, name, description, destination=None):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=True)

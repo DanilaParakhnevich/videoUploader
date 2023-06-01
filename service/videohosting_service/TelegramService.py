@@ -10,6 +10,8 @@ from service.StateService import StateService
 import json
 import os
 
+from service.videohosting_service.exception.NoFreeSpaceException import NoFreeSpaceException
+
 
 class TelegramService(VideohostingService):
 
@@ -57,12 +59,25 @@ class TelegramService(VideohostingService):
 
         return True
 
+    def validate_url_by_account(self, url: str, account) -> int:
+        # with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
+        #             workdir='service/videohosting_service/tmp') as app:
+        pass
+
     def upload_video(self, account, file_path, name, description, destination=None):
 
         with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash, workdir='service/videohosting_service/tmp') as app:
             app.send_video(chat_id=destination, video=file_path, caption=name)
 
-    def download_video(self, url, hosting, video_quality, format, account=None, table_item: QTableWidgetItem = None):
+    def download_video(self, url, hosting, video_quality, format, download_dir, account=None, table_item: QTableWidgetItem = None):
+
+        video_info = self.get_video_info(url, video_quality)
+
+        space = os.statvfs(os.path.expanduser(download_dir))
+        free = space.f_bavail * space.f_frsize / 1024000
+
+        if free - video_info['filesize'] < 100:
+            raise NoFreeSpaceException(f'Нет свободного места: размер файла: {video_info["filesize"]}')
 
         with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
                     workdir='service/videohosting_service/tmp') as app:
@@ -76,7 +91,7 @@ class TelegramService(VideohostingService):
             msg = app.get_messages(chat_id=chat_id, message_ids=int(message_id))
 
             result = app.download_media(msg,
-                                        file_name=f'{StateService.settings.download_dir}/{hosting}/{chat_id}_{message_id}.mp4',
+                                        file_name=f'{download_dir}/{hosting}/{chat_id}_{message_id}.mp4',
                                         progress=progress)
 
             data = {"title": msg.caption}

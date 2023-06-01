@@ -74,40 +74,11 @@ class UploadAfterDownloadForm(QDialog):
 			return
 
 		for account in choose_accounts_for_uploading_form.accounts:
-			account_hosting = Hosting[account.hosting]
-
-			if account_hosting.value[0].need_to_be_uploaded_to_special_source():
-				# В некоторых ситуациях, допустим с Telegram, для выгрузки необходимо указать дополнительную информацию
-				# такую, как то, на какой именно канал по аккаунту нужно выгружать видео
-
-				channels = self.state_service.get_channel_by_hosting(account_hosting.name)
-
-				if len(channels) == 0:
-					msg = QMessageBox()
-					msg.setText(
-						f'{get_str("not_found_channels_for_videohosting")}: {account_hosting.name}')
-					msg.exec_()
-					self.close()
-					continue
-
-				form = ChooseChannelForm(self, channels)
-				form.exec_()
-
-				if form.passed:
-					self.upload_targets.append({
-						'login': account.login,
-						'hosting': account.hosting,
-						'upload_target': form.channel.url
-					})
-				else:
-					self.close()
-					continue
-			else:
-				self.upload_targets.append({
-					'login': account.login,
-					'hosting': account.hosting,
-					'upload_target': None
-				})
+			self.upload_targets.append({
+				'login': account.login,
+				'hosting': account.hosting,
+				'upload_target': account.url
+			})
 
 		self.upload_flag = True
 		self.passed = True

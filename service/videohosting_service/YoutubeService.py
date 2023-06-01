@@ -41,6 +41,29 @@ class YoutubeService(VideohostingService):
 
             return page.context.cookies()
 
+    def validate_url_by_account(self, url: str, account) -> int:
+        with sync_playwright() as p:
+            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+            context.add_cookies(account.auth)
+            page = context.new_page()
+
+            page.goto(url)
+
+            for channel_handle in page.query_selector_all('#channel-handle'):
+                if channel_handle is not None:
+                    channel_id = channel_handle.text_content()
+                    break
+
+            page.goto('https://www.youtube.com/channel_switcher?next=%2Faccount&feature=settings', timeout=0)
+
+            page.wait_for_url('https://www.youtube.com/account', timeout=0)
+            page.wait_for_selector('.ytd-account-item-renderer', timeout=0)
+
+            for title_element in page.query_selector_all('.ytd-account-item-renderer'):
+                if title_element.text_content() == channel_id:
+                    return True
+            return False
+
     def upload_video(self, account, file_path, name, description, destination=None):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
@@ -70,8 +93,7 @@ class YoutubeService(VideohostingService):
                                    timeout=0).click()
             page.query_selector_all('.yt-simple-endpoint.style-scope.ytd-compact-link-renderer')[0].click(timeout=0)
 
-            time.sleep(4)
-
+            page.wait_for_selector('#select-files-button', timeout=0)
             with page.expect_file_chooser() as fc_info:
                 page.query_selector(selector='#select-files-button').click()
             file_chooser = fc_info.value

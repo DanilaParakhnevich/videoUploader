@@ -19,7 +19,7 @@ class ChooseAccountForm(QDialog):
         self.combo_box.setPlaceholderText(choose_account_text)
 
         for account in accounts:
-            self.combo_box.addItem(account.login, account)
+            self.combo_box.addItem(account.url if account.url is not None else account.login, account)
 
         layout.addWidget(label_name, 0, 0)
         layout.addWidget(self.combo_box, 0, 1)

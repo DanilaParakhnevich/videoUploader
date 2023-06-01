@@ -7,11 +7,13 @@ from playwright.sync_api import Page
 from yt_dlp import YoutubeDL
 from PyQt5.QtWidgets import QTableWidgetItem
 from moviepy.editor import VideoFileClip
+
 from service.StateService import StateService
 from service.videohosting_service.exception.DescriptionIsTooLongException import DescriptionIsTooLongException
 from service.videohosting_service.exception.FileFormatException import FileFormatException
 from service.videohosting_service.exception.FileSizeException import FileSizeException
 from service.videohosting_service.exception.NameIsTooLongException import NameIsTooLongException
+from service.videohosting_service.exception.NoFreeSpaceException import NoFreeSpaceException
 from service.videohosting_service.exception.VideoDurationException import VideoDurationException
 import os
 import time
@@ -50,6 +52,8 @@ class VideohostingService(ABC):
     duration_restriction = None  # в минутах
     title_size_restriction = None
     description_size_restriction = None
+
+    state_service = StateService()
 
     @abc.abstractmethod
     def get_videos_by_url(self, url, account=None):
@@ -121,19 +125,40 @@ class VideohostingService(ABC):
         browser = p.chromium.launch(headless=headless, args=args)
         return browser.new_context()
 
-    def download_video(self, url, hosting, video_quality, format, account=None, table_item: QTableWidgetItem = None):
+    def download_video(self, url, hosting, video_quality, format, download_dir, account=None, table_item: QTableWidgetItem = None):
+
+        from model.Hosting import Hosting
+        video_info = Hosting[hosting].value[0].get_video_info(url, video_quality)
+
+        space = os.statvfs(os.path.expanduser(download_dir))
+        free = space.f_bavail * space.f_frsize / 1024000
+
+        if free - video_info['filesize'] < 100:
+            raise NoFreeSpaceException(f'Нет свободного места: размер файла: {video_info["filesize"]}')
 
         def prog_hook(d, table_item):
             if d["status"] == "downloading":
-                p = d['_percent_str']
-                table_item.setText(p)
+                if d['total_bytes_estimate'] != 0:
+                    p = (d['downloaded_bytes'] / d['total_bytes_estimate']) * 100
+                    table_item.setText(str(round(p, 1)) + '%')
+                else:
+                    table_item.setText(d['_percent_str'])
+
+        settings = self.state_service.get_settings()
 
         simple_download_opts = {
             'progress_hooks': [lambda d: prog_hook(d, table_item)],
             'ffmpeg_location': os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin'),
-            'outtmpl': f'{StateService.settings.download_dir}/{hosting}/%(title)s.%(ext)s',
-            'writeinfojson': True
+            'outtmpl': f'{download_dir}/{hosting}/%(title)s.%(ext)s',
+            'writeinfojson': True,
+            '--retries': settings.retries,
+            '--no-check-certificate': settings.no_check_certificate,
+            '--audio-quality': settings.audio_quality,
+            '--no-cache-dir': settings.no_cache_dir
         }
+
+        if settings.referer != '':
+            simple_download_opts['--referer'] = settings.referer
 
         # Чтобы нормально добавить куки в обычном json, приходится использовать http_headers
         if account is not None and isinstance(account.auth, list):
@@ -145,23 +170,33 @@ class VideohostingService(ABC):
         if StateService.settings.rate_limit != 0:
             simple_download_opts['ratelimit'] = str(StateService.settings.rate_limit * 1024)
 
-        info = None
-
         if format == 'NOT_MERGE':
             download_video_opts = {
                 'ffmpeg_location': os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin'),
                 'format': f'bestvideo[height<={video_quality}]/best[height<={video_quality}]/best',
                 '--list-formats ': True,
-                'outtmpl': f'{StateService.settings.download_dir}/{hosting}/%(title)s.%(ext)s',
+                'outtmpl': f'{download_dir}/{hosting}/%(title)s.%(ext)s',
                 'writeinfojson': True,
+                '--retries': settings.retries,
+                '--no-check-certificate': settings.no_check_certificate,
+                '--audio-quality': settings.audio_quality,
+                '--no-cache-dir': settings.no_cache_dir
             }
 
             download_audio_opts = {
                 'ffmpeg_location': os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin'),
                 'format': 'bestaudio/best',
                 '--list-formats ': True,
-                'outtmpl': f'{StateService.settings.download_dir}/{hosting}/audio_%(title)s.%(ext)s',
+                'outtmpl': f'{download_dir}/{hosting}/audio_%(title)s.%(ext)s',
+                '--retries': settings.retries,
+                '--no-check-certificate': settings.no_check_certificate,
+                '--audio-quality': settings.audio_quality,
+                '--no-cache-dir': settings.no_cache_dir
             }
+
+            if settings.referer != '':
+                download_audio_opts['--referer'] = settings.referer
+                download_video_opts['--referer'] = settings.referer
 
             if 'http_headers' in simple_download_opts.keys():
                 download_audio_opts['http_headers'] = simple_download_opts['http_headers']
@@ -171,10 +206,10 @@ class VideohostingService(ABC):
                 download_video_opts['ratelimit'] = simple_download_opts['ratelimit']
 
             with YoutubeDL(download_video_opts) as ydl:
-                info = ydl.extract_info("https://www.youtube.com/watch?v=SRdZTZE5pOA&ab_channel=Deftones")
+                info = ydl.extract_info(url)
 
             with YoutubeDL(download_audio_opts) as ydl:
-                ydl.extract_info("https://www.youtube.com/watch?v=SRdZTZE5pOA&ab_channel=Deftones")
+                ydl.extract_info(url)
 
         else:
 
@@ -189,9 +224,9 @@ class VideohostingService(ABC):
                 info = ydl.extract_info(url)
 
         if 'video_ext' in info:
-            return f'{StateService.settings.download_dir}/{hosting}/{info["title"]}.{info["video_ext"]}'
+            return f'{download_dir}/{hosting}/{info["title"]}.{info["video_ext"]}'
         else:
-            return f'{StateService.settings.download_dir}/{hosting}/{info["title"]}.{info["ext"]}'
+            return f'{download_dir}/{hosting}/{info["title"]}.{info["ext"]}'
 
     def get_video_info(self, url, video_quality, account=None):
 
@@ -212,11 +247,18 @@ class VideohostingService(ABC):
 
         return {
             'title': info['title'],
-            'description': info['description'],
+            'description': info['description'] if hasattr(info, 'description') else '',
             'duration': info['duration'],
             'filesize': int(info['filesize_approx'] / 1024 ** 2) if 'filesize_approx' in info else int(info['filesize'] / 1024 ** 2),
             'ext': info['ext'] if info['ext'] else info['video_ext']
         }
+
+    # Возвращает: False, если ссылка не является ссылкой на канал аккаунта, True, если является
+    def validate_url_by_account(self, url: str, account) -> int:
+        pass
+
+    def need_to_pass_channel_after_login(self):
+        return True
 
     # Возвращает: 0, если ссылка невалидна; 1, если ссылка валидна и является ссылкой на канал;
     # 2, если ссылка валидна и является ссылкой на видео

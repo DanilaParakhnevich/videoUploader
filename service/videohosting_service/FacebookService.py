@@ -23,12 +23,18 @@ class FacebookService(VideohostingService):
 
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
-            context.add_cookies(account.auth)
+
+            if account is not None:
+                context.add_cookies(account.auth)
+
             page = context.new_page()
             page.goto(url, timeout=0)
+            page.wait_for_selector('.x6s0dn4.x9f619.x78zum5.x2lah0s.x1hshjfz.x1n2onr6.xng8ra.x1pi30zi.x1swvt13')
             buttons = page.query_selector_all('.x6s0dn4.x9f619.x78zum5.x2lah0s.x1hshjfz.x1n2onr6.xng8ra.x1pi30zi.x1swvt13')
             if len(buttons) == 5:
-                buttons[2].click(timeout=0)
+                for button in buttons:
+                    if button.text_content() == 'Media':
+                        button.click(timeout=0)
                 time.sleep(1)
                 page.query_selector('[href*="/media/videos"]').click(timeout=0, no_wait_after=True)
                 self.scroll_page_to_the_bottom(page=page, timeout=3)
@@ -71,9 +77,24 @@ class FacebookService(VideohostingService):
             page.wait_for_selector('#mbasic_inline_feed_composer', timeout=0)
             return page.context.cookies()
 
-    def upload_video(self, account, file_path, name, description, destination:str = None):
+    def validate_url_by_account(self, url: str, account) -> int:
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=True)
+            context.add_cookies(account.auth)
+            page = context.new_page()
+            page.goto(url, timeout=0)
+
+            user_item = page.query_selector('div[aria-label="Edit profile"]')
+            group_item = page.query_selector('div[aria-label="Invite"]')
+
+            if user_item is None and group_item is None:
+                return False
+            else:
+                return True
+
+    def upload_video(self, account, file_path, name, description, destination: str = None):
+        with sync_playwright() as p:
+            context = self.new_context(p=p, headless=False)
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto(destination, wait_until='domcontentloaded')

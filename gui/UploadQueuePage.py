@@ -30,6 +30,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
     def __init__(self, central_widget):
         super(UploadQueuePageWidget, self).__init__(central_widget)
+        self.lock = Lock()
         self.setMinimumSize(QtCore.QSize(0, 440))
         self.setObjectName("upload_queue_page_widget")
         self.setColumnCount(6)
@@ -83,7 +84,6 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         self.uploading_by_schedule_timer = QTimer(self)
         self.uploading_by_schedule_timer.timeout.connect(self.upload_by_schedule)
         self.uploading_by_schedule_timer.start(10_000)
-        self.lock = Lock()
 
     def upload_by_schedule(self):
         for queue_media in self.queue_media_list:
@@ -267,26 +267,26 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                     media.account.login in key or media.destination in key):
                 media.status = status
                 self.state_service.save_upload_queue_media(self.queue_media_list)
-
-                if status == 0 or status == 4:
-                    self.item(i, 3).setText(get_str('stopped'))
-                    self.cellWidget(i, 4).setText(get_str('start'))
-                    self.cellWidget(i, 4).clicked.disconnect()
-                    self.cellWidget(i, 4).clicked.connect(self.on_start_upload)
-                elif status == 1:
-                    self.item(i, 3).setText(get_str('process'))
-                    self.cellWidget(i, 4).setText(get_str('stop'))
-                    self.cellWidget(i, 4).clicked.disconnect()
-                    self.cellWidget(i, 4).clicked.connect(self.on_stop_upload)
-                elif status == 2:
-                    self.item(i, 3).setText(get_str('end'))
-                    self.cellWidget(i, 4).setText('-')
-                    self.cellWidget(i, 4).clicked.disconnect()
-                elif status == 3:
-                    self.item(i, 3).setText(get_str('error'))
-                    self.cellWidget(i, 4).setText(get_str('start'))
-                    self.cellWidget(i, 4).clicked.disconnect()
-                    self.cellWidget(i, 4).clicked.connect(self.on_start_upload)
+                if self.cellWidget(i, 4) is not None:
+                    if status == 0 or status == 4:
+                        self.item(i, 3).setText(get_str('stopped'))
+                        self.cellWidget(i, 4).setText(get_str('start'))
+                        self.cellWidget(i, 4).clicked.disconnect()
+                        self.cellWidget(i, 4).clicked.connect(self.on_start_upload)
+                    elif status == 1:
+                        self.item(i, 3).setText(get_str('process'))
+                        self.cellWidget(i, 4).setText(get_str('stop'))
+                        self.cellWidget(i, 4).clicked.disconnect()
+                        self.cellWidget(i, 4).clicked.connect(self.on_stop_upload)
+                    elif status == 2:
+                        self.item(i, 3).setText(get_str('end'))
+                        self.cellWidget(i, 4).setText('-')
+                        self.cellWidget(i, 4).clicked.disconnect()
+                    elif status == 3:
+                        self.item(i, 3).setText(get_str('error'))
+                        self.cellWidget(i, 4).setText(get_str('start'))
+                        self.cellWidget(i, 4).clicked.disconnect()
+                        self.cellWidget(i, 4).clicked.connect(self.on_start_upload)
                 break
             i += 1
         self.lock.release()

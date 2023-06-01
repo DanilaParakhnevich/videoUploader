@@ -24,7 +24,7 @@ class AccountsListWidget(QtWidgets.QTableWidget):
 
         for account in account_list:
             self.insertRow(self.rowCount())
-            item1 = QtWidgets.QTableWidgetItem(account.login)
+            item1 = QtWidgets.QTableWidgetItem(account.url if account.url is not None else account.login)
             item2 = QtWidgets.QTableWidgetItem(account.hosting)
 
             item3 = QtWidgets.QTableWidgetItem()

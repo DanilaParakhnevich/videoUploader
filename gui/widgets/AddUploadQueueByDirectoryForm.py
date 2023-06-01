@@ -5,8 +5,9 @@ from PyQt5.QtWidgets import (QDialog, QPushButton, QLabel, QMessageBox, QComboBo
 from dateutil.relativedelta import relativedelta
 
 from gui.widgets.ChooseAccountsForUploadingForm import ChooseAccountsForUploadingForm
-from gui.widgets.ChooseChannelForm import ChooseChannelForm
+from model.Event import Event
 from model.Hosting import Hosting
+from service.EventService import EventService
 from service.LocalizationService import *
 from gui.widgets.ChooseDirForm import ChooseDirForm
 from gui.widgets.DirOrFileForm import DirOrFileForm
@@ -45,6 +46,7 @@ class AddUploadQueueByDirectoryForm(QDialog):
 
         self.setLayout(layout)
         self.state_service = StateService()
+        self.event_service = EventService()
 
     def choose(self):
         choose_accounts_for_uploading_form = ChooseAccountsForUploadingForm(self)
@@ -55,32 +57,10 @@ class AddUploadQueueByDirectoryForm(QDialog):
 
         accounts = choose_accounts_for_uploading_form.accounts
         for account in accounts:
-            if Hosting[account.hosting].value[0].need_to_be_uploaded_to_special_source():
-                # В некоторых ситуациях, допустим с Telegram, для выгрузки необходимо указать дополнительную информацию
-                # такую, как то, на какой именно канал по аккаунту нужно выгружать видео
-
-                channels = self.state_service.get_channel_by_hosting(account.hosting)
-
-                if len(channels) == 0:
-                    msg = QMessageBox()
-                    msg.setText(
-                        f'{get_str("not_found_channels_for_videohosting")}: {account.hosting}')
-                    msg.exec_()
-                    self.close()
-                    continue
-
-                form = ChooseChannelForm(self, channels)
-                form.exec_()
-
-                if form.passed:
-                    self.upload_targets.append({'login': account.login,
-                    'hosting': account.hosting,
-                    'upload_target': form.channel.url})
-            else:
-                self.upload_targets.append({
-                    'login': account.login,
-                    'hosting': account.hosting,
-                    'upload_target': None})
+            self.upload_targets.append({
+                'login': account.login,
+                'hosting': account.hosting,
+                'upload_target': account.url})
 
         form = DirOrFileForm(parent=self.parentWidget())
         form.exec_()
@@ -154,8 +134,17 @@ class AddUploadQueueByDirectoryForm(QDialog):
         for target in self.upload_targets:
             try:
                 Hosting[target['hosting']].value[0].validate_video_info_for_uploading(video_dir=file_dir)
-            except:
+            except VideoDurationException:
                 log_error(traceback.format_exc())
+                self.event_service.add_event(Event(f'{get_str("bad_file_duration")}{file_dir}'))
+                continue
+            except FileSizeException:
+                log_error(traceback.format_exc())
+                self.event_service.add_event(Event(f'{get_str("bad_file_size")}{file_dir}'))
+                continue
+            except FileFormatException:
+                log_error(traceback.format_exc())
+                self.event_service.add_event(Event(f'{get_str("bad_file_format")}{file_dir}'))
                 continue
 
             if Hosting[target['hosting']].value[0].title_size_restriction is not None and title is None:
@@ -166,22 +155,7 @@ class AddUploadQueueByDirectoryForm(QDialog):
 
                 if form.passed:
                     try:
-                        Hosting[target['hosting']].value[0].validate_video_info_for_uploading(video_dir=file_dir, title=title)
-                    except VideoDurationException:
-                        log_error(traceback.format_exc())
-                        msg = QMessageBox()
-                        msg.setText(f'{get_str("bad_file_duration")}{file_dir}')
-                        msg.exec_()
-                    except FileSizeException:
-                        log_error(traceback.format_exc())
-                        msg = QMessageBox()
-                        msg.setText(f'{get_str("bad_file_size")}{file_dir}')
-                        msg.exec_()
-                    except FileFormatException:
-                        log_error(traceback.format_exc())
-                        msg = QMessageBox()
-                        msg.setText(f'{get_str("bad_file_format")}{file_dir}')
-                        msg.exec_()
+                        Hosting[target['hosting']].value[0].validate_video_info_for_uploading(title=title)
                     except NameIsTooLongException:
                         while len(title) > Hosting[target['hosting']].value[0].title_size_restriction:
                             log_error(traceback.format_exc())

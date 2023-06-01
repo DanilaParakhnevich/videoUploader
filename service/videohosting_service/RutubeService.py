@@ -52,6 +52,9 @@ class RutubeService(VideohostingService):
 
             return page.context.cookies()
 
+    def need_to_pass_channel_after_login(self):
+        return False
+
     def upload_video(self, account, file_path, name, description, destination=None):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=True)

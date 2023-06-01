@@ -19,6 +19,8 @@ from service.LocalizationService import *
 import traceback
 import time
 
+from service.videohosting_service.exception.NoFreeSpaceException import NoFreeSpaceException
+
 
 class DownloadQueuePageWidget(QtWidgets.QTableWidget):
     state_service = StateService()
@@ -46,14 +48,6 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
         horizontal_layout = QtWidgets.QHBoxLayout(self)
         horizontal_layout.setObjectName("horizontal_layout")
-
-        self.add_button = AnimatedButton(central_widget)
-        self.add_button.setObjectName("add_button")
-        self.add_button.setText(get_str('add_download_single_video_by_link'))
-        horizontal_layout.addWidget(self.add_button)
-        horizontal_layout.setAlignment(QtCore.Qt.AlignBottom)
-
-        self.add_button.clicked.connect(self.on_add)
 
         item = self.horizontalHeaderItem(0)
         item.setText(get_str('link'))
@@ -129,6 +123,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                 hosting=media.hosting,
                 table_item=self.item(self.get_row_index(media.url), 1),
                 format=media.format,
+                download_dir=media.download_dir,
                 video_quality=media.video_quality)
             if media.upload_after_download:
                 for upload_target in media.upload_targets:
@@ -144,6 +139,10 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
         except SystemExit:
             self.set_media_status(media.url, 0)
             self.download_thread_dict.pop(media.url)
+            return
+        except NoFreeSpaceException:
+            log_error(traceback.format_exc())
+            self.set_media_status(media.url, 3, status_name=get_str('no_free_space'))
             return
         except Exception:
             log_error(traceback.format_exc())
@@ -206,7 +205,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
         self.setItem(input_position, 0, item1)
         self.setItem(input_position, 1, item2)
 
-    def set_media_status(self, url, status):
+    def set_media_status(self, url, status, status_name=None):
         i = 0
         self.lock.acquire()
         for media in self.queue_media_list:
@@ -229,7 +228,11 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                     self.cellWidget(i, 2).setText('-')
                     self.cellWidget(i, 2).clicked.disconnect()
                 elif status == 3:
-                    self.item(i, 1).setText(get_str('error'))
+                    if status_name is None:
+                        self.item(i, 1).setText(get_str('error'))
+                    else:
+                        self.item(i, 1).setText(status_name)
+
                     self.cellWidget(i, 2).setText(get_str('start'))
                     self.cellWidget(i, 2).clicked.disconnect()
                     self.cellWidget(i, 2).clicked.connect(self.on_start_download)
@@ -243,27 +246,6 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             if media.url == url:
                 return i
             i += 1
-
-    def on_add(self):
-        form = AddDownloadQueueViaLinkForm(self)
-        form.exec_()
-
-        if form.passed is True:
-            queue_media = LoadQueuedMedia(url=form.link,
-                                          hosting=form.hosting.name,
-                                          status=0,
-                                          upload_after_download=form.upload_on,
-                                          account=form.account,
-                                          format=form.format,
-                                          video_quality=form.video_quality,
-                                          remove_files_after_upload=form.remove_files_after_upload.isChecked(),
-                                          upload_date=datetime.datetime.now(),
-                                          upload_targets=form.upload_targets,
-                                          title=form.title,
-                                          description=form.description)
-
-            self.queue_media_list.append(queue_media)
-            self.insert_queue_media(queue_media)
 
     def on_delete_row(self):
         button = self.sender()
