@@ -131,7 +131,7 @@ class VKService(VideohostingService):
     def validate_url_by_account(self, url: str, account) -> int:
         vk_session = vk_api.VkApi(token=account.auth['access_token'])
 
-        user_id = account['user_id']
+        user_id = account.auth['user_id']
 
         with vk_api.VkRequestsPool(vk_session) as pool:
             response = pool.method('utils.resolveScreenName', {
