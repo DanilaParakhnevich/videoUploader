@@ -139,10 +139,11 @@ class VKService(VideohostingService):
             })
 
         if response.result['type'] == 'group':
-            response = pool.method('groups.getById', {
-                'group_id': response.result['object_id']
-            })
-            return response.result['is_admin'] == 1
+            with vk_api.VkRequestsPool(vk_session) as pool:
+                response = pool.method('groups.getById', {
+                    'group_id': response.result['object_id']
+                })
+            return response.result[0]['is_admin'] == 1
         else:
             return response.result["object_id"] == user_id
 

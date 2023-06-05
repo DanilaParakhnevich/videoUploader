@@ -70,7 +70,7 @@ class OKService(VideohostingService):
 
     def validate_url_by_account(self, url: str, account) -> int:
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=False)
+            context = self.new_context(p=p, headless=True)
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto('https://ok.ru/', timeout=0)

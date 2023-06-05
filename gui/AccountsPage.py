@@ -123,6 +123,10 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
             self.event_service.add_event(Event(
                 f'{get_str("event_loginned")} {account.login}, {self.comboBox.currentText()}'))
 
+            current_accounts = self.state_service.get_accounts()
+            current_accounts.append(account)
+            self.state_service.save_accounts(current_accounts)
+
         self.add_button.stop_animation()
 
     def on_delete_row(self):

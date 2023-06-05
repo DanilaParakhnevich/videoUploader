@@ -68,13 +68,8 @@ class LoginForm(QDialog):
             self.close()
             return
 
-        current_accounts = self.state_service.get_accounts()
         self.account = Account(hosting=self.hosting.name,
                                login=self.lineEdit_username.text(),
                                password=self.lineEdit_password.text(),
                                auth=auth)
-
-        current_accounts.append(self.account)
-
-        self.state_service.save_accounts(current_accounts)
         self.close()

@@ -94,7 +94,7 @@ class FacebookService(VideohostingService):
 
     def upload_video(self, account, file_path, name, description, destination: str = None):
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=False)
+            context = self.new_context(p=p, headless=True)
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto(destination, wait_until='domcontentloaded')

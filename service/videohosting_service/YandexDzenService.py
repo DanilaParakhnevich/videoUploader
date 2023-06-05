@@ -53,7 +53,7 @@ class YandexDzenService(VideohostingService):
             context = self.new_context(p=p, headless=True)
             context.add_cookies(account.auth)
             page = context.new_page()
-            page.goto('https://dzen.ru/profile/editor/create#video-editor' ,timeout=0)
+            page.goto('https://dzen.ru/profile/editor/create#video-editor', timeout=0)
 
             page.click('.author-studio-header__addButton-1Z.author-studio-header__rightItemButton-3a', timeout=0)
 
