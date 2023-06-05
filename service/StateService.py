@@ -184,7 +184,18 @@ class StateService(object):
                     StateService.settings.no_cache_dir = False
                 if hasattr(StateService.settings, 'referer') is False:
                     StateService.settings.referer = ''
-
+                if hasattr(StateService.settings, 'geo_bypass_country') is False:
+                    StateService.settings.geo_bypass_country = ''
+                if hasattr(StateService.settings, 'keep_fragments') is False:
+                    StateService.settings.keep_fragments = False
+                if hasattr(StateService.settings, 'buffer_size') is False:
+                    StateService.settings.buffer_size = 1024
+                if hasattr(StateService.settings, 'write_sub') is False:
+                    StateService.settings.write_sub = False
+                if hasattr(StateService.settings, 'embed_subs') is False:
+                    StateService.settings.embed_subs = False
+                if hasattr(StateService.settings, 'add_metadata') is False:
+                    StateService.settings.add_metadata = False
         return StateService.settings
 
     # GUI

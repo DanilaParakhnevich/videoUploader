@@ -84,6 +84,11 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
                 return
 
         account = hosting.value[0].show_login_dialog(hosting, self.parentWidget())
+
+        if account is None:
+            self.add_button.stop_animation()
+            return
+
         msg = QtWidgets.QMessageBox(self)
         msg.setText(get_str('authorized_successfully'))
 

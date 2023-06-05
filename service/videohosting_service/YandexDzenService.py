@@ -5,7 +5,6 @@ from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
 from yt_dlp import YoutubeDL
-import json
 from playwright.sync_api import sync_playwright
 
 

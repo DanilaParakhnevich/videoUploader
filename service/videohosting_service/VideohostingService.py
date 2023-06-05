@@ -1,4 +1,5 @@
 import re
+import traceback
 from abc import ABC
 import abc
 from playwright.sync_api import BrowserContext
@@ -8,6 +9,7 @@ from yt_dlp import YoutubeDL
 from PyQt5.QtWidgets import QTableWidgetItem
 from moviepy.editor import VideoFileClip
 
+from service.LoggingService import log_error
 from service.StateService import StateService
 from service.videohosting_service.exception.DescriptionIsTooLongException import DescriptionIsTooLongException
 from service.videohosting_service.exception.FileFormatException import FileFormatException
@@ -137,28 +139,44 @@ class VideohostingService(ABC):
             raise NoFreeSpaceException(f'Нет свободного места: размер файла: {video_info["filesize"]}')
 
         def prog_hook(d, table_item):
-            if d["status"] == "downloading":
-                if d['total_bytes_estimate'] != 0:
-                    p = (d['downloaded_bytes'] / d['total_bytes_estimate']) * 100
-                    table_item.setText(str(round(p, 1)) + '%')
-                else:
-                    table_item.setText(d['_percent_str'])
+            try:
+                if d["status"] == "downloading":
+                    str = 'total_bytes' if 'total_bytes' in d else 'total_bytes_estimate'
+                    if d[str] != 0:
+                        p = (d['downloaded_bytes'] / d[str]) * 100
+                        table_item.setText(round(p, 1).__str__() + '%')
+                    else:
+                        table_item.setText(d['_percent_str'])
+            except:
+                log_error(traceback.format_exc())
 
         settings = self.state_service.get_settings()
 
+        ffmpeg_location = os.path.abspath('dist/Application/ffmpeg-master-latest-win64-gpl/bin') if os.name.__contains__('Windows') else os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin')
+
         simple_download_opts = {
             'progress_hooks': [lambda d: prog_hook(d, table_item)],
-            'ffmpeg_location': os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin'),
+            'ffmpeg_location': ffmpeg_location,
             'outtmpl': f'{download_dir}/{hosting}/%(title)s.%(ext)s',
             'writeinfojson': True,
-            '--retries': settings.retries,
-            '--no-check-certificate': settings.no_check_certificate,
+            'retries': settings.retries,
+            'nocheckcertificate': settings.no_check_certificate,
             '--audio-quality': settings.audio_quality,
-            '--no-cache-dir': settings.no_cache_dir
+            'cachedir': settings.no_cache_dir is False,
+            'keepvideo': settings.keep_fragments,
+            'buffersize': settings.buffer_size,
+            'writesubtitles': settings.write_sub,
+            'overwrites':  True
         }
+
+        if settings.embed_subs:
+            simple_download_opts['postprocessors'] = [{'already_have_subtitle': False, 'key': 'FFmpegEmbedSubtitle'}]
 
         if settings.referer != '':
             simple_download_opts['--referer'] = settings.referer
+
+        if settings.geo_bypass_country != '':
+            simple_download_opts['--geo-bypass-country'] = settings.geo_bypass_country
 
         # Чтобы нормально добавить куки в обычном json, приходится использовать http_headers
         if account is not None and isinstance(account.auth, list):
@@ -177,10 +195,14 @@ class VideohostingService(ABC):
                 '--list-formats ': True,
                 'outtmpl': f'{download_dir}/{hosting}/%(title)s.%(ext)s',
                 'writeinfojson': True,
-                '--retries': settings.retries,
-                '--no-check-certificate': settings.no_check_certificate,
+                'retries': settings.retries,
+                'nocheckcertificate': settings.no_check_certificate,
                 '--audio-quality': settings.audio_quality,
-                '--no-cache-dir': settings.no_cache_dir
+                'cachedir': settings.no_cache_dir is False,
+                'keepvideo': settings.keep_fragments,
+                'buffersize': settings.buffer_size,
+                'writesubtitles': settings.write_sub,
+                'overwrites': True
             }
 
             download_audio_opts = {
@@ -188,16 +210,26 @@ class VideohostingService(ABC):
                 'format': 'bestaudio/best',
                 '--list-formats ': True,
                 'outtmpl': f'{download_dir}/{hosting}/audio_%(title)s.%(ext)s',
-                '--retries': settings.retries,
-                '--no-check-certificate': settings.no_check_certificate,
+                'retries': settings.retries,
+                'nocheckcertificate': settings.no_check_certificate,
                 '--audio-quality': settings.audio_quality,
-                '--no-cache-dir': settings.no_cache_dir
+                'cachedir': settings.no_cache_dir is False,
+                'keepvideo': settings.keep_fragments,
+                'buffersize': settings.buffer_size,
+                'writesubtitles': settings.write_sub,
+                'overwrites': True
             }
 
             if settings.referer != '':
                 download_audio_opts['--referer'] = settings.referer
                 download_video_opts['--referer'] = settings.referer
 
+            if settings.geo_bypass_country != '':
+                download_audio_opts['--geo-bypass-country'] = settings.geo_bypass_country
+                download_video_opts['--geo-bypass-country'] = settings.geo_bypass_country
+            if 'postprocessors' in simple_download_opts.keys():
+                download_audio_opts['postprocessors'] = simple_download_opts['postprocessors']
+                download_video_opts['postprocessors'] = simple_download_opts['postprocessors']
             if 'http_headers' in simple_download_opts.keys():
                 download_audio_opts['http_headers'] = simple_download_opts['http_headers']
                 download_video_opts['http_headers'] = simple_download_opts['http_headers']

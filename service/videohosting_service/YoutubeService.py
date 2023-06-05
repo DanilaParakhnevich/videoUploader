@@ -24,7 +24,11 @@ class YoutubeService(VideohostingService):
         result = list()
         for video in c:
             url = f'https://www.youtube.com/{video["navigationEndpoint"]["commandMetadata"]["webCommandMetadata"]["url"]}'
-            result.append(VideoModel(url, video['title']['runs'][0]['text'], video['publishedTimeText']['simpleText']))
+            if 'simpleText' in video['title'].keys():
+                title = video['title']['simpleText']
+            else:
+                title = video['title']['runs'][0]['text']
+            result.append(VideoModel(url, title, video['publishedTimeText']['simpleText']))
         return result
 
     def show_login_dialog(self, hosting, form):

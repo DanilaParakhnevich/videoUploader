@@ -24,21 +24,47 @@ if __name__ == "__main__":
 
             if form.accept:
                 try:
-                    os.system('PLAYWRIGHT_BROWSERS_PATH=0 sh playwright/driver/playwright.sh install chromium')
 
-                    response = requests.get('https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz', stream=True, timeout=3000)
-                    if response.status_code == 200:
-                        with open('ffmpeg-master-latest-linux64-gpl.tar.xz', 'wb') as f:
-                            f.write(response.raw.read())
+                    if os.name.__contains__('Windows'):
+                        os.system('PLAYWRIGHT_BROWSERS_PATH=0 sh playwright/driver/playwright.sh install chromium')
 
-                    os.system(f'mkdir {os.path.abspath("dist/")}')
-                    os.system(f'mkdir {os.path.abspath("dist/Application/")}')
-                    os.system(f'tar xf ffmpeg-master-latest-linux64-gpl.tar.xz -C {os.path.abspath("dist/Application/")}')
-                    os.system('rm ffmpeg-master-latest-linux64-gpl.tar.xz')
+                        response = requests.get(
+                            'https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip',
+                            stream=True, timeout=3000)
+                        if response.status_code == 200:
+                            with open('ffmpeg-master-latest-win64-gpl.zip', 'wb') as f:
+                                f.write(response.raw.read())
+
+                        os.system(f'mkdir {os.path.abspath("dist/")}')
+                        os.system(f'mkdir {os.path.abspath("dist/Application/")}')
+                        os.system(
+                            f'tar -xf ffmpeg-master-latest-win64-gpl.tar.xz -C {os.path.abspath("dist/Application/")}')
+                        os.system('rm ffmpeg-master-latest-win64-gpl.tar.xz')
+                    else:
+                        os.system('PLAYWRIGHT_BROWSERS_PATH=0 sh playwright/driver/playwright.sh install chromium')
+
+                        response = requests.get(
+                            'https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz',
+                            stream=True, timeout=3000)
+                        if response.status_code == 200:
+                            with open('ffmpeg-master-latest-linux64-gpl.tar.xz', 'wb') as f:
+                                f.write(response.raw.read())
+
+                        os.system(f'mkdir {os.path.abspath("dist/")}')
+                        os.system(f'mkdir {os.path.abspath("dist/Application/")}')
+                        os.system(
+                            f'tar -xf ffmpeg-master-latest-linux64-gpl.tar.xz -C {os.path.abspath("dist/Application/")}')
+                        os.system('del ffmpeg-master-latest-linux64-gpl.tar.xz')
+
                 except:
-                    os.system('rm ffmpeg-master-latest-linux64-gpl.tar.xz')
-                    os.system('rm -r dist/Application/ffmpeg-master-latest-linux64-gpl/')
-                    os.system('rm -r playwright/driver/package/.local-browsers')
+                    if os.name.__contains__('Windows'):
+                        os.system('del ffmpeg-master-latest-linux64-gpl.tar.xz')
+                        os.system('rmdir dist/Application/ffmpeg-master-latest-linux64-gpl/')
+                        os.system('rmdir playwright/driver/package/.local-browsers')
+                    else:
+                        os.system('rm ffmpeg-master-latest-linux64-gpl.tar.xz')
+                        os.system('rm -r dist/Application/ffmpeg-master-latest-linux64-gpl/')
+                        os.system('rm -r playwright/driver/package/.local-browsers')
                     failed = True
                     form.close()
                     continue

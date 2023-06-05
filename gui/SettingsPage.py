@@ -1,3 +1,5 @@
+import traceback
+
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QIntValidator
 
@@ -6,6 +8,7 @@ from gui.widgets.EventsListForm import EventsListForm
 from gui.widgets.FormatChooserComboBox import FormatChooserComboBox
 from model.Settings import Settings
 from service.LocalizationService import *
+from service.LoggingService import log_error
 
 
 class SettingsPage(QtWidgets.QDialog):
@@ -17,7 +20,7 @@ class SettingsPage(QtWidgets.QDialog):
         self.old_settings = self.state_service.get_settings()
         self.settings_box = QtWidgets.QWidget()
         self.scroll = QtWidgets.QScrollArea(self)
-        self.resize(700, 700)
+        self.resize(900, 800)
 
         self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
@@ -155,14 +158,56 @@ class SettingsPage(QtWidgets.QDialog):
         self.gridLayout.addWidget(self.referer_label, 13, 0)
         self.gridLayout.addWidget(self.referer, 13, 1)
 
+        self.geo_bypass_country_label = QtWidgets.QLabel('geo_bypass_country')
+        self.geo_bypass_country = QtWidgets.QLineEdit()
+        self.geo_bypass_country.setMaximumWidth(150)
+        self.geo_bypass_country.setText(str(self.old_settings.geo_bypass_country))
+        self.gridLayout.addWidget(self.geo_bypass_country_label, 14, 0)
+        self.gridLayout.addWidget(self.geo_bypass_country, 14, 1)
+
+        self.keep_fragments = QtWidgets.QCheckBox(self)
+        self.keep_fragments.setGeometry(QtCore.QRect(620, 200, 30, 30))
+        self.keep_fragments.setObjectName('keep_fragments')
+        self.keep_fragments.setChecked(self.old_settings.keep_fragments)
+        self.keep_fragments_label = QtWidgets.QLabel(self.settings_box)
+        self.keep_fragments_label.setObjectName("keep_fragments_label")
+        self.gridLayout.addWidget(self.keep_fragments_label, 15, 0)
+        self.gridLayout.addWidget(self.keep_fragments, 15, 1)
+
+        self.buffer_size_label = QtWidgets.QLabel('buffer_size_label')
+        self.buffer_size = QtWidgets.QLineEdit()
+        self.buffer_size.setValidator(QIntValidator(0, 99999))
+        self.buffer_size.setMaximumWidth(150)
+        self.buffer_size.setText(str(self.old_settings.buffer_size))
+        self.gridLayout.addWidget(self.buffer_size_label, 16, 0)
+        self.gridLayout.addWidget(self.buffer_size, 16, 1)
+
+        self.write_sub = QtWidgets.QCheckBox(self)
+        self.write_sub.setGeometry(QtCore.QRect(620, 200, 30, 30))
+        self.write_sub.setObjectName('write_sub')
+        self.write_sub.setChecked(self.old_settings.write_sub)
+        self.write_sub_label = QtWidgets.QLabel(self.settings_box)
+        self.write_sub_label.setObjectName("write_sub_label")
+        self.gridLayout.addWidget(self.write_sub_label, 17, 0)
+        self.gridLayout.addWidget(self.write_sub, 17, 1)
+
+        self.embed_subs = QtWidgets.QCheckBox(self)
+        self.embed_subs.setGeometry(QtCore.QRect(620, 200, 30, 30))
+        self.embed_subs.setObjectName('embed_subs')
+        self.embed_subs.setChecked(self.old_settings.embed_subs)
+        self.embed_subs_label = QtWidgets.QLabel(self.settings_box)
+        self.embed_subs_label.setObjectName("embed_subs_label")
+        self.gridLayout.addWidget(self.embed_subs_label, 18, 0)
+        self.gridLayout.addWidget(self.embed_subs, 18, 1)
+
         self.remove_files_after_upload = QtWidgets.QCheckBox(self)
         self.remove_files_after_upload.setGeometry(QtCore.QRect(620, 200, 30, 30))
         self.remove_files_after_upload.setObjectName('remove_files_after_upload')
         self.remove_files_after_upload.setChecked(self.old_settings.remove_files_after_upload)
         self.remove_files_after_upload_label = QtWidgets.QLabel(self.settings_box)
         self.remove_files_after_upload_label.setObjectName("remove_files_after_upload_label")
-        self.gridLayout.addWidget(self.remove_files_after_upload_label, 14, 0)
-        self.gridLayout.addWidget(self.remove_files_after_upload, 14, 1)
+        self.gridLayout.addWidget(self.remove_files_after_upload_label, 19, 0)
+        self.gridLayout.addWidget(self.remove_files_after_upload, 19, 1)
 
         self.events_page_button = QtWidgets.QPushButton(self.settings_box)
         self.events_page_button.setObjectName("events_page_button")
@@ -170,24 +215,24 @@ class SettingsPage(QtWidgets.QDialog):
         self.events_page_button.clicked.connect(self.open_events_page)
         self.events_label = QtWidgets.QLabel(self.settings_box)
         self.events_label.setObjectName("add_localization_label")
-        self.gridLayout.addWidget(self.events_label, 15, 0)
-        self.gridLayout.addWidget(self.events_page_button, 15, 1)
+        self.gridLayout.addWidget(self.events_label, 20, 0)
+        self.gridLayout.addWidget(self.events_page_button, 20, 1)
 
         self.send_crash_notifications = QtWidgets.QCheckBox(self.settings_box)
         self.send_crash_notifications.setObjectName("autostart")
         self.send_crash_notifications.setChecked(self.old_settings.send_crash_notifications)
-        self.gridLayout.addWidget(self.send_crash_notifications, 16, 0)
+        self.gridLayout.addWidget(self.send_crash_notifications, 21, 0)
 
         self.save_button = QtWidgets.QPushButton(self.settings_box)
         self.save_button.setObjectName("save_button")
         self.save_button.setMaximumWidth(80)
         self.save_button.clicked.connect(self.on_save)
-        self.gridLayout.addWidget(self.save_button, 17, 0)
+        self.gridLayout.addWidget(self.save_button, 22, 0)
 
         self.autostart = QtWidgets.QCheckBox(self.settings_box)
         self.autostart.setObjectName("autostart")
         self.autostart.setChecked(self.old_settings.autostart)
-        self.gridLayout.addWidget(self.autostart, 17, 1)
+        self.gridLayout.addWidget(self.autostart, 22, 1)
 
         self.retranslate_ui()
 
@@ -204,6 +249,11 @@ class SettingsPage(QtWidgets.QDialog):
         self.audio_quality_label.setText(get_str('audio_quality'))
         self.no_cache_dir_label.setText(get_str('no_cache_dir'))
         self.referer_label.setText(get_str('referer'))
+        self.geo_bypass_country_label.setText(get_str("geo_bypass_country"))
+        self.keep_fragments_label.setText(get_str("keep_fragments"))
+        self.buffer_size_label.setText(get_str("buffer_size"))
+        self.write_sub_label.setText(get_str("write_sub"))
+        self.embed_subs_label.setText(get_str("embed_subs"))
         self.remove_files_after_upload_label.setText(get_str('remove_files_after_upload'))
         self.events_label.setText(get_str('events'))
         self.choose_dir_label.setText(get_str('choose_the_download_path'))
@@ -262,6 +312,46 @@ class SettingsPage(QtWidgets.QDialog):
             msg = QtWidgets.QMessageBox()
             msg.setText(get_str('for_applying_localization_settings_need_to_restart'))
             msg.exec_()
+        try:
+            if self.old_settings.autostart != (self.autostart.checkState() != 0):
+                import os
+
+                if os.name.__contains__('Windows'):
+                    if self.autostart.checkState() != 0:
+                        import winreg
+
+                        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", 0,
+                                             winreg.KEY_ALL_ACCESS)
+                        winreg.SetValueEx(key, "BuxarVideoUploader", 0, winreg.REG_SZ, f'{os.path.abspath("Application")}.exe')
+                        key.Close()
+                    else:
+                        import winreg
+
+                        winreg.DeleteValue("BuxarVideoUploader")
+                else:
+                    if self.autostart.checkState() != 0:
+                        import subprocess
+
+                        service = f'''
+                        [Unit]
+                        Description=BuxarVideoUploader
+    
+                        [Service]
+                        ExecStart=.{os.path.abspath("Application")}
+                        Restart=always
+    
+                        [Install]
+                        WantedBy=multi-user.target
+                        '''
+
+                        with open('/etc/systemd/system/BuxarVideoUploader.service', 'w') as f:
+                            f.write(service)
+
+                        subprocess.run(['sudo', 'systemctl', 'daemon-reload'])
+                        subprocess.run(['sudo', 'systemctl', 'enable', 'BuxarVideoUploader.service'])
+                        subprocess.run(['sudo', 'systemctl', 'start', 'BuxarVideoUploader.service'])
+        except:
+            log_error(traceback.format_exc())
 
         self.state_service.save_settings(
             Settings(
@@ -278,4 +368,9 @@ class SettingsPage(QtWidgets.QDialog):
                 no_check_certificate=self.no_check_certificate.checkState() != 0,
                 audio_quality=int(self.audio_quality.text()),
                 no_cache_dir=self.no_cache_dir.checkState() != 0,
-                referer=self.referer.text()))
+                referer=self.referer.text(),
+                geo_bypass_country=self.geo_bypass_country.text(),
+                keep_fragments=self.keep_fragments.checkState() != 0,
+                buffer_size=int(self.buffer_size.text()),
+                write_sub=self.write_sub.checkState() != 0,
+                embed_subs=self.embed_subs.checkState() != 0))

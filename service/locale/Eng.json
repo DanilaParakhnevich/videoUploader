@@ -129,5 +129,10 @@
   "no_check_certificate": "Remove HTTPS certificate check",
   "audio_quality": "Audio quality selection (1-9)",
   "no_cache_dir": "Disable file system caching",
-  "referer": "Referrer if video is restricted to one domain"
+  "referer": "Referrer if video is restricted to one domain",
+  "geo_bypass_country": "ISO 3166-2 two-letter country code to download",
+  "keep_fragments": "Keep downloaded fragments to disk after download is complete",
+  "buffer_size": "Load Buffer Size",
+  "write_sub": "Write subtitle file",
+  "embed_subs": "Embed subtitles into video (only for mp4, webm and mkv videos, the file is not saved)"
 }
