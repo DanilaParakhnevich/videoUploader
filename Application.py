@@ -4,16 +4,18 @@ from PyQt5 import QtWidgets
 import os
 import requests
 
+from gui.widgets.ExistsNewVersionDialog import ExistsNewVersionDialog
 from gui.widgets.introduction.AcceptLoadingPackagesForm import AcceptLoadingPackagesForm
+from service.VersionService import VersionService
 
 if __name__ == "__main__":
 
     app = QtWidgets.QApplication(sys.argv)
     BuxarVideoUploader = QtWidgets.QMainWindow()
-    BuxarVideoUploader.setObjectName('BuxarVideoUploader')
 
     from gui.MainPage import Ui_BuxarVideoUploader
 
+    # Подгрузка зависимостей
     try:
         open(os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/LICENSE.txt'))
     except:
@@ -73,10 +75,19 @@ if __name__ == "__main__":
             form.close()
             break
 
+    # Проверка новой версии
+    version_service = VersionService()
+
+    current_client_version = version_service.get_current_client_version()
+    current_version = version_service.get_current_version()
+
+    if current_version != current_client_version:
+        dialog = ExistsNewVersionDialog(current_version)
+        dialog.exec_()
 
     #pyinstaller --add-data "service/locale/*.json:./service/locale/" --add-data "gui/widgets/button_icons/*.gif:./gui/widgets/button_icons/" Application.py
 
     ui = Ui_BuxarVideoUploader()
-    ui.setupUi(BuxarVideoUploader)
+    ui.setupUi(BuxarVideoUploader, current_version)
     BuxarVideoUploader.show()
     sys.exit(app.exec_())

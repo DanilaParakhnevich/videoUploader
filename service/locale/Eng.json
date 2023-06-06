@@ -134,5 +134,7 @@
   "keep_fragments": "Keep downloaded fragments to disk after download is complete",
   "buffer_size": "Load Buffer Size",
   "write_sub": "Write subtitle file",
-  "embed_subs": "Embed subtitles into video (only for mp4, webm and mkv videos, the file is not saved)"
+  "embed_subs": "Embed subtitles into video (only for mp4, webm and mkv videos, the file is not saved)",
+  "new_version": "New version is available",
+  "ok": "Ok"
 }

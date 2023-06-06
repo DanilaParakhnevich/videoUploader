@@ -14,8 +14,8 @@ class Ui_BuxarVideoUploader(object):
         self.currentOption = None
         self.main_layout = None
 
-    def setupUi(self, ui):
-        ui.setObjectName("BuxarVideoUploader")
+    def setupUi(self, ui, version):
+        ui.setObjectName(f'BuxarVideoUploader {version}')
         ui.setWindowModality(QtCore.Qt.ApplicationModal)
         ui.resize(954, 603)
         ui.setMaximumSize(1000, 620)
@@ -69,11 +69,11 @@ class Ui_BuxarVideoUploader(object):
         self.vertical_layout.addLayout(self.horizontal_layout)
         ui.setCentralWidget(self.central_widget)
 
-        self.retranslate_ui(ui)
+        self.retranslate_ui(ui, version)
         QtCore.QMetaObject.connectSlotsByName(ui)
 
-    def retranslate_ui(self, BuxarVideoUploader):
-        BuxarVideoUploader.setWindowTitle("BuxarVideoUploader")
+    def retranslate_ui(self, BuxarVideoUploader, version):
+        BuxarVideoUploader.setWindowTitle(f'BuxarVideoUploader: {version}')
         self.load_button.setText(get_str('download_page'))
         self.channels_button.setText(get_str('channels_page'))
         self.accounts_button.setText(get_str('accounts_page'))
