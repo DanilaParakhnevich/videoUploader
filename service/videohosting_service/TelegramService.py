@@ -1,5 +1,6 @@
 from io import BytesIO
 
+from service.LoggingService import log_error
 from service.videohosting_service.VideohostingService import VideohostingService
 from pyrogram import Client
 from model.VideoModel import VideoModel
@@ -14,7 +15,6 @@ from service.videohosting_service.exception.NoFreeSpaceException import NoFreeSp
 
 
 class TelegramService(VideohostingService):
-
     api_id = 21915718
     api_hash = "e4fda4b7d7ab5c8f27df56c71fbe44d9"
 
@@ -31,7 +31,8 @@ class TelegramService(VideohostingService):
     def get_videos_by_url(self, url, account=None):
         result = list()
 
-        with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash, workdir='service/videohosting_service/tmp') as app:
+        with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
+                    workdir='service/videohosting_service/tmp') as app:
             for message in app.get_chat_history(chat_id=url):
                 if message.video is not None:
                     message_url = f'https://t.me/c/me/{message.id}' if url == 'me' else message.link
@@ -40,24 +41,55 @@ class TelegramService(VideohostingService):
         return result
 
     def show_login_dialog(self, hosting, form):
-        self.login_form = LoginForm(form, hosting, self, 1, 'Введите номер телефона')
-        self.login_form.exec_()
 
-        return self.login_form.account
+        login = ''
+
+        while True:
+            self.login_form = LoginForm(form, hosting, self, 1, 'Введите номер телефона', username_val=login)
+            self.login_form.exec_()
+
+            if self.login_form.account is not None and self.login_form.account.auth is not None:
+                return self.login_form.account
+            elif self.login_form.passed is False:
+                return
+
+            login = self.login_form.lineEdit_username.text()
 
     def login(self, phone_number, password=None):
-        app = Client(name=phone_number, api_id=self.api_id, api_hash=self.api_hash, workdir='service/videohosting_service/tmp')
+        try:
+            app = Client(name=phone_number, api_id=self.api_id, api_hash=self.api_hash, workdir='service/videohosting_service/tmp')
 
-        app.connect()
+            app.connect()
 
-        if app.is_initialized is not True:
+            if app.is_initialized is not True:
+                activated = False
+                while True:
+                    sent_code_info = app.send_code(phone_number)
+                    while True:
+                        try:
+                            phone_code = self.handle_auth()
+                            if phone_code is False:
+                                return None
 
-            sent_code_info = app.send_code(phone_number)
-            phone_code = self.handle_auth()
+                            app.sign_in(phone_number, sent_code_info.phone_code_hash, phone_code)
+                            activated = True
+                            break
+                        except:
+                            log_error('Неверно введен код')
+                    if activated:
+                        break
+            app.disconnect()
+            return True
+        except:
+            app.disconnect()
 
-            app.sign_in(phone_number, sent_code_info.phone_code_hash, phone_code)
-
-        return True
+    def handle_auth(self):
+        form = AuthenticationConfirmationForm(self.login_form)
+        form.exec_()
+        if form.passed is True:
+            return form.code_edit.text()
+        else:
+            return False
 
     def validate_url_by_account(self, url: str, account) -> int:
         # with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
@@ -66,10 +98,12 @@ class TelegramService(VideohostingService):
 
     def upload_video(self, account, file_path, name, description, destination=None):
 
-        with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash, workdir='service/videohosting_service/tmp') as app:
+        with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
+                    workdir='service/videohosting_service/tmp') as app:
             app.send_video(chat_id=destination, video=file_path, caption=name)
 
-    def download_video(self, url, hosting, video_quality, format, download_dir, account=None, table_item: QTableWidgetItem = None):
+    def download_video(self, url, hosting, video_quality, video_extension, format, download_dir, account=None,
+                       table_item: QTableWidgetItem = None):
 
         video_info = self.get_video_info(url, video_quality)
 
@@ -101,7 +135,7 @@ class TelegramService(VideohostingService):
 
             return result
 
-    def get_video_info(self, url, video_quality, account=None):
+    def get_video_info(self, url, video_quality, video_extension, account=None):
 
         with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
                     workdir='service/videohosting_service/tmp') as app:
@@ -115,15 +149,9 @@ class TelegramService(VideohostingService):
                 'title': msg.caption,
                 'description': None,
                 'duration': msg.video.duration,
-                'filesize': msg.video.file_size/1024**2,
+                'filesize': msg.video.file_size / 1024 ** 2,
                 'ext': msg.video.mime_type.split('/')[1]
             }
-
-    def handle_auth(self):
-        form = AuthenticationConfirmationForm(self.login_form)
-        form.exec_()
-
-        return form.code_edit.text()
 
     def need_to_be_uploaded_to_special_source(self) -> bool:
         return True

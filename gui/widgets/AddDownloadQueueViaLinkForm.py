@@ -31,8 +31,9 @@ class AddDownloadQueueViaLinkForm(QDialog):
     upload_targets = None
     title = None
     description = None
+    video_size = None
 
-    def __init__(self, parent, format, quality, remove_files_after_upload):
+    def __init__(self, parent, format, quality, extension, remove_files_after_upload):
 
         super().__init__(parent)
         self.setWindowTitle(get_str('adding_video_via_url'))
@@ -61,6 +62,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
         self.queue_media_service = QueueMediaService()
         self.format = format
         self.video_quality = quality
+        self.video_extension = extension
         self.remove_files_after_upload = remove_files_after_upload
         self.event_service = EventService()
 
@@ -72,7 +74,9 @@ class AddDownloadQueueViaLinkForm(QDialog):
             msg.setText(get_str('need_authorize'))
             msg.exec_()
             return
-        elif len(accounts) != 0:
+        elif len(accounts) == 1:
+            self.account = accounts[0]
+        else:
             form = ChooseAccountForm(parent=self.parentWidget(),
                                      accounts=accounts)
             form.exec_()
@@ -88,9 +92,15 @@ class AddDownloadQueueViaLinkForm(QDialog):
         if form.passed is False:
             return
 
+        self.video_size = get_str('no_info')
         self.link = form.link_edit.text()
         if self.format != 3:
-            form = UploadAfterDownloadForm(self, need_interval=False)
+            video_info = self.hosting.value[0].get_video_info(self.link,
+                                                              self.video_quality,
+                                                              self.video_extension,
+                                                              self.account)
+            self.video_size = video_info['filesize']
+            form = UploadAfterDownloadForm(self, need_interval=False, video_size=self.video_size)
             form.exec_()
 
             if form.passed is False:
@@ -101,9 +111,6 @@ class AddDownloadQueueViaLinkForm(QDialog):
             self.upload_targets = list()
 
             if self.upload_on:
-                video_info = self.hosting.value[0].get_video_info(self.link,
-                                                                  self.video_quality,
-                                                                  self.account)
                 # Если необходимо выгружать видео после загрузки, проводим валидацию
                 for upload_target in form.upload_targets:
                     upload_hosting = Hosting[upload_target['hosting']]

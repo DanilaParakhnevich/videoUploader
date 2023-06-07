@@ -6,6 +6,7 @@ from PyQt5 import QtCore, QtWidgets
 
 from model.Event import Event
 from service.EventService import EventService
+from service.MailService import MailService
 from service.QueueMediaService import QueueMediaService
 from model.Hosting import Hosting
 from model.UploadQueueMedia import UploadQueueMedia
@@ -124,7 +125,8 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                 table_item=self.item(self.get_row_index(media.url), 1),
                 format=media.format,
                 download_dir=media.download_dir,
-                video_quality=media.video_quality)
+                video_quality=media.video_quality,
+                video_extension=media.video_extension)
             if media.upload_after_download:
                 for upload_target in media.upload_targets:
                     self.queue_media_service.replace_to_the_upload_queue(UploadQueueMedia(video_dir=video_dir,
@@ -147,6 +149,8 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
         except Exception:
             log_error(traceback.format_exc())
             self.set_media_status(media.url, 3)
+            if self.settings.send_crash_notifications is True:
+                MailService().send_log()
             return
 
         self.event_service.add_event(Event(f'{get_str("event_downloaded")} {media.url}'))

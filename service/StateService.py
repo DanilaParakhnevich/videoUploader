@@ -95,6 +95,12 @@ class StateService(object):
             if StateService.tabs is None:
                 StateService.tabs = list()
 
+            for tab in StateService.tabs:
+                if hasattr(tab, 'video_extension') is False:
+                    tab.video_extension = 5
+                if hasattr(tab, 'download_dir') is False:
+                    tab.download_dir = StateService.settings.download_dir
+
         return StateService.tabs
 
     # QueueMedia
@@ -194,8 +200,8 @@ class StateService(object):
                     StateService.settings.write_sub = False
                 if hasattr(StateService.settings, 'embed_subs') is False:
                     StateService.settings.embed_subs = False
-                if hasattr(StateService.settings, 'add_metadata') is False:
-                    StateService.settings.add_metadata = False
+                if hasattr(StateService.settings, 'video_extension') is False:
+                    StateService.settings.video_extension = [5, 'mp4']
         return StateService.settings
 
     # GUI

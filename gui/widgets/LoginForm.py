@@ -10,9 +10,10 @@ import traceback
 
 class LoginForm(QDialog):
     account = None
+    passed = False
 
     def __init__(self, parent: QWidget, hosting, service: VideohostingService, count: int,
-                 username: str = get_str('username'), password:str = get_str('password')):
+                 username: str = get_str('username'), password:str = get_str('password'), username_val=''):
         super().__init__(parent)
         self.setWindowTitle('Login Form')
         self.resize(500, 120)
@@ -43,6 +44,7 @@ class LoginForm(QDialog):
         button_login.clicked.connect(self.check_password)
         layout.addWidget(button_login, 3, 0, 1, 2)
         layout.setRowMinimumHeight(3, 75)
+        self.lineEdit_username.setText(username_val)
 
         self.setLayout(layout)
         self.hosting = hosting
@@ -72,4 +74,5 @@ class LoginForm(QDialog):
                                login=self.lineEdit_username.text(),
                                password=self.lineEdit_password.text(),
                                auth=auth)
+        self.passed = True
         self.close()

@@ -23,7 +23,6 @@ import time
 
 # Класс-родитель всех классов с основной логикой загрузки/выгрузки/авторизации
 class VideohostingService(ABC):
-
     __metaclass__ = abc.ABCMeta
 
     # Аргументы для выборки информации, используя yt-dlp
@@ -69,7 +68,8 @@ class VideohostingService(ABC):
     def login(self, login, password):
         raise NotImplementedError()
 
-    def validate_video_info_for_uploading(self, video_dir=None, filesize=None, ext=None, duration=None, title=None, description=None):
+    def validate_video_info_for_uploading(self, video_dir=None, filesize=None, ext=None, duration=None, title=None,
+                                          description=None):
 
         clip = None
 
@@ -88,16 +88,19 @@ class VideohostingService(ABC):
 
         if clip is not None:
             if self.duration_restriction is not None and (clip.duration / 60) > self.duration_restriction:
-                raise VideoDurationException(f'Продолжительность ролика слишком большая ({clip.duration} > {self.duration_restriction})')
+                raise VideoDurationException(
+                    f'Продолжительность ролика слишком большая ({clip.duration} > {self.duration_restriction})')
 
             size = get_size()
             if self.size_restriction is not None and size is not None and size > self.size_restriction:
                 raise FileSizeException(f'Размер файла слишком большой ({size} > {self.size_restriction})')
 
             if validate_format(os.path.splitext(video_dir)[1].replace('.', '')) is False:
-                raise FileFormatException(f'Неподходящий формат для видеохостинга({clip.filename} не подходит к {self.upload_video_formats.__str__()})')
+                raise FileFormatException(
+                    f'Неподходящий формат для видеохостинга({clip.filename} не подходит к {self.upload_video_formats.__str__()})')
 
-        if self.duration_restriction is not None and duration is not None and (duration / 60) > self.duration_restriction:
+        if self.duration_restriction is not None and duration is not None and (
+                duration / 60) > self.duration_restriction:
             raise VideoDurationException(
                 f'Продолжительность ролика слишком большая ({duration} > {self.duration_restriction})')
 
@@ -109,10 +112,13 @@ class VideohostingService(ABC):
                 f'Неподходящий формат для видеохостинга({ext} не подходит к {self.upload_video_formats.__str__()})')
 
         if self.title_size_restriction is not None and title is not None and len(title) > self.title_size_restriction:
-            raise NameIsTooLongException(f'Слишком большой размер названия(Ограничение: {self.title_size_restriction} символов)')
+            raise NameIsTooLongException(
+                f'Слишком большой размер названия(Ограничение: {self.title_size_restriction} символов)')
 
-        if self.description_size_restriction is not None and description is not None and len(description) > self.description_size_restriction:
-            raise DescriptionIsTooLongException(f'Слишком большой размер описания(Ограничение {self.description_size_restriction} символов)')
+        if self.description_size_restriction is not None and description is not None and len(
+                description) > self.description_size_restriction:
+            raise DescriptionIsTooLongException(
+                f'Слишком большой размер описания(Ограничение {self.description_size_restriction} символов)')
 
     def upload_video(self, account, file_path, name, description, destination=None):
         raise NotImplementedError()
@@ -127,10 +133,11 @@ class VideohostingService(ABC):
         browser = p.chromium.launch(headless=headless, args=args)
         return browser.new_context()
 
-    def download_video(self, url, hosting, video_quality, format, download_dir, account=None, table_item: QTableWidgetItem = None):
+    def download_video(self, url, hosting, video_quality, video_extension, format, download_dir, account=None,
+                       table_item: QTableWidgetItem = None):
 
         from model.Hosting import Hosting
-        video_info = Hosting[hosting].value[0].get_video_info(url, video_quality)
+        video_info = Hosting[hosting].value[0].get_video_info(url, video_quality, video_extension)
 
         space = os.statvfs(os.path.expanduser(download_dir))
         free = space.f_bavail * space.f_frsize / 1024000
@@ -144,15 +151,17 @@ class VideohostingService(ABC):
                     str = 'total_bytes' if 'total_bytes' in d else 'total_bytes_estimate'
                     if d[str] != 0:
                         p = (d['downloaded_bytes'] / d[str]) * 100
-                        table_item.setText(round(p, 1).__str__() + '%')
+                        table_item.setText(f'{round(p, 1).__str__()}% ({video_info["filesize"]} MB)')
                     else:
-                        table_item.setText(d['_percent_str'])
+                        table_item.setText(f'{d["_percent_str"]} ({video_info["filesize"]} MB)')
             except:
                 log_error(traceback.format_exc())
 
         settings = self.state_service.get_settings()
 
-        ffmpeg_location = os.path.abspath('dist/Application/ffmpeg-master-latest-win64-gpl/bin') if os.name.__contains__('Windows') else os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin')
+        ffmpeg_location = os.path.abspath(
+            'dist/Application/ffmpeg-master-latest-win64-gpl/bin') if os.name.__contains__(
+            'Windows') else os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin')
 
         simple_download_opts = {
             'progress_hooks': [lambda d: prog_hook(d, table_item)],
@@ -166,7 +175,7 @@ class VideohostingService(ABC):
             'keepvideo': settings.keep_fragments,
             'buffersize': settings.buffer_size,
             'writesubtitles': settings.write_sub,
-            'overwrites':  True
+            'overwrites': True
         }
 
         if settings.embed_subs:
@@ -191,7 +200,7 @@ class VideohostingService(ABC):
         if format == 'NOT_MERGE':
             download_video_opts = {
                 'ffmpeg_location': os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin'),
-                'format': f'bestvideo[height<={video_quality}]/best[height<={video_quality}]/best',
+                'format': f'bestvideo[height<={video_quality}][ext=?{video_extension}]/best[height<={video_quality}][ext=?{video_extension}]/best',
                 '--list-formats ': True,
                 'outtmpl': f'{download_dir}/{hosting}/%(title)s.%(ext)s',
                 'writeinfojson': True,
@@ -248,9 +257,11 @@ class VideohostingService(ABC):
             if format == 'AUDIO':
                 simple_download_opts['format'] = 'bestaudio/best'
             elif format == 'VIDEO':
-                simple_download_opts['format'] = f'bestvideo[height<={video_quality}]/best[height<={video_quality}]/best'
+                simple_download_opts[
+                    'format'] = f'bestvideo[height<={video_quality}][ext=?{video_extension}]/best[height<={video_quality}][ext=?{video_extension}]/best'
             else:
-                simple_download_opts['format'] = f'bestvideo[height<={video_quality}]+bestaudio/best[height<={video_quality}]/best'
+                simple_download_opts[
+                    'format'] = f'bestvideo[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[height<={video_quality}][ext=?{video_extension}]/best'
 
             with YoutubeDL(simple_download_opts) as ydl:
                 info = ydl.extract_info(url)
@@ -260,11 +271,11 @@ class VideohostingService(ABC):
         else:
             return f'{download_dir}/{hosting}/{info["title"]}.{info["ext"]}'
 
-    def get_video_info(self, url, video_quality, account=None):
+    def get_video_info(self, url, video_quality, video_extension, account=None):
 
         download_opts = {
             'skip_download': True,
-            'format': f'bestvideo[height<={video_quality}]+bestaudio/best[height<={video_quality}]/best'
+            'format': f'bestvideo[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[height<={video_quality}][ext=?{video_extension}]/best'
         }
 
         # Чтобы нормально добавить куки в обычном json, приходится использовать http_headers
@@ -281,7 +292,8 @@ class VideohostingService(ABC):
             'title': info['title'],
             'description': info['description'] if hasattr(info, 'description') else '',
             'duration': info['duration'],
-            'filesize': int(info['filesize_approx'] / 1024 ** 2) if 'filesize_approx' in info else int(info['filesize'] / 1024 ** 2),
+            'filesize': int(info['filesize_approx'] / 1024 ** 2) if 'filesize_approx' in info else int(
+                info['filesize'] / 1024 ** 2),
             'ext': info['ext'] if info['ext'] else info['video_ext']
         }
 

@@ -5,6 +5,7 @@ from PyQt5.QtGui import QIntValidator
 
 from gui.widgets.ChooseVideoQualityComboBox import ChooseVideoQualityComboBox
 from gui.widgets.EventsListForm import EventsListForm
+from gui.widgets.ExstensionChooserComboBox import ExtensionChooserComboBox
 from gui.widgets.FormatChooserComboBox import FormatChooserComboBox
 from model.Settings import Settings
 from service.LocalizationService import *
@@ -115,7 +116,6 @@ class SettingsPage(QtWidgets.QDialog):
         self.gridLayout.addWidget(self.choose_video_format_combo_box, 8, 1)
 
         self.choose_video_quality_form = ChooseVideoQualityComboBox(self)
-        self.choose_video_quality_form.setGeometry(QtCore.QRect(620, 150, 300, 30))
         self.choose_video_quality_form.setObjectName('choose_video_quality_form')
         self.choose_video_quality_form.setCurrentIndex(self.old_settings.video_quality)
         self.choose_video_quality_label = QtWidgets.QLabel(self.settings_box)
@@ -123,13 +123,21 @@ class SettingsPage(QtWidgets.QDialog):
         self.gridLayout.addWidget(self.choose_video_quality_label, 9, 0)
         self.gridLayout.addWidget(self.choose_video_quality_form, 9, 1)
 
+        self.extension_chooser_combo_box = ExtensionChooserComboBox(self)
+        self.extension_chooser_combo_box.setObjectName('choose_extension_quality_form')
+        self.choose_video_extension_label = QtWidgets.QLabel(self.settings_box)
+        self.choose_video_extension_label.setObjectName("choose_video_extension_label")
+        self.extension_chooser_combo_box.setCurrentIndex(self.old_settings.video_extension)
+        self.gridLayout.addWidget(self.choose_video_extension_label, 10, 0)
+        self.gridLayout.addWidget(self.extension_chooser_combo_box, 10, 1)
+
         self.retries_label = QtWidgets.QLabel('retries')
         self.retries_edit = QtWidgets.QLineEdit()
         self.retries_edit.setValidator(QIntValidator(0, 100))
         self.retries_edit.setMaximumWidth(150)
         self.retries_edit.setText(str(self.old_settings.retries))
-        self.gridLayout.addWidget(self.retries_label, 10, 0)
-        self.gridLayout.addWidget(self.retries_edit, 10, 1)
+        self.gridLayout.addWidget(self.retries_label, 11, 0)
+        self.gridLayout.addWidget(self.retries_edit, 11, 1)
 
         self.no_check_certificate = QtWidgets.QCheckBox(self)
         self.no_check_certificate.setGeometry(QtCore.QRect(620, 200, 30, 30))
@@ -137,16 +145,16 @@ class SettingsPage(QtWidgets.QDialog):
         self.no_check_certificate.setChecked(self.old_settings.no_check_certificate)
         self.no_check_certificate_label = QtWidgets.QLabel(self.settings_box)
         self.no_check_certificate_label.setObjectName("remove_files_after_upload_label")
-        self.gridLayout.addWidget(self.no_check_certificate_label, 11, 0)
-        self.gridLayout.addWidget(self.no_check_certificate, 11, 1)
+        self.gridLayout.addWidget(self.no_check_certificate_label, 12, 0)
+        self.gridLayout.addWidget(self.no_check_certificate, 12, 1)
 
         self.audio_quality_label = QtWidgets.QLabel('audio_quality')
         self.audio_quality = QtWidgets.QLineEdit()
         self.audio_quality.setValidator(QIntValidator(1, 9))
         self.audio_quality.setMaximumWidth(150)
         self.audio_quality.setText(str(self.old_settings.audio_quality))
-        self.gridLayout.addWidget(self.audio_quality_label, 12, 0)
-        self.gridLayout.addWidget(self.audio_quality, 12, 1)
+        self.gridLayout.addWidget(self.audio_quality_label, 13, 0)
+        self.gridLayout.addWidget(self.audio_quality, 13, 1)
 
         self.no_cache_dir = QtWidgets.QCheckBox(self)
         self.no_cache_dir.setGeometry(QtCore.QRect(620, 200, 30, 30))
@@ -154,22 +162,22 @@ class SettingsPage(QtWidgets.QDialog):
         self.no_cache_dir.setChecked(self.old_settings.no_cache_dir)
         self.no_cache_dir_label = QtWidgets.QLabel(self.settings_box)
         self.no_cache_dir_label.setObjectName("no_cache_dir_label")
-        self.gridLayout.addWidget(self.no_cache_dir_label, 13, 0)
-        self.gridLayout.addWidget(self.no_cache_dir, 13, 1)
+        self.gridLayout.addWidget(self.no_cache_dir_label, 14, 0)
+        self.gridLayout.addWidget(self.no_cache_dir, 14, 1)
 
         self.referer_label = QtWidgets.QLabel('referer')
         self.referer = QtWidgets.QLineEdit()
         self.referer.setMaximumWidth(150)
         self.referer.setText(str(self.old_settings.referer))
-        self.gridLayout.addWidget(self.referer_label, 14, 0)
-        self.gridLayout.addWidget(self.referer, 14, 1)
+        self.gridLayout.addWidget(self.referer_label, 15, 0)
+        self.gridLayout.addWidget(self.referer, 15, 1)
 
         self.geo_bypass_country_label = QtWidgets.QLabel('geo_bypass_country')
         self.geo_bypass_country = QtWidgets.QLineEdit()
         self.geo_bypass_country.setMaximumWidth(150)
         self.geo_bypass_country.setText(str(self.old_settings.geo_bypass_country))
-        self.gridLayout.addWidget(self.geo_bypass_country_label, 15, 0)
-        self.gridLayout.addWidget(self.geo_bypass_country, 15, 1)
+        self.gridLayout.addWidget(self.geo_bypass_country_label, 16, 0)
+        self.gridLayout.addWidget(self.geo_bypass_country, 16, 1)
 
         self.keep_fragments = QtWidgets.QCheckBox(self)
         self.keep_fragments.setGeometry(QtCore.QRect(620, 200, 30, 30))
@@ -177,16 +185,16 @@ class SettingsPage(QtWidgets.QDialog):
         self.keep_fragments.setChecked(self.old_settings.keep_fragments)
         self.keep_fragments_label = QtWidgets.QLabel(self.settings_box)
         self.keep_fragments_label.setObjectName("keep_fragments_label")
-        self.gridLayout.addWidget(self.keep_fragments_label, 16, 0)
-        self.gridLayout.addWidget(self.keep_fragments, 16, 1)
+        self.gridLayout.addWidget(self.keep_fragments_label, 17, 0)
+        self.gridLayout.addWidget(self.keep_fragments, 17, 1)
 
         self.buffer_size_label = QtWidgets.QLabel('buffer_size_label')
         self.buffer_size = QtWidgets.QLineEdit()
         self.buffer_size.setValidator(QIntValidator(0, 99999))
         self.buffer_size.setMaximumWidth(150)
         self.buffer_size.setText(str(self.old_settings.buffer_size))
-        self.gridLayout.addWidget(self.buffer_size_label, 17, 0)
-        self.gridLayout.addWidget(self.buffer_size, 17, 1)
+        self.gridLayout.addWidget(self.buffer_size_label, 18, 0)
+        self.gridLayout.addWidget(self.buffer_size, 18, 1)
 
         self.write_sub = QtWidgets.QCheckBox(self)
         self.write_sub.setGeometry(QtCore.QRect(620, 200, 30, 30))
@@ -194,8 +202,8 @@ class SettingsPage(QtWidgets.QDialog):
         self.write_sub.setChecked(self.old_settings.write_sub)
         self.write_sub_label = QtWidgets.QLabel(self.settings_box)
         self.write_sub_label.setObjectName("write_sub_label")
-        self.gridLayout.addWidget(self.write_sub_label, 18, 0)
-        self.gridLayout.addWidget(self.write_sub, 18, 1)
+        self.gridLayout.addWidget(self.write_sub_label, 19, 0)
+        self.gridLayout.addWidget(self.write_sub, 19, 1)
 
         self.embed_subs = QtWidgets.QCheckBox(self)
         self.embed_subs.setGeometry(QtCore.QRect(620, 200, 30, 30))
@@ -203,8 +211,8 @@ class SettingsPage(QtWidgets.QDialog):
         self.embed_subs.setChecked(self.old_settings.embed_subs)
         self.embed_subs_label = QtWidgets.QLabel(self.settings_box)
         self.embed_subs_label.setObjectName("embed_subs_label")
-        self.gridLayout.addWidget(self.embed_subs_label, 19, 0)
-        self.gridLayout.addWidget(self.embed_subs, 19, 1)
+        self.gridLayout.addWidget(self.embed_subs_label, 20, 0)
+        self.gridLayout.addWidget(self.embed_subs, 20, 1)
 
         self.remove_files_after_upload = QtWidgets.QCheckBox(self)
         self.remove_files_after_upload.setGeometry(QtCore.QRect(620, 200, 30, 30))
@@ -212,8 +220,8 @@ class SettingsPage(QtWidgets.QDialog):
         self.remove_files_after_upload.setChecked(self.old_settings.remove_files_after_upload)
         self.remove_files_after_upload_label = QtWidgets.QLabel(self.settings_box)
         self.remove_files_after_upload_label.setObjectName("remove_files_after_upload_label")
-        self.gridLayout.addWidget(self.remove_files_after_upload_label, 20, 0)
-        self.gridLayout.addWidget(self.remove_files_after_upload, 20, 1)
+        self.gridLayout.addWidget(self.remove_files_after_upload_label, 21, 0)
+        self.gridLayout.addWidget(self.remove_files_after_upload, 21, 1)
 
         self.events_page_button = QtWidgets.QPushButton(self.settings_box)
         self.events_page_button.setObjectName("events_page_button")
@@ -221,24 +229,24 @@ class SettingsPage(QtWidgets.QDialog):
         self.events_page_button.clicked.connect(self.open_events_page)
         self.events_label = QtWidgets.QLabel(self.settings_box)
         self.events_label.setObjectName("add_localization_label")
-        self.gridLayout.addWidget(self.events_label, 21, 0)
-        self.gridLayout.addWidget(self.events_page_button, 21, 1)
+        self.gridLayout.addWidget(self.events_label, 22, 0)
+        self.gridLayout.addWidget(self.events_page_button, 22, 1)
 
         self.send_crash_notifications = QtWidgets.QCheckBox(self.settings_box)
         self.send_crash_notifications.setObjectName("autostart")
         self.send_crash_notifications.setChecked(self.old_settings.send_crash_notifications)
-        self.gridLayout.addWidget(self.send_crash_notifications, 22, 0)
+        self.gridLayout.addWidget(self.send_crash_notifications, 23, 0)
 
         self.save_button = QtWidgets.QPushButton(self.settings_box)
         self.save_button.setObjectName("save_button")
         self.save_button.setMaximumWidth(80)
         self.save_button.clicked.connect(self.on_save)
-        self.gridLayout.addWidget(self.save_button, 23, 0)
+        self.gridLayout.addWidget(self.save_button, 24, 0)
 
         self.autostart = QtWidgets.QCheckBox(self.settings_box)
         self.autostart.setObjectName("autostart")
         self.autostart.setChecked(self.old_settings.autostart)
-        self.gridLayout.addWidget(self.autostart, 23, 1)
+        self.gridLayout.addWidget(self.autostart, 24, 1)
 
         self.retranslate_ui()
 

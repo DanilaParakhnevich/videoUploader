@@ -5,6 +5,9 @@ from service.LocalizationService import *
 # Эта форма предназначена для автоматизированной авторизации и используется в реализациях метода login наследников
 # VideohostingService
 class AuthenticationConfirmationForm(QDialog):
+
+	passed = False
+
 	def __init__(self, parent):
 		super().__init__(parent)
 		self.setWindowTitle(get_str('authentication'))
@@ -26,4 +29,5 @@ class AuthenticationConfirmationForm(QDialog):
 		self.setLayout(layout)
 
 	def exit(self):
+		self.passed = True
 		self.close()

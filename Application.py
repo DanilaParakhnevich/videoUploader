@@ -6,6 +6,8 @@ import requests
 
 from gui.widgets.ExistsNewVersionDialog import ExistsNewVersionDialog
 from gui.widgets.introduction.AcceptLoadingPackagesForm import AcceptLoadingPackagesForm
+from service.MailService import MailService
+from service.StateService import StateService
 from service.VersionService import VersionService
 
 if __name__ == "__main__":
@@ -86,8 +88,11 @@ if __name__ == "__main__":
         dialog.exec_()
 
     #pyinstaller --add-data "service/locale/*.json:./service/locale/" --add-data "gui/widgets/button_icons/*.gif:./gui/widgets/button_icons/" Application.py
-
-    ui = Ui_BuxarVideoUploader()
-    ui.setupUi(BuxarVideoUploader, current_version)
-    BuxarVideoUploader.show()
-    sys.exit(app.exec_())
+    try:
+        ui = Ui_BuxarVideoUploader()
+        ui.setupUi(BuxarVideoUploader, current_version)
+        BuxarVideoUploader.show()
+        sys.exit(app.exec_())
+    except:
+        if StateService().get_settings().send_crash_notifications is True:
+            MailService().send_log()

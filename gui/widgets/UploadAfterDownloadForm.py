@@ -13,7 +13,7 @@ class UploadAfterDownloadForm(QDialog):
 	upload_targets = None
 	passed = False
 
-	def __init__(self, parent, need_interval: bool = True):
+	def __init__(self, parent, need_interval: bool = True, video_size: str = None):
 		super().__init__(parent)
 		self.setWindowTitle(get_str('upload_video_after_download'))
 		self.resize(300, 120)
@@ -46,6 +46,11 @@ class UploadAfterDownloadForm(QDialog):
 		no_button.setMaximumWidth(100)
 		layout.addWidget(no_button, 2, 1)
 		layout.setRowMinimumHeight(2, 75)
+
+		if video_size is not None:
+			video_size_label = QLabel('video_size_label')
+			video_size_label.setText(f'{video_size} MB')
+			layout.addWidget(video_size_label, 3, 0)
 
 		self.state_service = StateService()
 		self.need_interval = need_interval

@@ -6,6 +6,7 @@ from PyQt5 import QtCore, QtWidgets
 
 from gui.widgets.AddDownloadQueueViaLinkForm import AddDownloadQueueViaLinkForm
 from gui.widgets.ChooseVideoQualityComboBox import ChooseVideoQualityComboBox
+from gui.widgets.ExstensionChooserComboBox import ExtensionChooserComboBox
 from gui.widgets.FormatChooserComboBox import FormatChooserComboBox
 from gui.widgets.TypeStrForm import TypeStrForm
 from model.Event import Event
@@ -17,6 +18,7 @@ from gui.widgets.ChooseAccountForm import ChooseAccountForm
 from gui.widgets.UploadAfterDownloadForm import UploadAfterDownloadForm
 from gui.widgets.LoadingButton import AnimatedButton
 from model.UploadQueueMedia import UploadQueueMedia
+from service.EventService import EventService
 from service.LocalizationService import *
 from service.QueueMediaService import QueueMediaService
 from threading import Thread
@@ -62,11 +64,12 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             self.create_empty_tab()
         else:
             for tab in self.tab_models:
-                self.create_tab(tab.tab_name, tab.channel, tab.format[0], tab.video_quality[0],
+                self.create_tab(tab.tab_name, tab.channel, tab.format[0], tab.video_quality[0], tab.video_extension[0],
                                 tab.remove_files_after_upload, tab.download_dir if hasattr(tab, 'download_dir')
                                 else self.state_service.get_settings().download_dir)
 
         self.setCurrentIndex(0)
+        self.event_service = EventService()
 
     def remove_tab(self, index):
         self.tab_models.pop(index - 1)
@@ -80,14 +83,15 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         channels = self.state_service.get_channels()
         settings = self.state_service.get_settings()
         if len(channels) == 0:
-            return self.create_tab(None, None, settings.format, settings.video_quality,
+            return self.create_tab(None, None, settings.format, settings.video_quality, settings.video_extension,
                                    settings.remove_files_after_upload, settings.download_dir)
         else:
             return self.create_tab(None, channels.__getitem__(0), settings.format, settings.video_quality,
-                                   settings.remove_files_after_upload, settings.download_dir)
+                                   settings.video_extension, settings.remove_files_after_upload, settings.download_dir)
 
     # Этот метод добавляет новую вкладку, либо вкладку по известным данным из tab_models
-    def create_tab(self, name, selected_channel, format_index, video_quality_index, remove_files_after_upload,
+    def create_tab(self, name, selected_channel, format_index, video_quality_index, video_extension,
+                   remove_files_after_upload,
                    download_dir):
         tab = QtWidgets.QWidget()
         tab.setObjectName("Tab.py")
@@ -116,6 +120,11 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         tab.choose_video_quality_form.setObjectName('choose_video_quality_form')
         tab.choose_video_quality_form.setCurrentIndex(video_quality_index)
         tab.choose_video_quality_form.currentIndexChanged.connect(self.on_video_quality_changed)
+        tab.extension_chooser_combo_box = ExtensionChooserComboBox(tab)
+        tab.extension_chooser_combo_box.setGeometry(QtCore.QRect(620, 250, 300, 30))
+        tab.extension_chooser_combo_box.setObjectName('choose_video_quality_form')
+        tab.extension_chooser_combo_box.setCurrentIndex(video_extension)
+        tab.extension_chooser_combo_box.currentIndexChanged.connect(self.on_video_extension_changed)
         tab.choose_dir_button = QtWidgets.QPushButton(tab)
         tab.choose_dir_button.setObjectName("choose_dir_button")
         tab.choose_dir_button.setMaximumWidth(350)
@@ -130,20 +139,21 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 tab.choose_dir_button.setText(folder_path)
 
         tab.choose_dir_button.clicked.connect(pick_new)
-        tab.choose_dir_button.setGeometry(QtCore.QRect(620, 250, 300, 30))
+        tab.choose_dir_button.setGeometry(QtCore.QRect(620, 300, 300, 30))
         tab.remove_files_after_upload = QtWidgets.QCheckBox(tab)
-        tab.remove_files_after_upload.setGeometry(QtCore.QRect(620, 300, 30, 30))
+        tab.remove_files_after_upload.setGeometry(QtCore.QRect(620, 350, 30, 30))
         tab.remove_files_after_upload.setObjectName('remove_files_after_upload')
         tab.remove_files_after_upload.setChecked(remove_files_after_upload)
         tab.remove_files_after_upload.clicked.connect(self.on_remove_files_after_upload_changed)
         remove_files_after_upload_label = QtWidgets.QLabel(tab)
         remove_files_after_upload_label.setText(get_str('remove_files_after_upload'))
-        remove_files_after_upload_label.setGeometry(QtCore.QRect(670, 300, 250, 30))
+        remove_files_after_upload_label.setGeometry(QtCore.QRect(670, 350, 250, 30))
         remove_files_after_upload_label.setObjectName('remove_files_after_upload_label')
 
         def on_add():
             form = AddDownloadQueueViaLinkForm(self, self.tab_models[self.current_table_index].format[0],
-                                               self.tab_models[self.current_table_index].video_quality[0],
+                                               self.tab_models[self.current_table_index].video_quality[1],
+                                               self.tab_models[self.current_table_index].video_extension[1],
                                                self.tab_models[self.current_table_index].remove_files_after_upload)
             form.exec_()
 
@@ -153,15 +163,16 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                               status=0,
                                               upload_after_download=form.upload_on,
                                               account=form.account,
+                                              video_size=form.video_size,
                                               format=tab.choose_video_format_combo_box.currentData(),
                                               video_quality=tab.choose_video_quality_form.currentData(),
+                                              video_extension=tab.extension_chooser_combo_box.currentData(),
                                               remove_files_after_upload=tab.remove_files_after_upload.isChecked(),
                                               upload_date=datetime.datetime.now(),
                                               upload_targets=form.upload_targets,
                                               title=form.title,
                                               description=form.description,
                                               download_dir=tab.choose_dir_button.text())
-
 
                 self.queue_media_service.add_to_the_download_queue(list([queue_media]))
 
@@ -220,9 +231,10 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             tab_name = f'{get_str("tab")} {index}'
             self.setTabText(self.indexOf(tab), tab_name)
 
-            self.tab_models.append(TabModel(tab_name, '', Hosting.Youtube.name, [0, None], [0, '144'], False))
+            self.tab_models.append(
+                TabModel(tab_name, '', Hosting.Youtube.name, [0, None], [0, '144'], [5, 'mp4'], False,
+                         self.state_service.get_settings().download_dir))
             self.state_service.save_tabs_state(self.tab_models)
-
         self.tables.append(table_widget)
 
         add_media_to_query_button.clicked.connect(self.on_add_media_to_query)
@@ -292,12 +304,14 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             channel = self.state_service.get_channel_by_url(self.tab_models[self.currentIndex()].channel)
             hosting = Hosting[channel.hosting]
 
-            if upload_on:
-                video_info = hosting.value[0].get_video_info(table.item(i, 1).text(),
-                                                             self.tab_models[
-                                                                 self.currentIndex()].video_quality[1],
-                                                             self.tab_models[self.currentIndex()].account)
+            video_info = hosting.value[0].get_video_info(table.item(i, 1).text(),
+                                                         self.tab_models[self.currentIndex()].video_quality[1],
+                                                         self.tab_models[self.currentIndex()].video_extension[1],
+                                                         self.tab_models[self.currentIndex()].account)
 
+            video_size = video_info['filesize']
+
+            if upload_on:
                 # Если необходимо выгружать видео после загрузки, проводим валидацию
                 for upload_target in upload_after_download_form.upload_targets:
                     upload_hosting = Hosting[upload_target['hosting']]
@@ -353,11 +367,13 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                           account=self.tab_models[self.currentIndex()].account,
                                           hosting=hosting.name,
                                           status=0,
+                                          video_size=video_size,
                                           upload_after_download=upload_on,
                                           upload_targets=upload_targets,
                                           upload_date=upload_date,
                                           format=self.tab_models[self.currentIndex()].format[1],
                                           video_quality=self.tab_models[self.currentIndex()].video_quality[1],
+                                          video_extension=self.tab_models[self.currentIndex()].video_extension[1],
                                           remove_files_after_upload=self.tab_models[
                                               self.currentIndex()].remove_files_after_upload,
                                           title=title,
@@ -404,6 +420,12 @@ class LoadPageWidget(QtWidgets.QTabWidget):
     def on_video_quality_changed(self, item):
         quality_list = list(['144', '240', '360', '480', '720', '1080', '1440', '2160'])
         self.tab_models[self.currentIndex()].video_quality = [item, quality_list[item]]
+        self.state_service.save_tabs_state(self.tab_models)
+
+    def on_video_extension_changed(self, item):
+        quality_list = list(['3gp', 'aac', 'flv', 'm4a', 'mp3', 'mp4', 'ogg', 'wav', 'webm'])
+        self.tab_models[self.currentIndex()].video_extension = [item, quality_list[item]]
+        self.state_service.save_tabs_state(self.tab_models)
 
     def on_remove_files_after_upload_changed(self, item):
         self.tab_models[self.currentIndex()].remove_files_after_upload = item
@@ -496,4 +518,5 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             msg.exec_()
             log_error(traceback.format_exc())
 
+        table.update()
         button.stop_animation()

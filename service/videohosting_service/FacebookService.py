@@ -1,4 +1,5 @@
 from service.LocalizationService import get_str
+from service.LoggingService import log_error
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
@@ -79,15 +80,23 @@ class FacebookService(VideohostingService):
 
     def validate_url_by_account(self, url: str, account) -> int:
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=True)
+            context = self.new_context(p=p, headless=False)
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto(url, timeout=0)
 
             user_item = page.query_selector('div[aria-label="Edit profile"]')
             group_item = page.query_selector('div[aria-label="Invite"]')
+            if user_item is None and group_item is None and page.query_selector('div[aria-label="Switch Now"]') is not None:
+                page.query_selector('div[aria-label="Switch Now"]').click()
+                try:
+                    page.wait_for_selector('div[aria-label="Edit"]', timeout=60_000)
+                except:
+                    log_error('Switch now есть, а Edit нет(')
 
-            if user_item is None and group_item is None:
+            page_item = page.query_selector('div[aria-label="Edit"]')
+
+            if user_item is None and group_item is None and page_item is None:
                 return False
             else:
                 return True
