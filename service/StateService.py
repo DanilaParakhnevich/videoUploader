@@ -97,7 +97,7 @@ class StateService(object):
 
             for tab in StateService.tabs:
                 if hasattr(tab, 'video_extension') is False:
-                    tab.video_extension = 5
+                    tab.video_extension = [5, 'mp4']
                 if hasattr(tab, 'download_dir') is False:
                     tab.download_dir = StateService.settings.download_dir
 

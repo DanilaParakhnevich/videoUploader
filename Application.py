@@ -43,7 +43,7 @@ if __name__ == "__main__":
                         os.system(f'mkdir dist')
                         os.system(f'mkdir dist/Application')
                         os.system(f'tar -xf ffmpeg-master-latest-win64-gpl.tar.xz -C {os.path.abspath("dist/Application/")}')
-                        os.system('rm ffmpeg-master-latest-win64-gpl.tar.xz')
+                        os.system('del ffmpeg-master-latest-win64-gpl.tar.xz')
                     else:
                         os.system('PLAYWRIGHT_BROWSERS_PATH=0 sh playwright/driver/playwright.sh install chromium')
 
@@ -58,7 +58,7 @@ if __name__ == "__main__":
                         os.system(f'mkdir dist/Application')
                         os.system(
                             f'tar -xf ffmpeg-master-latest-linux64-gpl.tar.xz -C {os.path.abspath("dist/Application/")}')
-                        os.system('del ffmpeg-master-latest-linux64-gpl.tar.xz')
+                        os.system('rm ffmpeg-master-latest-linux64-gpl.tar.xz')
 
                 except:
                     if os.name.__contains__('Windows'):
