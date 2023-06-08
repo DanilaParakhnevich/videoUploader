@@ -17,6 +17,8 @@ if __name__ == "__main__":
 
     from gui.MainPage import Ui_BuxarVideoUploader
 
+    os.system(os.name)
+
     # Подгрузка зависимостей
     try:
         open(os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/LICENSE.txt'))
@@ -25,7 +27,6 @@ if __name__ == "__main__":
         while True:
             form = AcceptLoadingPackagesForm(failed)
             form.exec_()
-
             if form.accept:
                 try:
 
@@ -39,10 +40,9 @@ if __name__ == "__main__":
                             with open('ffmpeg-master-latest-win64-gpl.zip', 'wb') as f:
                                 f.write(response.raw.read())
 
-                        os.system(f'mkdir {os.path.abspath("dist/")}')
-                        os.system(f'mkdir {os.path.abspath("dist/Application/")}')
-                        os.system(
-                            f'tar -xf ffmpeg-master-latest-win64-gpl.tar.xz -C {os.path.abspath("dist/Application/")}')
+                        os.system(f'mkdir dist')
+                        os.system(f'mkdir dist/Application')
+                        os.system(f'tar -xf ffmpeg-master-latest-win64-gpl.tar.xz -C {os.path.abspath("dist/Application/")}')
                         os.system('rm ffmpeg-master-latest-win64-gpl.tar.xz')
                     else:
                         os.system('PLAYWRIGHT_BROWSERS_PATH=0 sh playwright/driver/playwright.sh install chromium')
@@ -54,8 +54,8 @@ if __name__ == "__main__":
                             with open('ffmpeg-master-latest-linux64-gpl.tar.xz', 'wb') as f:
                                 f.write(response.raw.read())
 
-                        os.system(f'mkdir {os.path.abspath("dist/")}')
-                        os.system(f'mkdir {os.path.abspath("dist/Application/")}')
+                        os.system(f'mkdir dist')
+                        os.system(f'mkdir dist/Application')
                         os.system(
                             f'tar -xf ffmpeg-master-latest-linux64-gpl.tar.xz -C {os.path.abspath("dist/Application/")}')
                         os.system('del ffmpeg-master-latest-linux64-gpl.tar.xz')
