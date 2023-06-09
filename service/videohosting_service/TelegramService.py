@@ -105,7 +105,7 @@ class TelegramService(VideohostingService):
     def download_video(self, url, hosting, video_quality, video_extension, format, download_dir, account=None,
                        table_item: QTableWidgetItem = None):
 
-        video_info = self.get_video_info(url, video_quality)
+        video_info = self.get_video_info(url, video_quality, [5, 'mp4'], account=account)
 
         space = os.statvfs(os.path.expanduser(download_dir))
         free = space.f_bavail * space.f_frsize / 1024000

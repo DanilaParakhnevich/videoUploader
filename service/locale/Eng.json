@@ -136,5 +136,10 @@
   "write_sub": "Write subtitle file",
   "embed_subs": "Embed subtitles into video (only for mp4, webm and mkv videos, the file is not saved)",
   "new_version": "New version is available",
-  "ok": "Ok"
+  "ok": "Ok",
+  "media_size": "Filesize",
+  "retry": "Retry",
+  "upload_error": "Upload error",
+  "need_make_some_action_on_videohosting": "Hosting does not accept video. May require channel setup and first download manually",
+  "technical_error": "A technical error has occurred. You can send a bug report to the developer by specifying this in the application settings"
 }

@@ -135,6 +135,10 @@ class StateService(object):
             if StateService.upload_queue_media is None:
                 StateService.upload_queue_media = list()
 
+            for queue_media in StateService.upload_queue_media:
+                if hasattr(queue_media, 'error_name') is False:
+                    queue_media.error_name = None
+
         return StateService.upload_queue_media
 
     # Events

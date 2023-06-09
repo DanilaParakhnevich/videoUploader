@@ -16,7 +16,7 @@ class UploadAfterDownloadForm(QDialog):
 	def __init__(self, parent, need_interval: bool = True, video_size: str = None):
 		super().__init__(parent)
 		self.setWindowTitle(get_str('upload_video_after_download'))
-		self.resize(300, 120)
+		self.resize(450, 120)
 
 		layout = QGridLayout()
 		if need_interval:
@@ -48,9 +48,16 @@ class UploadAfterDownloadForm(QDialog):
 		layout.setRowMinimumHeight(2, 75)
 
 		if video_size is not None:
+			video_size_pre_label = QLabel('video_size_label')
+			video_size_pre_label.setText(get_str('media_size'))
+			layout.addWidget(video_size_pre_label, 3, 0)
+
 			video_size_label = QLabel('video_size_label')
-			video_size_label.setText(f'{video_size} MB')
-			layout.addWidget(video_size_label, 3, 0)
+			if video_size is int:
+				video_size_label.setText(f'{video_size} MB')
+			else:
+				video_size_label.setText(f'{video_size}')
+			layout.addWidget(video_size_label, 3, 1)
 
 		self.state_service = StateService()
 		self.need_interval = need_interval

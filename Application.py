@@ -1,4 +1,5 @@
 import sys
+import traceback
 
 from PyQt5 import QtWidgets
 import os
@@ -6,6 +7,7 @@ import requests
 
 from gui.widgets.ExistsNewVersionDialog import ExistsNewVersionDialog
 from gui.widgets.introduction.AcceptLoadingPackagesForm import AcceptLoadingPackagesForm
+from service.LoggingService import log_error
 from service.MailService import MailService
 from service.StateService import StateService
 from service.VersionService import VersionService
@@ -16,8 +18,6 @@ if __name__ == "__main__":
     BuxarVideoUploader = QtWidgets.QMainWindow()
 
     from gui.MainPage import Ui_BuxarVideoUploader
-
-    os.system(os.name)
 
     # Подгрузка зависимостей
     try:
@@ -94,5 +94,7 @@ if __name__ == "__main__":
         BuxarVideoUploader.show()
         sys.exit(app.exec_())
     except:
+        print(traceback.format_exc())
+        log_error(traceback.format_exc())
         if StateService().get_settings().send_crash_notifications is True:
             MailService().send_log()

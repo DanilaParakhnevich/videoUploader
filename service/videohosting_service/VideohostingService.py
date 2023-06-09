@@ -9,6 +9,7 @@ from yt_dlp import YoutubeDL
 from PyQt5.QtWidgets import QTableWidgetItem
 from moviepy.editor import VideoFileClip
 
+from service.LocalizationService import get_str
 from service.LoggingService import log_error
 from service.StateService import StateService
 from service.videohosting_service.exception.DescriptionIsTooLongException import DescriptionIsTooLongException
@@ -104,7 +105,7 @@ class VideohostingService(ABC):
             raise VideoDurationException(
                 f'Продолжительность ролика слишком большая ({duration} > {self.duration_restriction})')
 
-        if self.size_restriction is not None and filesize is not None and filesize > self.size_restriction:
+        if self.size_restriction is not None and filesize is not None and filesize is int and filesize > self.size_restriction:
             raise FileSizeException(f'Размер файла слишком большой ({filesize} > {self.size_restriction})')
 
         if ext is not None and validate_format(ext) is False:
@@ -142,7 +143,7 @@ class VideohostingService(ABC):
         space = os.statvfs(os.path.expanduser(download_dir))
         free = space.f_bavail * space.f_frsize / 1024000
 
-        if free - video_info['filesize'] < 100:
+        if video_info['filesize'] is int and free - video_info['filesize'] < 100:
             raise NoFreeSpaceException(f'Нет свободного места: размер файла: {video_info["filesize"]}')
 
         def prog_hook(d, table_item):
@@ -151,9 +152,15 @@ class VideohostingService(ABC):
                     str = 'total_bytes' if 'total_bytes' in d else 'total_bytes_estimate'
                     if d[str] != 0:
                         p = (d['downloaded_bytes'] / d[str]) * 100
-                        table_item.setText(f'{round(p, 1).__str__()}% ({video_info["filesize"]} MB)')
+                        if video_info['filesize'] is int:
+                            table_item.setText(f'{round(p, 1).__str__()}% ({video_info["filesize"]} MB)')
+                        else:
+                            table_item.setText(f'{round(p, 1).__str__()}%')
                     else:
-                        table_item.setText(f'{d["_percent_str"]} ({video_info["filesize"]} MB)')
+                        if video_info['filesize'] is int:
+                            table_item.setText(f'{d["_percent_str"]} ({video_info["filesize"]} MB)')
+                        else:
+                            table_item.setText(f'{d["_percent_str"]}')
             except:
                 log_error(traceback.format_exc())
 
@@ -280,20 +287,27 @@ class VideohostingService(ABC):
 
         # Чтобы нормально добавить куки в обычном json, приходится использовать http_headers
         if account is not None and isinstance(account.auth, list):
-            cookie_str = ''
-            for auth in account.auth:
-                cookie_str += f'{auth["name"]}={auth["value"]}; '
-            download_opts["http_headers"] = {"Set-Cookie": cookie_str}
+            if account.hosting == 'Facebook':
+                download_opts['username'] = account.login
+                download_opts['password'] = account.password
+            else:
+                cookie_str = ''
+                for auth in account.auth:
+                    cookie_str += f'{auth["name"]}={auth["value"]}; '
+                download_opts["http_headers"] = {"Set-Cookie": cookie_str}
 
         with YoutubeDL(download_opts) as ydl:
             info = ydl.extract_info(url)
-
+        filesize = get_str('no_info')
+        if 'filesize' in info:
+            filesize = int(info['filesize'] / 1024 ** 2)
+        elif 'filesize_approx' in info:
+            filesize = int(info['filesize_approx'] / 1024 ** 2)
         return {
             'title': info['title'],
             'description': info['description'] if hasattr(info, 'description') else '',
             'duration': info['duration'],
-            'filesize': int(info['filesize_approx'] / 1024 ** 2) if 'filesize_approx' in info else int(
-                info['filesize'] / 1024 ** 2),
+            'filesize': filesize,
             'ext': info['ext'] if info['ext'] else info['video_ext']
         }
 

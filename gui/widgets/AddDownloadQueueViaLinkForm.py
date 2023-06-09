@@ -74,15 +74,8 @@ class AddDownloadQueueViaLinkForm(QDialog):
             msg.setText(get_str('need_authorize'))
             msg.exec_()
             return
-        elif len(accounts) == 1:
-            self.account = accounts[0]
         else:
-            form = ChooseAccountForm(parent=self.parentWidget(),
-                                     accounts=accounts)
-            form.exec_()
-            self.account = form.account
-            if form.account is None and Hosting[self.hosting_combo_box.currentText()].value[1]:
-                return
+            self.account = accounts[0]
 
         self.hosting = self.hosting_combo_box.itemData(self.hosting_combo_box.currentIndex())
 
@@ -95,10 +88,16 @@ class AddDownloadQueueViaLinkForm(QDialog):
         self.video_size = get_str('no_info')
         self.link = form.link_edit.text()
         if self.format != 3:
-            video_info = self.hosting.value[0].get_video_info(self.link,
-                                                              self.video_quality,
-                                                              self.video_extension,
-                                                              self.account)
+            try:
+                video_info = self.hosting.value[0].get_video_info(self.link,
+                                                                  self.video_quality,
+                                                                  self.video_extension,
+                                                                  self.account)
+            except:
+                log_error(traceback.format_exc())
+                self.event_service.add_event(
+                    Event(f'{get_str("technical_error")}: {self.link}'))
+
             self.video_size = video_info['filesize']
             form = UploadAfterDownloadForm(self, need_interval=False, video_size=self.video_size)
             form.exec_()
@@ -128,19 +127,19 @@ class AddDownloadQueueViaLinkForm(QDialog):
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
-                        self.upload_on = False
+                        continue
                     except FileSizeException:
                         log_error(traceback.format_exc())
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
-                        self.upload_on = False
+                        continue
                     except FileFormatException:
                         log_error(traceback.format_exc())
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
-                        self.upload_on = False
+                        continue
                     except NameIsTooLongException:
                         self.title = video_info['title']
                         while len(self.title) > self.upload_hosting.value[0].title_size_restriction:
@@ -163,13 +162,13 @@ class AddDownloadQueueViaLinkForm(QDialog):
                     self.upload_targets.append(upload_target)
 
                 for target in self.upload_targets:
+                    account = self.state_service.get_account_by_hosting_and_login(target['hosting'], target['login'])
                     self.queue_media_service.add_to_the_upload_queue(
                         UploadQueueMedia(video_dir=get_str('upload_yet'),
                                          hosting=target['hosting'],
                                          status=5,
-                                         account=self.state_service.get_account_by_hosting_and_login(
-                                             target['hosting'],
-                                             target['login']),
+                                         account=account,
+                                         destination=account.url,
                                          remove_files_after_upload=self.remove_files_after_upload))
 
         self.passed = True

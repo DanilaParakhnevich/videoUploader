@@ -68,7 +68,7 @@ class FacebookService(VideohostingService):
 
     def login(self, login, password):
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=False)
+            context = self.new_context(p=p, headless=False, use_user_agent_arg=True)
             page = context.new_page()
             page.goto('https://mbasic.facebook.com')
             page.type('input[name=email]', login)
@@ -80,7 +80,7 @@ class FacebookService(VideohostingService):
 
     def validate_url_by_account(self, url: str, account) -> int:
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=False)
+            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto(url, timeout=0)
@@ -103,29 +103,47 @@ class FacebookService(VideohostingService):
 
     def upload_video(self, account, file_path, name, description, destination: str = None):
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=True)
+            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto(destination, wait_until='domcontentloaded')
 
+            is_group = False
+
             if destination.__contains__('groups'):
                 with page.expect_file_chooser() as fc_info:
+                    page.wait_for_selector('.x3nfvp2.x1c4vz4f.x2lah0s.x1emribx')
                     page.query_selector_all('.x3nfvp2.x1c4vz4f.x2lah0s.x1emribx')[1].click()
+                    is_group = True
             else:
+                switch_but = page.query_selector('[aria-label="Switch Now"]')
+
+                if switch_but is not None:
+                    page.click(selector='[aria-label="Switch Now"]')
+
+                page.wait_for_selector('.x3nfvp2.x1c4vz4f.x2lah0s.x1emribx')
                 page.query_selector_all('.x3nfvp2.x1c4vz4f.x2lah0s.x1emribx')[1].click()
                 with page.expect_file_chooser() as fc_info:
+                    done_btn = page.query_selector('[aria-label="Done"]')
                     page.click(selector='.x1n2onr6.x1ja2u2z.x9f619.x78zum5.xdt5ytf.x2lah0s.x193iq5w.x5yr21d')
+
+                    if done_btn is not None:
+                        page.click('[aria-label="Done"]')
 
             file_chooser = fc_info.value
             file_chooser.set_files(file_path)
 
             page.wait_for_selector('[role="button"][aria-label="Post"]', timeout=0)
+            if is_group is False:
+                page.click('[aria-label="What\'s on your mind?"]')
 
             page.keyboard.type(name)
 
-            page.query_selector('[role="button"][aria-label="Post"]').click()
+            but1 = page.query_selector('[role="button"][aria-label="Post"]')
 
-            time.sleep(5)
+            but1.click()
+
+            time.sleep(30)
 
     def need_to_be_uploaded_to_special_source(self) -> bool:
         return True

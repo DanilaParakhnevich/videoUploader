@@ -10,9 +10,6 @@ from service.MailService import MailService
 from service.QueueMediaService import QueueMediaService
 from model.Hosting import Hosting
 from model.UploadQueueMedia import UploadQueueMedia
-from model.LoadQueuedMedia import LoadQueuedMedia
-from gui.widgets.AddDownloadQueueViaLinkForm import AddDownloadQueueViaLinkForm
-from gui.widgets.LoadingButton import AnimatedButton
 import kthread
 from PyQt5.QtCore import QTimer
 from service.LoggingService import *
@@ -195,7 +192,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             action_button.setText('-')
         else:
             item2 = QtWidgets.QTableWidgetItem(get_str('error'))
-            action_button.setText(get_str('start'))
+            action_button.setText(get_str('retry'))
             action_button.clicked.connect(self.on_start_download)
 
         self.setCellWidget(input_position, 2, action_button)
@@ -237,7 +234,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                     else:
                         self.item(i, 1).setText(status_name)
 
-                    self.cellWidget(i, 2).setText(get_str('start'))
+                    self.cellWidget(i, 2).setText(get_str('retry'))
                     self.cellWidget(i, 2).clicked.disconnect()
                     self.cellWidget(i, 2).clicked.connect(self.on_start_download)
                 break

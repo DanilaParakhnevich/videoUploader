@@ -7,6 +7,9 @@ from gui.widgets.LoginForm import LoginForm
 from yt_dlp import YoutubeDL
 from playwright.sync_api import sync_playwright
 
+from service.videohosting_service.exception.NeedCreateSomeActionOnVideohostingException import \
+    NeedCreateSomeActionOnVideohostingException
+
 
 class YandexDzenService(VideohostingService):
 
@@ -50,7 +53,7 @@ class YandexDzenService(VideohostingService):
     
     def upload_video(self, account, file_path, name, description, destination=None):
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=True)
+            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto('https://dzen.ru/profile/editor/create#video-editor', timeout=0)
@@ -72,3 +75,6 @@ class YandexDzenService(VideohostingService):
                 timeout=0)
 
             time.sleep(1)
+
+            if page.query_selector('.prepublish-popup-publisher-data__content') is not None:
+                raise NeedCreateSomeActionOnVideohostingException(get_str('need_make_some_action_on_videohosting'))

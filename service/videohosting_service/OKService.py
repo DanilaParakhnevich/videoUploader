@@ -84,7 +84,6 @@ class OKService(VideohostingService):
                 return False
             else:
                 return True
-        self.add_button.stop_animation()
 
     def upload_video(self, account, file_path, name, description, destination:str = None):
         with sync_playwright() as p:
@@ -92,7 +91,7 @@ class OKService(VideohostingService):
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto(destination)
-            if page.query_selector('.u-menu.__items-count-2.header-action-menu.__v4.__small.__user') is not None:
+            if page.query_selector('[hrefattrs="st.cmd=userMain&cmd=PopLayer&st.layer.cmd=PopLayerChangeUserAvatarLayer&st._aid=LeftColumn_TopCardUser_ChangeAvatarLink"]') is not None:
                 page.click('[href="/video/showcase"]')
                 page.click('.svg-ico_video_add_16')
             else:

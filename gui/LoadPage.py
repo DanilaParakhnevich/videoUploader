@@ -303,12 +303,16 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             description = None
             channel = self.state_service.get_channel_by_url(self.tab_models[self.currentIndex()].channel)
             hosting = Hosting[channel.hosting]
-
-            video_info = hosting.value[0].get_video_info(table.item(i, 1).text(),
-                                                         self.tab_models[self.currentIndex()].video_quality[1],
-                                                         self.tab_models[self.currentIndex()].video_extension[1],
-                                                         self.tab_models[self.currentIndex()].account)
-
+            try:
+                video_info = hosting.value[0].get_video_info(table.item(i, 1).text(),
+                                                             self.tab_models[self.currentIndex()].video_quality[1],
+                                                             self.tab_models[self.currentIndex()].video_extension[1],
+                                                             self.tab_models[self.currentIndex()].account)
+            except:
+                log_error(traceback.format_exc())
+                self.event_service.add_event(
+                    Event(f'{get_str("technical_error")}: {table.item(i, 1).text()}'))
+                continue
             video_size = video_info['filesize']
 
             if upload_on:
@@ -394,12 +398,12 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                     upload_date = upload_date + relativedelta(months=upload_interval)
 
                 for target in queue_media.upload_targets:
+                    account = self.state_service.get_account_by_hosting_and_login(target['hosting'], target['login'])
                     self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(video_dir=get_str('upload_yet'),
                                                                                       hosting=target['hosting'],
+                                                                                      destination=target['upload_target'],
                                                                                       status=5,
-                                                                                      account=self.state_service.get_account_by_hosting_and_login(
-                                                                                          target['hosting'],
-                                                                                          target['login']),
+                                                                                      account=account,
                                                                                       remove_files_after_upload=queue_media.remove_files_after_upload))
 
             new_media.append(queue_media)
@@ -456,12 +460,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             msg.exec_()
             button.stop_animation()
             return list()
-        elif len(accounts) == 1:
+        else:
             account = accounts[0]
-        elif len(accounts) > 1:
-            self.form = ChooseAccountForm(parent=self.parentWidget(), accounts=accounts)
-            self.form.exec()
-            account = self.form.account
 
         self.tab_models[self.currentIndex()].account = account
 

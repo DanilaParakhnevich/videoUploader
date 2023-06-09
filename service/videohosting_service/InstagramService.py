@@ -21,7 +21,7 @@ class InstagramService(VideohostingService):
         result = list()
 
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=False, args=self.CHROMIUM_ARGS)
+            browser = p.chromium.launch(headless=True, args=self.CHROMIUM_ARGS)
             context = browser.new_context()
 
             if account is not None:
