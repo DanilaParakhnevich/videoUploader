@@ -8,7 +8,7 @@ class AuthenticationConfirmationForm(QDialog):
 
 	passed = False
 
-	def __init__(self, parent):
+	def __init__(self, parent, enter_auth_code: str = get_str('enter_auth_code')):
 		super().__init__(parent)
 		self.setWindowTitle(get_str('authentication'))
 		self.resize(500, 120)
@@ -17,7 +17,7 @@ class AuthenticationConfirmationForm(QDialog):
 
 		label_name = QLabel(f'<font size="4"> {get_str("code")} </font>')
 		self.code_edit = QLineEdit()
-		self.code_edit.setPlaceholderText(get_str('enter_auth_code'))
+		self.code_edit.setPlaceholderText(enter_auth_code)
 		layout.addWidget(label_name, 0, 0)
 		layout.addWidget(self.code_edit, 0, 1)
 

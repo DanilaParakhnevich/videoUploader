@@ -67,6 +67,7 @@
   "interval": "Interval",
   "authentication": "Authentication",
   "code": "Code",
+  "reenter_auth_code": "Enter code to authenticate again",
   "enter_auth_code": "Enter code to authenticate",
   "check": "Check",
   "choose_account": "Choose an account",

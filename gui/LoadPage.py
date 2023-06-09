@@ -460,7 +460,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             msg.exec_()
             button.stop_animation()
             return list()
-        else:
+        elif len(accounts) != 0:
             account = accounts[0]
 
         self.tab_models[self.currentIndex()].account = account

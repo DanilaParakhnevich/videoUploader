@@ -74,7 +74,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
             msg.setText(get_str('need_authorize'))
             msg.exec_()
             return
-        else:
+        elif len(accounts) != 0:
             self.account = accounts[0]
 
         self.hosting = self.hosting_combo_box.itemData(self.hosting_combo_box.currentIndex())

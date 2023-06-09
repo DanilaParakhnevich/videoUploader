@@ -1,5 +1,6 @@
 from io import BytesIO
 
+from service.LocalizationService import get_str
 from service.LoggingService import log_error
 from service.videohosting_service.VideohostingService import VideohostingService
 from pyrogram import Client
@@ -63,11 +64,12 @@ class TelegramService(VideohostingService):
 
             if app.is_initialized is not True:
                 activated = False
+                enter_auth_code = None
                 while True:
                     sent_code_info = app.send_code(phone_number)
                     while True:
                         try:
-                            phone_code = self.handle_auth()
+                            phone_code = self.handle_auth(enter_auth_code)
                             if phone_code is False:
                                 return None
 
@@ -76,6 +78,7 @@ class TelegramService(VideohostingService):
                             break
                         except:
                             log_error('Неверно введен код')
+                            enter_auth_code = get_str('reenter_auth_code')
                     if activated:
                         break
             app.disconnect()
@@ -83,8 +86,12 @@ class TelegramService(VideohostingService):
         except:
             app.disconnect()
 
-    def handle_auth(self):
-        form = AuthenticationConfirmationForm(self.login_form)
+    def handle_auth(self, enter_auth_code):
+        if enter_auth_code is not None:
+            form = AuthenticationConfirmationForm(self.login_form, enter_auth_code)
+        else:
+            form = AuthenticationConfirmationForm(self.login_form)
+
         form.exec_()
         if form.passed is True:
             return form.code_edit.text()
