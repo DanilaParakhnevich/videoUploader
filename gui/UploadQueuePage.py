@@ -30,7 +30,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
     state_service = StateService()
     event_service = EventService()
     queue_media_service = QueueMediaService()
-    queue_media_list = state_service.get_upload_queue_media().copy()
+    queue_media_list = state_service.get_upload_queue_media()
     settings = state_service.get_settings()
     upload_thread_dict = {}
 
@@ -317,6 +317,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                             self.cellWidget(i, 3).clicked.connect(partial(self.show_error, error_name))
                             self.cellWidget(i, 3).setText(get_str('error'))
                             self.queue_media_list[i].error_name = error_name
+                            self.state_service.save_upload_queue_media(self.queue_media_list)
                         else:
                             self.cellWidget(i, 3).clicked.disconnect()
                             self.cellWidget(i, 3).clicked.connect(self.do_nothing)
