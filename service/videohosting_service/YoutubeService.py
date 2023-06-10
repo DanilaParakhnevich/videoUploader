@@ -36,10 +36,9 @@ class YoutubeService(VideohostingService):
         self.login_form = LoginForm(form, hosting, self, 1, 'Введите телефон или адрес эл. почты')
         self.login_form.exec_()
         return self.login_form.account
-
     def login(self, login, password):
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=False,use_user_agent_arg=True)
+            context = self.new_context(p=p, headless=False, use_user_agent_arg=True)
             page = context.new_page()
             page.goto('https://accounts.google.com/signin', timeout=0)
             page.wait_for_selector('.XY0ASe', timeout=0)

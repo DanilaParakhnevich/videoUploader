@@ -30,10 +30,12 @@ class AnimatedButton(QtWidgets.QPushButton):
     def start_animation(self):
         # Начало воспроизведения GIF-анимации
         self.playing = True
+        self.setDisabled(True)
         self.timer.start()
 
     def stop_animation(self):
         # Остановка воспроизведения GIF-анимации
+        self.setEnabled(True)
         self.playing = False
 
     def update_icon(self):

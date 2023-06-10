@@ -46,8 +46,8 @@ class RutubeService(VideohostingService):
             page.goto('https://rutube.ru', timeout=0)
             page.wait_for_selector('.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
             page.click('.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
-            page.wait_for_selector('.freyja_char-button__button__c4Dm-', timeout=0)
-            page.click('.freyja_char-button__button__c4Dm-', timeout=0)
+            page.wait_for_selector('.wdp-header-right-module__login', timeout=0)
+            page.click('.wdp-header-right-module__login', timeout=0)
 
             page.wait_for_selector('.wdp-header-right-module__userWrapper', timeout=0)
 

@@ -292,14 +292,10 @@ class VideohostingService(ABC):
 
         # Чтобы нормально добавить куки в обычном json, приходится использовать http_headers
         if account is not None and isinstance(account.auth, list):
-            if account.hosting == 'Facebook':
-                download_opts['username'] = account.login
-                download_opts['password'] = account.password
-            else:
-                cookie_str = ''
-                for auth in account.auth:
-                    cookie_str += f'{auth["name"]}={auth["value"]}; '
-                download_opts["http_headers"] = {"Set-Cookie": cookie_str}
+            cookie_str = ''
+            for auth in account.auth:
+                cookie_str += f'{auth["name"]}={auth["value"]}; '
+            download_opts["http_headers"] = {"Set-Cookie": cookie_str}
 
         with YoutubeDL(download_opts) as ydl:
             info = ydl.extract_info(url)

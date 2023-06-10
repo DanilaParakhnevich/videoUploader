@@ -74,6 +74,14 @@ class AddDownloadQueueViaLinkForm(QDialog):
             msg.setText(get_str('need_authorize'))
             msg.exec_()
             return
+        elif len(accounts) != 0 and Hosting[self.hosting_combo_box.currentText()].value[1]:
+            choose_account_form = ChooseAccountForm(self, accounts)
+            choose_account_form.exec_()
+
+            if choose_account_form.account is None:
+                return
+
+            self.account = choose_account_form.account
         elif len(accounts) != 0:
             self.account = accounts[0]
 
@@ -87,6 +95,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
 
         self.video_size = get_str('no_info')
         self.link = form.link_edit.text()
+
         if self.format != 3:
             try:
                 video_info = self.hosting.value[0].get_video_info(self.link,
@@ -101,8 +110,16 @@ class AddDownloadQueueViaLinkForm(QDialog):
                 log_error(traceback.format_exc())
                 self.event_service.add_event(
                     Event(f'{get_str("technical_error")}: {self.link}'))
+                msg = QMessageBox()
+                msg.setText(get_str('technical_error'))
+                msg.exec_()
+                return
 
-            self.video_size = video_info['filesize']
+            if video_info is None:
+                self.video_size = get_str('no_info')
+            else:
+                self.video_size = video_info['filesize']
+
             form = UploadAfterDownloadForm(self, need_interval=False, video_size=self.video_size)
             form.exec_()
 

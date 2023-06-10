@@ -304,6 +304,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             hosting = Hosting[channel.hosting]
             title = None
             description = None
+            upload_this = True
             try:
                 video_info = hosting.value[0].get_video_info(table.item(i, 1).text(),
                                                              self.tab_models[self.currentIndex()].video_quality[1],
@@ -320,10 +321,10 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 log_error(traceback.format_exc())
                 self.event_service.add_event(
                     Event(f'{get_str("technical_error")}: {table.item(i, 1).text()}'))
-                continue
-            video_size = video_info['filesize']
-
-            if upload_on:
+                upload_this = False
+            video_size = None
+            if upload_on and upload_this:
+                video_size = video_info['filesize']
                 # Если необходимо выгружать видео после загрузки, проводим валидацию
                 for upload_target in upload_after_download_form.upload_targets:
                     upload_hosting = Hosting[upload_target['hosting']]
@@ -385,7 +386,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                           hosting=hosting.name,
                                           status=0,
                                           video_size=video_size,
-                                          upload_after_download=upload_on,
+                                          upload_after_download=upload_on and upload_this,
                                           upload_targets=upload_targets,
                                           upload_date=upload_date,
                                           format=self.tab_models[self.currentIndex()].format[1],
@@ -449,7 +450,6 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         self.state_service.save_tabs_state(self.tab_models)
 
     def create_daemon_for_getting_video_list(self, button: AnimatedButton):
-
         button.start_animation()
 
         if self.tab_models[self.currentIndex()].channel == None or self.tab_models[self.currentIndex()].channel == '':
@@ -473,6 +473,15 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             msg.exec_()
             button.stop_animation()
             return list()
+        elif len(accounts) != 0 and hosting.value[1]:
+            choose_account_form = ChooseAccountForm(self, accounts)
+            choose_account_form.exec_()
+
+            if choose_account_form.account is None:
+                button.stop_animation()
+                return list()
+
+            account = choose_account_form.account
         elif len(accounts) != 0:
             account = accounts[0]
 

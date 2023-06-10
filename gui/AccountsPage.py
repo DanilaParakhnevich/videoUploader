@@ -93,15 +93,20 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
         msg.setText(get_str('authorized_successfully'))
 
         if hosting.value[0].need_to_pass_channel_after_login():
-            while hosting.value[0].validate_url_by_account(form.url, account) is False:
-                form = TypeUrlForm(self, hosting, title=get_str("retype_url_for"))
-                form.exec_()
+            try:
+                while hosting.value[0].validate_url_by_account(form.url, account) is False:
+                    form = TypeUrlForm(self, hosting, title=get_str("retype_url_for"))
+                    form.exec_()
 
-                if form.passed is False:
-                    self.add_button.stop_animation()
-                    return
+                    if form.passed is False:
+                        self.add_button.stop_animation()
+                        return
 
-            account.url = form.url
+                account.url = form.url
+            except:
+                msg = QtWidgets.QMessageBox(self)
+                msg.setText(get_str('error'))
+                return
 
         msg.exec_()
 
