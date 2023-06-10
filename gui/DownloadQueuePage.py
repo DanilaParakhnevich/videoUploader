@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 from threading import Lock
 
 from PyQt5 import QtCore, QtWidgets
@@ -195,6 +194,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             action_button.setText(get_str('retry'))
             action_button.clicked.connect(self.on_start_download)
 
+        action_button.clicked.connect(self.do_nothing)
         self.setCellWidget(input_position, 2, action_button)
 
         delete_button = QtWidgets.QPushButton(self)
@@ -240,6 +240,9 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                 break
             i += 1
         self.lock.release()
+
+    def do_nothing(self):
+        pass
 
     def get_row_index(self, url):
         i = 0

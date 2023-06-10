@@ -158,6 +158,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             form.exec_()
 
             if form.passed is True:
+
                 queue_media = LoadQueuedMedia(url=form.link,
                                               hosting=form.hosting.name,
                                               status=0,
@@ -299,15 +300,22 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             if is_exist:
                 continue
 
-            title = None
-            description = None
             channel = self.state_service.get_channel_by_url(self.tab_models[self.currentIndex()].channel)
             hosting = Hosting[channel.hosting]
+            title = None
+            description = None
             try:
                 video_info = hosting.value[0].get_video_info(table.item(i, 1).text(),
                                                              self.tab_models[self.currentIndex()].video_quality[1],
                                                              self.tab_models[self.currentIndex()].video_extension[1],
                                                              self.tab_models[self.currentIndex()].account)
+                title = video_info['title']
+                if title is None:
+                    title = ''
+                if 'description' in video_info and description is None:
+                    description = video_info['description']
+                    if description is None:
+                        description = ''
             except:
                 log_error(traceback.format_exc())
                 self.event_service.add_event(
@@ -320,14 +328,14 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 for upload_target in upload_after_download_form.upload_targets:
                     upload_hosting = Hosting[upload_target['hosting']]
                     try:
-                        upload_hosting.value[0].validate_video_info_for_uploading(title=video_info['title'],
-                                                                                  description=video_info[
-                                                                                      'description'],
+                        upload_hosting.value[0].validate_video_info_for_uploading(title=title,
+                                                                                  description=description,
                                                                                   duration=video_info[
                                                                                       'duration'],
                                                                                   filesize=video_info[
                                                                                       'filesize'],
                                                                                   ext=video_info['ext'])
+
                     except VideoDurationException:
                         log_error(traceback.format_exc())
                         self.event_service.add_event(
@@ -347,16 +355,21 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
                         continue
                     except NameIsTooLongException:
-                        title = video_info['title']
-                        while len(title) > upload_hosting.value[0].title_size_restriction:
+                        while (upload_hosting.value[0].title_size_restriction is not None and
+                               len(title) > upload_hosting.value[0].title_size_restriction) or \
+                                (upload_hosting.value[0].min_title_size is not None and
+                                 len(title) < upload_hosting.value[0].min_title_size):
                             log_error(traceback.format_exc())
+                            if upload_hosting.value[0].title_size_restriction is not None:
+                                label = f'{get_str("bad_title")} ({str(upload_hosting.value[0].min_title_size)} <= {get_str("name")} > {str(upload_hosting.value[0].title_size_restriction)})'
+                            else:
+                                label = f'{get_str("bad_title")} ({str(upload_hosting.value[0].min_title_size)} <= {get_str("name")})'
                             form = TypeStrForm(parent=self,
-                                               label=f'{get_str("too_long_title")}{str(upload_hosting.value[0].title_size_restriction)}',
+                                               label=label,
                                                current_text=title)
                             form.exec_()
                             title = form.str
                     except DescriptionIsTooLongException:
-                        description = video_info['description']
                         while len(description) > upload_hosting.value[0].description_size_restriction:
                             log_error(traceback.format_exc())
                             form = TypeStrForm(parent=self,

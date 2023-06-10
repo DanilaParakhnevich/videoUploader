@@ -147,7 +147,7 @@ class AddUploadQueueByDirectoryForm(QDialog):
                 self.event_service.add_event(Event(f'{get_str("bad_file_format")}{file_dir}'))
                 continue
 
-            if Hosting[target['hosting']].value[0].title_size_restriction is not None and title is None:
+            if title is None:
                 form = TypeStrForm(parent=self, label=f'{get_str("input_title")}: {file_dir}')
                 form.exec_()
 
@@ -157,10 +157,17 @@ class AddUploadQueueByDirectoryForm(QDialog):
                     try:
                         Hosting[target['hosting']].value[0].validate_video_info_for_uploading(title=title)
                     except NameIsTooLongException:
-                        while len(title) > Hosting[target['hosting']].value[0].title_size_restriction:
+                        while (Hosting[target['hosting']].value[0].title_size_restriction is not None and \
+                                len(title) > Hosting[target['hosting']].value[0].title_size_restriction) or \
+                                (Hosting[target['hosting']].value[0].min_title_size is not None and \
+                                len(title) < Hosting[target['hosting']].value[0].min_title_size):
                             log_error(traceback.format_exc())
+                            if Hosting[target['hosting']].value[0].title_size_restriction is not None:
+                                label = f'{get_str("bad_title")} ({str(Hosting[target["hosting"]].value[0].min_title_size)} <= {get_str("name")} > {str(Hosting[target["hosting"]].value[0].title_size_restriction)})'
+                            else:
+                                label = f'{get_str("bad_title")} ({str(Hosting[target["hosting"]].value[0].min_title_size)} <= {get_str("name")})'
                             form = TypeStrForm(parent=self,
-                                               label=f'{get_str("too_long_title")}{str(Hosting[target["hosting"]].value[0].title_size_restriction)}',
+                                               label=label,
                                                current_text=title)
                             form.exec_()
                             title = form.str

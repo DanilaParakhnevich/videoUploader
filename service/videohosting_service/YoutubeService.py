@@ -13,6 +13,7 @@ class YoutubeService(VideohostingService):
         self.video_regex = 'https:\/\/www.youtube.com\/watch\?v=.*'
         self.channel_regex = '(https:\/\/www.youtube.com\/@.*)|(https:\/\/www.youtube.com\/channel\/)'
         self.title_size_restriction = 100
+        self.min_title_size = 1
         self.description_size_restriction = 5_000
         self.size_restriction = 256 * 1024
         self.duration_restriction = 12 * 60
@@ -107,7 +108,7 @@ class YoutubeService(VideohostingService):
 
             page.query_selector('#title-textarea').click(click_count=3)
             page.keyboard.press("Backspace")
-            page.query_selector('#title-textarea').type(text=name if name is not None else 'a')
+            page.query_selector('#title-textarea').type(text=name)
 
             page.query_selector('#description-textarea').click()
             page.query_selector('#description-textarea').type(text=description if description is not None else '')

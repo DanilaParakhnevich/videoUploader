@@ -17,6 +17,7 @@ class YandexDzenService(VideohostingService):
         self.video_regex = 'https:\/\/dzen.ru\/video\/watch\/.*'
         self.channel_regex = '(https:\/\/dzen.ru\/id\/.*)|(https:\/\/dzen.ru\/.*\/)'
         self.title_size_restriction = 200
+        self.min_title_size = 0
         self.size_restriction = 30 * 1024
         self.duration_restriction = 240
         self.upload_video_formats = list(['3gpp', 'x-fvl', 'mp4', 'webm', 'x-ms-wmv', 'x-ms-asf', 'ogg', 'mpeg',

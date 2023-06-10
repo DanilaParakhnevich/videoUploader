@@ -34,6 +34,7 @@ class VKService(VideohostingService):
         self.video_regex = 'https:\/\/vk.com\/.*\/=video-.*'
         self.channel_regex = 'https:\/\/vk.com\/.*'
         self.title_size_restriction = 3_772
+        self.min_title_size = 1
         self.description_size_restriction = 9_999_999_999
         self.duration_restriction = sys.maxsize
         self.size_restriction = 2 * 1024

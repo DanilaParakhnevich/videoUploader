@@ -23,6 +23,7 @@ class TelegramService(VideohostingService):
         self.video_regex = 'https:\/\/t.me/.*\/.*'
         self.channel_regex = '.*'
         self.title_size_restriction = 100
+        self.min_title_size = 0
         self.duration_restriction = 240
         self.size_restriction = 2 * 1024
         self.upload_video_formats = list(['3g2', '3gp', '3gpp', 'asf', 'avi', 'dat', 'divx', 'dv', 'f4v', 'flv', 'gif',

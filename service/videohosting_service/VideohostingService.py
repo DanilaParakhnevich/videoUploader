@@ -53,6 +53,7 @@ class VideohostingService(ABC):
     size_restriction = None  # в мегабайтах
     duration_restriction = None  # в минутах
     title_size_restriction = None
+    min_title_size = None
     description_size_restriction = None
 
     state_service = StateService()
@@ -115,6 +116,10 @@ class VideohostingService(ABC):
         if self.title_size_restriction is not None and title is not None and len(title) > self.title_size_restriction:
             raise NameIsTooLongException(
                 f'Слишком большой размер названия(Ограничение: {self.title_size_restriction} символов)')
+
+        if self.min_title_size is not None and title is not None and len(title) < self.min_title_size:
+            raise NameIsTooLongException(
+                f'Слишком маленький размер названия(Ограничение: {self.min_title_size} символов)')
 
         if self.description_size_restriction is not None and description is not None and len(
                 description) > self.description_size_restriction:

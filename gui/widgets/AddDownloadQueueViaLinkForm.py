@@ -93,6 +93,10 @@ class AddDownloadQueueViaLinkForm(QDialog):
                                                                   self.video_quality,
                                                                   self.video_extension,
                                                                   self.account)
+                self.title = video_info['title']
+                if self.title is None:
+                    self.title = ''
+                self.description = video_info['description']
             except:
                 log_error(traceback.format_exc())
                 self.event_service.add_event(
@@ -114,9 +118,8 @@ class AddDownloadQueueViaLinkForm(QDialog):
                 for upload_target in form.upload_targets:
                     upload_hosting = Hosting[upload_target['hosting']]
                     try:
-                        upload_hosting.value[0].validate_video_info_for_uploading(title=video_info['title'],
-                                                                                  description=video_info[
-                                                                                      'description'],
+                        upload_hosting.value[0].validate_video_info_for_uploading(title=self.title,
+                                                                                  description=self.description,
                                                                                   duration=video_info[
                                                                                       'duration'],
                                                                                   filesize=video_info[
@@ -141,11 +144,17 @@ class AddDownloadQueueViaLinkForm(QDialog):
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
                         continue
                     except NameIsTooLongException:
-                        self.title = video_info['title']
-                        while len(self.title) > self.upload_hosting.value[0].title_size_restriction:
+                        while (upload_hosting.value[0].title_size_restriction is not None and
+                               len(self.title) > upload_hosting.value[0].title_size_restriction) or \
+                                (upload_hosting.value[0].min_title_size is not None and
+                                 len(self.title) < upload_hosting.value[0].min_title_size):
                             log_error(traceback.format_exc())
+                            if upload_hosting.value[0].title_size_restriction is not None:
+                                label = f'{get_str("bad_title")} ({str(upload_hosting.value[0].min_title_size)} >= {get_str("name")} < {str(upload_hosting.value[0].title_size_restriction)}'
+                            else:
+                                label = f'{get_str("bad_title")} ({str(upload_hosting.value[0].min_title_size)} >= {get_str("name")}'
                             form = TypeStrForm(parent=self,
-                                               label=f'{get_str("too_long_title")}{str(upload_hosting.value[0].title_size_restriction)}',
+                                               label=label,
                                                current_text=self.title)
                             form.exec_()
                             self.title = form.str

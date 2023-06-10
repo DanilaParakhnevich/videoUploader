@@ -95,7 +95,7 @@
   "bad_dir": "You must select the correct path",
   "input_title": "Enter video title",
   "input_description": "Enter video description",
-  "too_long_title": "Title length must be less than ",
+  "bad_title": "Title length is incorrect",
   "too_long_description": "Description length must be less than ",
   "choose_intervals": "Choose a download interval",
   "bad_file": "1 of the video file criteria failed",

@@ -18,6 +18,7 @@ class FacebookService(VideohostingService):
         self.duration_restriction = 240
         self.size_restriction = 4 * 1024
         self.title_size_restriction = 9_999_999_999
+        self.min_title_size = 0
 
     def get_videos_by_url(self, url, account=None):
         result = list()

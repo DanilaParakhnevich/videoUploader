@@ -14,6 +14,7 @@ class OKService(VideohostingService):
         self.channel_regex = 'https:\/\/ok.ru\/.*\/.*'
         self.duration_restriction = sys.maxsize
         self.size_restriction = 2 * 1024
+        self.min_title_size = 1
         self.upload_video_formats = list(['avi', 'mp4', '3gp', 'mpeg', 'mov', 'flv', 'f4v', 'wmv', 'mkv', 'webm', 'vob',
                                           'rmvb', 'm4v', 'mpg', 'ogv', 'ts', 'm2ts', 'mts', 'mxf', 'torrent'])
         self.title_size_restriction = 9_999_999_999

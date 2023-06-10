@@ -55,7 +55,6 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         self.setHorizontalHeaderItem(5, item)
 
         self.horizontalHeader().setDefaultSectionSize(155)
-
         horizontal_layout = QtWidgets.QHBoxLayout(self)
         horizontal_layout.setObjectName("horizontal_layout")
 
