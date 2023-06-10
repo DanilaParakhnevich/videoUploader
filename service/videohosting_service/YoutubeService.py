@@ -54,6 +54,10 @@ class YoutubeService(VideohostingService):
 
             page.goto(url)
 
+            page.wait_for_selector('#channel-handle')
+
+            channel_id = None
+
             for channel_handle in page.query_selector_all('#channel-handle'):
                 if channel_handle is not None:
                     channel_id = channel_handle.text_content()
@@ -65,7 +69,7 @@ class YoutubeService(VideohostingService):
             page.wait_for_selector('.ytd-account-item-renderer', timeout=0)
 
             for title_element in page.query_selector_all('.ytd-account-item-renderer'):
-                if title_element.text_content() == channel_id:
+                if channel_id is not None and title_element.text_content() == channel_id:
                     return True
             return False
 
