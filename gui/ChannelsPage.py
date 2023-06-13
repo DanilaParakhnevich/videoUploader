@@ -118,3 +118,14 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
             self.removeRow(row)
             self.channels.pop(row)
             self.state_service.save_channels(self.channels)
+
+    def resizeEvent(self, event):
+        coef_x = self.parent().width() / 950
+
+        column_width = int(950 * coef_x / 3)
+
+        self.setColumnWidth(0, column_width)
+        self.setColumnWidth(1, column_width)
+        self.setColumnWidth(2, column_width)
+
+        return super(ChannelsPageWidget, self).resizeEvent(event)

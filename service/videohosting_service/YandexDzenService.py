@@ -1,5 +1,7 @@
 import time
 
+from PyQt5.QtWidgets import QTableWidgetItem
+
 from service.LocalizationService import get_str
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
@@ -52,9 +54,10 @@ class YandexDzenService(VideohostingService):
     def need_to_pass_channel_after_login(self):
         return False
     
-    def upload_video(self, account, file_path, name, description, destination=None):
+    def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+            table_item.setText(get_str('preparing'))
+            context = self.new_context(p=p, headless=False, use_user_agent_arg=True)
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto('https://dzen.ru/profile/editor/create#video-editor', timeout=0)
@@ -65,8 +68,11 @@ class YandexDzenService(VideohostingService):
 
             with page.expect_file_chooser() as fc_info:
                 page.click('.base-button__rootElement-75.base-button__xl-28.base-button__accentPrimary-B4', timeout=0)
+            table_item.setText(get_str('uploading'))
             file_chooser = fc_info.value
             file_chooser.set_files(file_path)
+
+            table_item.setText(get_str('ending'))
             page.click('.ql-editor', click_count=3)
 
             page.keyboard.type(text=name)

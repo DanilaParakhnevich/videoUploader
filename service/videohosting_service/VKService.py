@@ -1,5 +1,6 @@
 import sys
 
+from PyQt5.QtWidgets import QTableWidgetItem
 from playwright.sync_api import sync_playwright
 
 from service.LocalizationService import get_str
@@ -148,7 +149,8 @@ class VKService(VideohostingService):
         else:
             return response.result["object_id"] == user_id
 
-    def upload_video(self, account, file_path, name, description, destination=None):
+    def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
+        table_item.setText(get_str('preparing'))
         vk_session = vk_api.VkApi(token=account.auth['access_token'])
 
         with vk_api.VkRequestsPool(vk_session) as pool:
@@ -161,6 +163,7 @@ class VKService(VideohostingService):
         else:
             object_id = None
 
+        table_item.setText(get_str('uploading'))
         vk_upload = vk_api.VkUpload(vk_session)
         vk_upload.video(video_file=file_path, name=name, group_id=object_id,
                         description=description if description is not None else '')

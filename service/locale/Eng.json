@@ -142,5 +142,9 @@
   "retry": "Retry",
   "upload_error": "Upload error",
   "need_make_some_action_on_videohosting": "Hosting does not accept video. May require channel setup and first download manually",
-  "technical_error": "A technical error has occurred. You can send a bug report to the developer by specifying this in the application settings"
+  "technical_error": "A technical error has occurred. You can send a bug report to the developer by specifying this in the application settings",
+  "preparing": "Preparing",
+  "uploading": "Uploading",
+  "ending": "Ending",
+  "reset_from_settings": "Restore add-ons to default"
 }

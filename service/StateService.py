@@ -219,3 +219,23 @@ class StateService(object):
 
     def save_type_url_form_size(self, size: QSize):
         self.q_settings.setValue('type_url_form_size', size)
+
+    def save_events_column_width(self, width):
+        self.q_settings.setValue('events_column_width', width)
+
+    def get_events_column_width(self):
+        result = self.q_settings.value('events_column_width')
+
+        if result is None:
+            return 145
+        return int(result)
+
+    def save_events_list_height(self, height):
+        self.q_settings.setValue('events_list_height', height)
+
+    def get_events_list_height(self):
+        result = self.q_settings.value('events_list_height')
+
+        if result is None:
+            return 120
+        return int(result)

@@ -426,3 +426,17 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
                     self.upload_thread_dict[key] = upload_video_thread
                     upload_video_thread.start()
+
+    def resizeEvent(self, event):
+        coef_x = self.parent().width() / 950
+
+        column_width = int(950 * coef_x / 6)
+
+        self.setColumnWidth(0, column_width)
+        self.setColumnWidth(1, column_width)
+        self.setColumnWidth(2, column_width)
+        self.setColumnWidth(3, column_width)
+        self.setColumnWidth(4, column_width)
+        self.setColumnWidth(5, column_width)
+
+        return super(UploadQueuePageWidget, self).resizeEvent(event)

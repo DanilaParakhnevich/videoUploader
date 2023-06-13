@@ -1,5 +1,9 @@
 import time
 
+from PyQt5.QtWidgets import QTableWidgetItem
+
+from service.LocalizationService import get_str
+from service.LoggingService import log_error
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
@@ -43,11 +47,27 @@ class RutubeService(VideohostingService):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=False)
             page = context.new_page()
-            page.goto('https://rutube.ru', timeout=0)
-            page.wait_for_selector('.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
-            page.click('.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
-            page.wait_for_selector('.wdp-header-right-module__login', timeout=0)
-            page.click('.wdp-header-right-module__login', timeout=0)
+            page.goto('https://rutube.ru', timeout=0, wait_until='commit')
+            page.reload(timeout=0, wait_until='commit')
+            try:
+                page.wait_for_selector('.freyja_char-base-button__pointerCursor__JNA7y', timeout=10_000)
+                page.click('.freyja_char-base-button__pointerCursor__JNA7y', timeout=10_000)
+                page.wait_for_selector('.wdp-header-right-module__login', timeout=10_000)
+                page.click('.wdp-header-right-module__login', timeout=10_000)
+            except:
+                page.reload(timeout=0, wait_until='commit')
+                try:
+                    page.wait_for_selector('.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
+                    if page.query_selector('.freyja_char-base-button__pointerCursor__JNA7y') is not None:
+                        page.click('.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
+                except:
+                    log_error('Не нашлось кнопки для подтверждения куки (rutube)')
+                try:
+                    page.wait_for_selector('.wdp-header-right-module__login', timeout=0)
+                    if page.query_selector('.wdp-header-right-module__login') is not None:
+                        page.click('.wdp-header-right-module__login', timeout=0)
+                except:
+                    log_error('Не нашлось кнопки логина (rutube)')
 
             page.wait_for_selector('.wdp-header-right-module__userWrapper', timeout=0)
 
@@ -56,7 +76,8 @@ class RutubeService(VideohostingService):
     def need_to_pass_channel_after_login(self):
         return False
 
-    def upload_video(self, account, file_path, name, description, destination=None):
+    def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
+        table_item.setText(get_str('preparing'))
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
             context.add_cookies(account.auth)
@@ -67,9 +88,11 @@ class RutubeService(VideohostingService):
             with page.expect_file_chooser() as fc_info:
                 page.click(
                     selector='.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y')
+            table_item.setText(get_str('uploading'))
             file_chooser = fc_info.value
             file_chooser.set_files(file_path)
 
+            table_item.setText(get_str('ending'))
             page.wait_for_selector('[name=title]', timeout=0)
 
             time.sleep(1)

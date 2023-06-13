@@ -21,7 +21,7 @@ class EventsListWidget(QtWidgets.QTableWidget):
         self.setHorizontalHeaderItem(1, item)
         item = QtWidgets.QTableWidgetItem()
         self.setHorizontalHeaderItem(2, item)
-        self.horizontalHeader().setDefaultSectionSize(155)
+        self.horizontalHeader().setDefaultSectionSize(self.state_service.get_events_column_width())
         self.events = self.state_service.get_events()
 
         for event in self.events:
@@ -44,6 +44,10 @@ class EventsListWidget(QtWidgets.QTableWidget):
         item.setText(get_str("date"))
         item = self.horizontalHeaderItem(2)
         item.setText(get_str("delete"))
+
+    def setColumnWidth(self, column, width):
+        self.state_service.save_events_column_width(width)
+        return super(EventsListWidget, self).setColumnWidth(column, width)
 
     def on_delete_row(self):
         button = self.sender()

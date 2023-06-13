@@ -22,7 +22,7 @@ class SettingsPage(QtWidgets.QDialog):
         self.old_settings = self.state_service.get_settings()
         self.settings_box = QtWidgets.QWidget()
         self.scroll = QtWidgets.QScrollArea(self)
-        self.resize(900, 800)
+        self.setFixedSize(900, 800)
 
         self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)

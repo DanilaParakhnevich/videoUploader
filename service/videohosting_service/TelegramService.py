@@ -104,7 +104,7 @@ class TelegramService(VideohostingService):
         #             workdir='service/videohosting_service/tmp') as app:
         pass
 
-    def upload_video(self, account, file_path, name, description, destination=None):
+    def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
 
         with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
                     workdir='service/videohosting_service/tmp') as app:

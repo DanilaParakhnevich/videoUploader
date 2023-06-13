@@ -1,3 +1,5 @@
+import traceback
+
 from PyQt5 import QtCore, QtWidgets
 
 from gui.widgets.TypeUrlForm import TypeUrlForm
@@ -6,6 +8,7 @@ from model.Hosting import Hosting
 from gui.widgets.LoadingButton import AnimatedButton
 from service.EventService import EventService
 from service.LocalizationService import *
+from service.LoggingService import log_error
 
 
 class AccountsPageWidget(QtWidgets.QTableWidget):
@@ -106,6 +109,9 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
             except:
                 msg = QtWidgets.QMessageBox(self)
                 msg.setText(get_str('error'))
+                msg.exec_()
+                log_error(traceback.format_exc())
+                self.add_button.stop_animation()
                 return
 
         msg.exec_()
@@ -141,3 +147,14 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
             self.removeRow(row)
             self.accounts.pop(row)
             self.state_service.save_accounts(self.accounts)
+
+    def resizeEvent(self, event):
+        coef_x = self.parent().width() / 950
+
+        column_width = int(950 * coef_x / 3)
+
+        self.setColumnWidth(0, column_width)
+        self.setColumnWidth(1, column_width)
+        self.setColumnWidth(2, column_width)
+
+        return super(AccountsPageWidget, self).resizeEvent(event)

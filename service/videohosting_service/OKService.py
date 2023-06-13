@@ -1,5 +1,8 @@
 import time
 
+from PyQt5.QtWidgets import QTableWidgetItem
+
+from service.LocalizationService import get_str
 from service.videohosting_service.VideohostingService import VideohostingService
 from playwright.sync_api import sync_playwright
 from gui.widgets.LoginForm import LoginForm
@@ -86,8 +89,9 @@ class OKService(VideohostingService):
             else:
                 return True
 
-    def upload_video(self, account, file_path, name, description, destination:str = None):
+    def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
         with sync_playwright() as p:
+            table_item.setText(get_str('preparing'))
             context = self.new_context(p=p, headless=True)
             context.add_cookies(account.auth)
             page = context.new_page()
@@ -101,9 +105,11 @@ class OKService(VideohostingService):
 
             with page.expect_file_chooser() as fc_info:
                 page.click(selector='.button-pro.js-upload-button')
+            table_item.setText(get_str('uploading'))
             file_chooser = fc_info.value
             file_chooser.set_files(file_path)
 
+            table_item.setText(get_str('ending'))
             page.click('.__small.video-uploader_ac.__go-to-editor-btn.js-uploader-editor-link', timeout=60_000)
 
             time.sleep(0.5)

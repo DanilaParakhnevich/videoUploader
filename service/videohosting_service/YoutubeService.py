@@ -1,5 +1,8 @@
 import time
 
+from PyQt5.QtWidgets import QTableWidgetItem
+
+from service.LocalizationService import get_str
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
@@ -70,8 +73,9 @@ class YoutubeService(VideohostingService):
                     return True
             return False
 
-    def upload_video(self, account, file_path, name, description, destination=None):
+    def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
         with sync_playwright() as p:
+            table_item.setText(get_str('preparing'))
             context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
             context.add_cookies(account.auth)
             page = context.new_page()
@@ -102,9 +106,12 @@ class YoutubeService(VideohostingService):
             page.wait_for_selector('#select-files-button', timeout=0)
             with page.expect_file_chooser() as fc_info:
                 page.query_selector(selector='#select-files-button').click()
+
+            table_item.setText(get_str('uploading'))
             file_chooser = fc_info.value
             file_chooser.set_files(file_path)
 
+            table_item.setText(get_str('ending'))
             page.wait_for_selector('#input', timeout=0)
 
             page.query_selector('#title-textarea').click(click_count=3)

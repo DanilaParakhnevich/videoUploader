@@ -1,3 +1,5 @@
+from PyQt5.QtWidgets import QTableWidgetItem
+
 from service.LocalizationService import get_str
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
@@ -78,9 +80,11 @@ class InstagramService(VideohostingService):
     def need_to_pass_channel_after_login(self):
         return False
 
-    def upload_video(self, account, file_path, name, description, destination=None):
+    def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
+        table_item.setText(get_str('preparing'))
         cl = Client()
         cl.login(account.login, account.password)
+        table_item.setText(get_str('uploading'))
         cl.video_upload(file_path, caption=name)
 
         # pillow

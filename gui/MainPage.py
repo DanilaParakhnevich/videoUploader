@@ -17,8 +17,9 @@ class Ui_BuxarVideoUploader(object):
     def setupUi(self, ui, version):
         ui.setObjectName(f'BuxarVideoUploader {version}')
         ui.setWindowModality(QtCore.Qt.ApplicationModal)
-        ui.resize(954, 603)
-        ui.setMaximumSize(1000, 620)
+        ui.resize(950, 600)
+        ui.setMaximumSize(950, 600)
+        ui.setMinimumSize(949, 599)
         ui.setStyleSheet("")
         ui.setToolButtonStyle(QtCore.Qt.ToolButtonFollowStyle)
         ui.setAnimated(True)

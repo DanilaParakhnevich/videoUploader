@@ -5,7 +5,6 @@ import abc
 from playwright.sync_api import BrowserContext
 from playwright.sync_api import Playwright
 from playwright.sync_api import Page
-from yt_dlp import YoutubeDL
 from PyQt5.QtWidgets import QTableWidgetItem
 from moviepy.editor import VideoFileClip
 
@@ -126,7 +125,7 @@ class VideohostingService(ABC):
             raise DescriptionIsTooLongException(
                 f'Слишком большой размер описания(Ограничение {self.description_size_restriction} символов)')
 
-    def upload_video(self, account, file_path, name, description, destination=None):
+    def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
         raise NotImplementedError()
 
     def new_context(self, p: Playwright, headless: bool, use_user_agent_arg: bool = False) -> BrowserContext:
@@ -144,6 +143,11 @@ class VideohostingService(ABC):
 
         from model.Hosting import Hosting
         video_info = Hosting[hosting].value[0].get_video_info(url, video_quality, video_extension)
+
+        if hosting == 'Facebook':
+            from youtube_dl import YoutubeDL
+        else:
+            from yt_dlp import YoutubeDL
 
         space = os.statvfs(os.path.expanduser(download_dir))
         free = space.f_bavail * space.f_frsize / 1024000
@@ -190,7 +194,7 @@ class VideohostingService(ABC):
             'overwrites': True
         }
 
-        if settings.embed_subs:
+        if settings.embed_subs and hosting != 'Facebook':
             simple_download_opts['postprocessors'] = [{'already_have_subtitle': False, 'key': 'FFmpegEmbedSubtitle'}]
 
         if settings.referer != '':
@@ -278,12 +282,24 @@ class VideohostingService(ABC):
             with YoutubeDL(simple_download_opts) as ydl:
                 info = ydl.extract_info(url)
 
-        if 'video_ext' in info:
-            return f'{download_dir}/{hosting}/{info["title"]}.{info["video_ext"]}'
+        if 'title' in info:
+            title = info['title']
+            ext = info['video_ext']
         else:
-            return f'{download_dir}/{hosting}/{info["title"]}.{info["ext"]}'
+            title = info['entries'][0]['title']
+            ext = info['entries'][0]['ext']
 
-    def get_video_info(self, url, video_quality, video_extension, account=None):
+        if 'video_ext' in info:
+            return f'{download_dir}/{hosting}/{title}.{ext}'
+        else:
+            return f'{download_dir}/{hosting}/{title}.{ext}'
+
+    def get_video_info(self, url: str, video_quality, video_extension, account=None):
+
+        if url.__contains__('Facebook'):
+            from youtube_dl import YoutubeDL
+        else:
+            from yt_dlp import YoutubeDL
 
         download_opts = {
             'skip_download': True,

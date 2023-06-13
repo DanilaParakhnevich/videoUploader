@@ -298,3 +298,16 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
                     self.download_thread_dict[media.url] = download_video_thread
                     download_video_thread.start()
+
+
+    def resizeEvent(self, event):
+        coef_x = self.parent().width() / 950
+
+        column_width = int(950 * coef_x / 4)
+
+        self.setColumnWidth(0, column_width)
+        self.setColumnWidth(1, column_width)
+        self.setColumnWidth(2, column_width)
+        self.setColumnWidth(3, column_width)
+
+        return super(DownloadQueuePageWidget, self).resizeEvent(event)
