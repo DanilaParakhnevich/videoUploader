@@ -6,13 +6,12 @@ from PyQt5.QtWidgets import (QDialog, QPushButton, QLabel, QMessageBox, QComboBo
 from dateutil.relativedelta import relativedelta
 
 from gui.widgets.ChooseAccountsForUploadingForm import ChooseAccountsForUploadingForm
+from gui.widgets.ChooseLoadedVideoForm import ChooseLoadedVideoForm
 from model.Event import Event
 from model.Hosting import Hosting
 from model.UploadQueueMedia import UploadQueueMedia
 from service.EventService import EventService
 from service.LocalizationService import *
-from gui.widgets.ChooseDirForm import ChooseDirForm
-from gui.widgets.DirOrFileForm import DirOrFileForm
 from gui.widgets.TypeStrForm import TypeStrForm
 from gui.widgets.ChooseIntervalsForm import ChooseIntervalForm
 import os
@@ -26,18 +25,12 @@ from service.videohosting_service.exception.NameIsTooLongException import NameIs
 from service.videohosting_service.exception.VideoDurationException import VideoDurationException
 
 
-class AddUploadQueueByDirectoryForm(QDialog):
-
-    upload_targets = list()
-    destination = None
-    directory = None
-    video_info = None
-    passed = False
+class AddUploadQueueByUploadedMediaForm(QDialog):
 
     def __init__(self, parent):
 
         super().__init__(parent)
-        self.setWindowTitle(get_str('adding_video_via_url'))
+        self.setWindowTitle(get_str('adding_video_by_uploaded_media'))
         self.resize(500, 120)
 
         layout = QGridLayout()
@@ -47,16 +40,32 @@ class AddUploadQueueByDirectoryForm(QDialog):
         layout.addWidget(button_choose, 0, 0)
         layout.setRowMinimumHeight(3, 75)
 
+        self.upload_targets = list()
+        self.destination = None
+        self.directory = None
+        self.video_info = None
+        self.passed = False
+
         self.setLayout(layout)
         self.state_service = StateService()
         self.event_service = EventService()
         self.queue_media_service = QueueMediaService()
 
     def choose(self):
+        choose_loaded_video_form = ChooseLoadedVideoForm(self)
+        choose_loaded_video_form.exec_()
+
+        if choose_loaded_video_form.passed is False or len(choose_loaded_video_form.video_dirs) == 0:
+            self.close()
+            return
+
+        video_dirs = choose_loaded_video_form.video_dirs
+
         choose_accounts_for_uploading_form = ChooseAccountsForUploadingForm(self)
         choose_accounts_for_uploading_form.exec_()
 
         if choose_accounts_for_uploading_form.passed is False or len(choose_accounts_for_uploading_form.accounts) == 0:
+            self.close()
             return
 
         accounts = choose_accounts_for_uploading_form.accounts
@@ -66,65 +75,44 @@ class AddUploadQueueByDirectoryForm(QDialog):
                 'hosting': account.hosting,
                 'upload_target': account.url})
 
-        form = DirOrFileForm(parent=self.parentWidget())
-        form.exec_()
-
-        if form.passed is False:
-            return
-
-        file_need = form.file_need
-
-        form = ChooseDirForm(parent=self.parentWidget(), file_need=file_need)
-        form.exec_()
-
-        if form.passed is False:
-            return
-
-        self.directory = form.choose_dir_button.text()
-
         self.video_info = list()
 
-        if os.path.isdir(self.directory):
-            for target in os.listdir(self.directory):
-                if os.path.isfile(f'{self.directory}/{target}'):
-                    handle_result = self.handle_file(f'{self.directory}/{target}')
-                    if handle_result is not False:
-                        self.video_info.append(handle_result)
+        for target in video_dirs:
+            if os.path.isfile(target):
+                handle_result = self.handle_file(target)
+                if handle_result is not False:
+                    self.video_info.append(handle_result)
 
-            upload_interval = 0
-            upload_interval_type = 0
+        upload_interval = 0
+        upload_interval_type = 0
 
-            if len(self.video_info) > 1:
-                form = ChooseIntervalForm(self)
-                form.exec_()
+        if len(self.video_info) > 1:
+            form = ChooseIntervalForm(self)
+            form.exec_()
 
-                if form.passed is False:
-                    return
-                elif form.yes:
-                    upload_interval_type = form.upload_interval_type
-                    upload_interval = form.upload_interval
-            elif len(self.video_info) == 0:
+            if form.passed is False:
+                self.close()
                 return
+            elif form.yes:
+                upload_interval_type = form.upload_interval_type
+                upload_interval = form.upload_interval
+        elif len(self.video_info) == 0:
+            self.close()
+            return
 
-            upload_date = datetime.now()
+        upload_date = datetime.now()
 
-            for info in self.video_info:
-                info[3] = upload_date
+        for info in self.video_info:
+            info[3] = upload_date
 
-                if upload_interval_type == 0:
-                    upload_date = upload_date + relativedelta(minutes=upload_interval)
-                elif upload_interval_type == 1:
-                    upload_date = upload_date + relativedelta(hours=upload_interval)
-                elif upload_interval_type == 2:
-                    upload_date = upload_date + relativedelta(days=upload_interval)
-                else:
-                    upload_date = upload_date + relativedelta(months=upload_interval)
-
-        else:
-            handle_result = self.handle_file(self.directory)
-            if handle_result is not False:
-                handle_result.append(datetime.now())
-                self.video_info.append(handle_result)
+            if upload_interval_type == 0:
+                upload_date = upload_date + relativedelta(minutes=upload_interval)
+            elif upload_interval_type == 1:
+                upload_date = upload_date + relativedelta(hours=upload_interval)
+            elif upload_interval_type == 2:
+                upload_date = upload_date + relativedelta(days=upload_interval)
+            else:
+                upload_date = upload_date + relativedelta(months=upload_interval)
 
         self.passed = True
         self.close()

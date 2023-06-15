@@ -1,7 +1,6 @@
 from PyQt5.QtWidgets import QTableWidgetItem
 
 from service.LocalizationService import get_str
-from service.LoggingService import log_error
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
@@ -27,7 +26,7 @@ class FacebookService(VideohostingService):
         result = list()
 
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=False)
+            context = self.new_context(p=p, headless=True)
 
             if account is not None:
                 context.add_cookies(account.auth)

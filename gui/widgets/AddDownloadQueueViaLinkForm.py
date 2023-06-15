@@ -1,4 +1,5 @@
 import traceback
+import uuid
 
 from PyQt5.QtWidgets import (QDialog, QPushButton, QLabel, QMessageBox, QComboBox, QGridLayout)
 
@@ -32,6 +33,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
     title = None
     description = None
     video_size = None
+    id = None
 
     def __init__(self, parent, format, quality, extension, remove_files_after_upload):
 
@@ -147,18 +149,24 @@ class AddDownloadQueueViaLinkForm(QDialog):
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
+                        self.add_error_upload_item(upload_target, f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
+                                  f'{upload_hosting.name}, {upload_target["login"]}')
                         continue
                     except FileSizeException:
                         log_error(traceback.format_exc())
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
+                        self.add_error_upload_item(upload_target, f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
+                                  f'{upload_hosting.name}, {upload_target["login"]}')
                         continue
                     except FileFormatException:
                         log_error(traceback.format_exc())
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
+                        self.add_error_upload_item(upload_target, f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
+                                  f'{upload_hosting.name}, {upload_target["login"]}')
                         continue
                     except NameIsTooLongException:
                         while (upload_hosting.value[0].title_size_restriction is not None and
@@ -186,11 +194,12 @@ class AddDownloadQueueViaLinkForm(QDialog):
                             form.exec_()
                             self.description = form.str
                     self.upload_targets.append(upload_target)
-
+                                
                 for target in self.upload_targets:
                     account = self.state_service.get_account_by_hosting_and_login(target['hosting'], target['login'])
                     self.queue_media_service.add_to_the_upload_queue(
-                        UploadQueueMedia(video_dir=get_str('upload_yet'),
+                        UploadQueueMedia(media_id=str(uuid.uuid4()),
+                                         video_dir=get_str('upload_yet'),
                                          hosting=target['hosting'],
                                          status=5,
                                          account=account,
@@ -199,3 +208,17 @@ class AddDownloadQueueViaLinkForm(QDialog):
 
         self.passed = True
         self.close()
+
+    def add_error_upload_item(self, target, error: str):
+        self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(uuid.uuid4()),
+                                                                          video_dir=get_str('error'),
+                                                                          hosting=target['hosting'],
+                                                                          status=3,
+                                                                          account=self.state_service.get_account_by_hosting_and_login(
+                                                                              target['hosting'],
+                                                                              target['login']),
+                                                                          destination=target[
+                                                                              'upload_target'],
+                                                                          upload_date=None,
+                                                                          remove_files_after_upload=False,
+                                                                          error_name=error))

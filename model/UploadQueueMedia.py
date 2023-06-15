@@ -1,11 +1,14 @@
+import uuid
+
 from model.Account import Account
 
 
 class UploadQueueMedia(object):
 
-    def __init__(self, video_dir: str, hosting: str, status: int, account: Account, remove_files_after_upload,
+    def __init__(self, media_id: uuid, video_dir: str, hosting: str, status: int, account: Account, remove_files_after_upload,
                  destination=None, upload_date=None, title=None, description=None, error_name=None):
 
+        self.id = media_id
         self.video_dir = video_dir
         # Всего 4 статуса: 0 - пауза, 1 - процесс, 2 - завершено, 3 - ошибка загрузки
         self.status = status

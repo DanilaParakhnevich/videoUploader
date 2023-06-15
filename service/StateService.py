@@ -1,3 +1,5 @@
+import uuid
+
 from PyQt5.QtCore import QSettings, QSize
 from model.Settings import Settings
 import os
@@ -100,6 +102,8 @@ class StateService(object):
                     tab.video_extension = [5, 'mp4']
                 if hasattr(tab, 'download_dir') is False:
                     tab.download_dir = StateService.settings.download_dir
+                if hasattr(tab, 'video_list') is False:
+                    tab.video_list = list()
 
         return StateService.tabs
 
@@ -114,6 +118,10 @@ class StateService(object):
 
             if StateService.download_queue_media is None:
                 StateService.download_queue_media = list()
+
+            for queue_media in StateService.download_queue_media:
+                if hasattr(queue_media, 'id') is False:
+                    queue_media.id = str(uuid.uuid4())
 
         return StateService.download_queue_media
 
@@ -138,6 +146,8 @@ class StateService(object):
             for queue_media in StateService.upload_queue_media:
                 if hasattr(queue_media, 'error_name') is False:
                     queue_media.error_name = None
+                if hasattr(queue_media, 'id') is False:
+                    queue_media.id = str(uuid.uuid4())
 
         return StateService.upload_queue_media
 
@@ -239,3 +249,45 @@ class StateService(object):
         if result is None:
             return 120
         return int(result)
+
+    def add_loaded_video_to_the_history(self, link, video_quality, video_extension):
+        history = self.q_settings.value('history')
+
+        if history is None:
+            history = list()
+
+        history.append({
+            'link': link,
+            'quality': video_quality,
+            'ext': video_extension
+        })
+
+        history = self.q_settings.setValue('history', history)
+
+    def if_video_has_been_loaded(self, link, video_quality, video_extension):
+        history = self.q_settings.value('history')
+
+        for video in history:
+            if video['link'] == link and video['quality'] == video_quality and video['ext'] == video_extension:
+                return True
+
+        return False
+
+    def save_tab_column_weight(self, name: str, index, width):
+        self.q_settings.setValue(f'width_{name}_{index}', width)
+
+    def get_tab_column_weight(self, name: str, index):
+        result = self.q_settings.value(f'width_{name}_{index}')
+
+        if result is None:
+            return 590 / 5
+        return int(result)
+
+    def save_column_row(self, name, index, width):
+        self.q_settings.setValue(f'{name}_{index}', width)
+
+    def column_row(self, name, index):
+        value = self.q_settings.value(f'{name}_{index}')
+        if value is not None:
+            return int(value)
+        return value

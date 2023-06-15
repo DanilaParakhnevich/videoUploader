@@ -133,7 +133,7 @@ class TelegramService(VideohostingService):
             msg = app.get_messages(chat_id=chat_id, message_ids=int(message_id))
 
             result = app.download_media(msg,
-                                        file_name=f'{download_dir}/{hosting}/{chat_id}_{message_id}.mp4',
+                                        file_name=f'{download_dir}/{hosting}/{chat_id}_{message_id}_{video_quality}.mp4',
                                         progress=progress)
 
             data = {"title": msg.caption}
@@ -143,7 +143,7 @@ class TelegramService(VideohostingService):
 
             return result
 
-    def get_video_info(self, url, video_quality, video_extension, account=None):
+    def get_video_info(self, url: str, video_quality, video_extension, account=None):
 
         with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
                     workdir='service/videohosting_service/tmp') as app:
@@ -158,7 +158,8 @@ class TelegramService(VideohostingService):
                 'description': None,
                 'duration': msg.video.duration,
                 'filesize': msg.video.file_size / 1024 ** 2,
-                'ext': msg.video.mime_type.split('/')[1]
+                'ext': msg.video.mime_type.split('/')[1],
+                'is_exists_format': [True, 1080]
             }
 
     def need_to_be_uploaded_to_special_source(self) -> bool:

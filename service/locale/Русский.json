@@ -26,7 +26,6 @@
   "need_load_video_list": "Необходимо подгрузить видео с канала",
   "not_found_accounts_for_videohosting": "Не найдено аккаунтов для видеохостинга",
   "not_found_channels_for_videohosting": "Не найдено каналов для видеохостинга",
-  "media_already_in_the_queue": "Медиа {} уже в списке очереди",
   "need_authorize": "Необходимо авторизоваться на странице \"Аккаунты\"",
   "happened_error": "Произошла ошибка",
   "download_page": "Страница загрузки",
@@ -146,5 +145,16 @@
   "preparing": "Подготовка",
   "uploading": "Выгрузка",
   "ending": "Завершение",
-  "reset_from_settings": "Восстановить надстройки по-умолчанию"
+  "reset_from_settings": "Восстановить надстройки по-умолчанию",
+  "failed_account_validation": "Ошибка при валидации аккаунта",
+  "agree_to_download": "Выбранный формат видео недоступен. Продолжить?",
+  "only_available": "С выбранный расширением доступно видео с качеством",
+  "no_available": "Нет доступных для скачки видео с выбранным расширением",
+  "agree_to_repeat": "Загрузить снова видео",
+  "video_has_been_loaded": "Видео с выбранными настройками уже было загружено ранее",
+  "adding_video_by_uploaded_media": "Добавление загруженного видео в выгрузку",
+  "choose_video_for_uploading": "Выберите видео для выгрузки",
+  "video_dir": "Расположение",
+  "is_upload": "Выгружать?",
+  "add_video_for_uploading": "Добавить видео в выгрузку"
 }

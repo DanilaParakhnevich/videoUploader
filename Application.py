@@ -96,5 +96,3 @@ if __name__ == "__main__":
     except:
         print(traceback.format_exc())
         log_error(traceback.format_exc())
-        if StateService().get_settings().send_crash_notifications is True:
-            MailService().send_log()

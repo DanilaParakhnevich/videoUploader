@@ -1,10 +1,14 @@
 import asyncio
 import datetime
+import uuid
+
 from dateutil.relativedelta import relativedelta
 
 from PyQt5 import QtCore, QtWidgets
 
 from gui.widgets.AddDownloadQueueViaLinkForm import AddDownloadQueueViaLinkForm
+from gui.widgets.AgreeToDownloadDialog import AgreeToDownloadDialog
+from gui.widgets.AgreeToRepeatDownloadDialog import AgreeToRepeatDownloadDialog
 from gui.widgets.ChooseVideoQualityComboBox import ChooseVideoQualityComboBox
 from gui.widgets.ExstensionChooserComboBox import ExtensionChooserComboBox
 from gui.widgets.FormatChooserComboBox import FormatChooserComboBox
@@ -20,6 +24,7 @@ from gui.widgets.LoadingButton import AnimatedButton
 from model.UploadQueueMedia import UploadQueueMedia
 from service.EventService import EventService
 from service.LocalizationService import *
+from service.MailService import MailService
 from service.QueueMediaService import QueueMediaService
 from threading import Thread
 from service.LoggingService import *
@@ -67,7 +72,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             for tab in self.tab_models:
                 self.create_tab(tab.tab_name, tab.channel, tab.format[0], tab.video_quality[0], tab.video_extension[0],
                                 tab.remove_files_after_upload, tab.download_dir if hasattr(tab, 'download_dir')
-                                else self.state_service.get_settings().download_dir)
+                                else self.state_service.get_settings().download_dir, tab.video_list)
 
         self.setCurrentIndex(0)
         self.event_service = EventService()
@@ -94,7 +99,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
     # Этот метод добавляет новую вкладку, либо вкладку по известным данным из tab_models
     def create_tab(self, name, selected_channel, format_index, video_quality_index, video_extension,
                    remove_files_after_upload,
-                   download_dir):
+                   download_dir, video_list=list()):
         tab = QtWidgets.QWidget()
         tab.setObjectName("Tab.py")
 
@@ -103,17 +108,21 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         tab.channel_box = ChannelComboBox(tab, selected_channel)
 
-        tab.channel_box.setGeometry(QtCore.QRect(int(20 * coef_x), int(40 * coef_y), int(590 * coef_x), int(30 * coef_y)))
+        tab.channel_box.setGeometry(
+            QtCore.QRect(int(20 * coef_x), int(40 * coef_y), int(590 * coef_x), int(30 * coef_y)))
         tab.channel_box.setObjectName("channel_box")
         tab.add_button = AnimatedButton(tab)
-        tab.add_button.setGeometry(QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(40 * coef_y), int(75 * coef_x), int(30 * coef_y))))
+        tab.add_button.setGeometry(
+            QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(40 * coef_y), int(75 * coef_x), int(30 * coef_y))))
         tab.add_button.setObjectName("add_button")
         tab.add_media_to_query_button = QtWidgets.QPushButton(tab)
-        tab.add_media_to_query_button.setGeometry(QtCore.QRect(int(700 * coef_x), int(40 * coef_y), int(150 * coef_x), int(30 * coef_y)))
+        tab.add_media_to_query_button.setGeometry(
+            QtCore.QRect(int(700 * coef_x), int(40 * coef_y), int(150 * coef_x), int(30 * coef_y)))
         tab.add_media_to_query_button.setObjectName('add_media_to_query_button')
         tab.add_by_link_button = AnimatedButton(tab)
         tab.add_by_link_button.setObjectName("add_button")
-        tab.add_by_link_button.setGeometry(QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(100 * coef_y), int(300 * coef_x), int(30 * coef_y))))
+        tab.add_by_link_button.setGeometry(
+            QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(100 * coef_y), int(300 * coef_x), int(30 * coef_y))))
         tab.add_by_link_button.setText(get_str('add_download_single_video_by_link'))
         tab.choose_video_format_combo_box = FormatChooserComboBox(tab)
         tab.choose_video_format_combo_box.setGeometry(QtCore.QRect(620, 150, 300, 30))
@@ -121,12 +130,14 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         tab.choose_video_format_combo_box.setCurrentIndex(format_index)
         tab.choose_video_format_combo_box.currentIndexChanged.connect(self.on_video_format_changed)
         tab.choose_video_quality_form = ChooseVideoQualityComboBox(tab)
-        tab.choose_video_quality_form.setGeometry(QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(200 * coef_y), int(300 * coef_x), int(30 * coef_y))))
+        tab.choose_video_quality_form.setGeometry(
+            QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(200 * coef_y), int(300 * coef_x), int(30 * coef_y))))
         tab.choose_video_quality_form.setObjectName('choose_video_quality_form')
         tab.choose_video_quality_form.setCurrentIndex(video_quality_index)
         tab.choose_video_quality_form.currentIndexChanged.connect(self.on_video_quality_changed)
         tab.extension_chooser_combo_box = ExtensionChooserComboBox(tab)
-        tab.extension_chooser_combo_box.setGeometry(QtCore.QRect(int(620 * coef_x), int(250 * coef_y), int(300 * coef_x), int(30 * coef_y)))
+        tab.extension_chooser_combo_box.setGeometry(
+            QtCore.QRect(int(620 * coef_x), int(250 * coef_y), int(300 * coef_x), int(30 * coef_y)))
         tab.extension_chooser_combo_box.setObjectName('choose_video_quality_form')
         tab.extension_chooser_combo_box.setCurrentIndex(video_extension)
         tab.extension_chooser_combo_box.currentIndexChanged.connect(self.on_video_extension_changed)
@@ -147,25 +158,30 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 tab.choose_dir_button.setText(folder_path)
 
         tab.choose_dir_button.clicked.connect(pick_new)
-        tab.choose_dir_button.setGeometry(QtCore.QRect(int(620 * coef_x), int(300 * coef_y), int(300 * coef_x), int(30 * coef_y)))
+        tab.choose_dir_button.setGeometry(
+            QtCore.QRect(int(620 * coef_x), int(300 * coef_y), int(300 * coef_x), int(30 * coef_y)))
         tab.remove_files_after_upload = QtWidgets.QCheckBox(tab)
-        tab.remove_files_after_upload.setGeometry(QtCore.QRect(int(620 * coef_x), int(350 * coef_y), int(30 * coef_x), int(30 * coef_y)))
+        tab.remove_files_after_upload.setGeometry(
+            QtCore.QRect(int(620 * coef_x), int(350 * coef_y), int(30 * coef_x), int(30 * coef_y)))
         tab.remove_files_after_upload.setObjectName('remove_files_after_upload')
         tab.remove_files_after_upload.setChecked(remove_files_after_upload)
         tab.remove_files_after_upload.clicked.connect(self.on_remove_files_after_upload_changed)
         tab.remove_files_after_upload_label = QtWidgets.QLabel(tab)
         tab.remove_files_after_upload_label.setText(get_str('remove_files_after_upload'))
-        tab.remove_files_after_upload_label.setGeometry(QtCore.QRect(int(670 * coef_x), int(350 * coef_y), int(250 * coef_x), int(30 * coef_y)))
+        tab.remove_files_after_upload_label.setGeometry(
+            QtCore.QRect(int(670 * coef_x), int(350 * coef_y), int(250 * coef_x), int(30 * coef_y)))
         tab.remove_files_after_upload_label.setObjectName('remove_files_after_upload_label')
 
         tab.reset_tab_settings_button = QtWidgets.QPushButton(tab)
         tab.reset_tab_settings_button.setObjectName("reset_tab_settings_button")
         tab.reset_tab_settings_button.setText(get_str('reset_from_settings'))
         tab.reset_tab_settings_button.clicked.connect(self.reset_tab_settings)
-        tab.reset_tab_settings_button.setGeometry(QtCore.QRect(int(620 * coef_x), int(450 * coef_y), int(300 * coef_x), int(30 * coef_y)))
+        tab.reset_tab_settings_button.setGeometry(
+            QtCore.QRect(int(620 * coef_x), int(450 * coef_y), int(300 * coef_x), int(30 * coef_y)))
 
         tab.choose_dir_button.clicked.connect(pick_new)
-        tab.choose_dir_button.setGeometry(QtCore.QRect(int(620 * coef_x), int(300 * coef_y), int(300 * coef_x), int(30 * coef_y)))
+        tab.choose_dir_button.setGeometry(
+            QtCore.QRect(int(620 * coef_x), int(300 * coef_y), int(300 * coef_x), int(30 * coef_y)))
 
         def on_add():
             form = AddDownloadQueueViaLinkForm(self, self.tab_models[self.current_table_index].format[0],
@@ -175,8 +191,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             form.exec_()
 
             if form.passed is True:
-
-                queue_media = LoadQueuedMedia(url=form.link,
+                queue_media = LoadQueuedMedia(media_id=str(uuid.uuid4()),
+                                              url=form.link,
                                               hosting=form.hosting.name,
                                               status=0,
                                               upload_after_download=form.upload_on,
@@ -197,7 +213,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         tab.add_by_link_button.clicked.connect(on_add)
 
         tab.table_widget = QtWidgets.QTableWidget(tab)
-        tab.table_widget.setGeometry(QtCore.QRect(int(20 * coef_x), int(80 * coef_y), int(590 * coef_x), int(420 * coef_y)))
+        tab.table_widget.setGeometry(
+            QtCore.QRect(int(20 * coef_x), int(80 * coef_y), int(590 * coef_x), int(420 * coef_y)))
         tab.table_widget.setObjectName("table_widget")
         tab.table_widget.setColumnCount(5)
         item = QtWidgets.QTableWidgetItem()
@@ -211,6 +228,32 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         item = QtWidgets.QTableWidgetItem()
         tab.table_widget.setHorizontalHeaderItem(4, item)
         tab.table_widget.horizontalHeader().sectionClicked.connect(self.section_clicked)
+        tab.table_widget.horizontalHeader().sectionResized.connect(self.section_resized)
+        index = 0
+
+        for video in video_list:
+            tab.table_widget.insertRow(index)
+
+            item1 = QtWidgets.QTableWidgetItem(video.name)
+            item2 = QtWidgets.QTableWidgetItem(video.url)
+            item3 = QtWidgets.QTableWidgetItem(video.date)
+            item4 = QtWidgets.QTableWidgetItem()
+            item4.setFlags(QtCore.Qt.ItemIsUserCheckable |
+                           QtCore.Qt.ItemIsEnabled)
+            item4.setCheckState(QtCore.Qt.Checked)
+
+            is_downloaded = get_str('yes') \
+                if self.state_service.get_download_queue_media_by_url(video.url) is not None else get_str('no')
+
+            item5 = QtWidgets.QTableWidgetItem(is_downloaded)
+
+            tab.table_widget.setItem(index, 0, item1)
+            tab.table_widget.setItem(index, 1, item2)
+            tab.table_widget.setItem(index, 2, item3)
+            tab.table_widget.setItem(index, 3, item4)
+            tab.table_widget.setItem(index, 4, item5)
+
+            index += 1
 
         self.insertTab(len(self.tables), tab, "")
 
@@ -228,12 +271,6 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         item.setText(get_str("is_download"))
         item = tab.table_widget.horizontalHeaderItem(4)
         item.setText(get_str("is_downloaded"))
-
-        tab.table_widget.setColumnWidth(0, int(590 * coef_x / 5))
-        tab.table_widget.setColumnWidth(1, int(590 * coef_x / 5))
-        tab.table_widget.setColumnWidth(2, int(590 * coef_x / 5))
-        tab.table_widget.setColumnWidth(3, int(590 * coef_x / 5))
-        tab.table_widget.setColumnWidth(4, int(590 * coef_x / 5))
 
         # Тут определяется, существующая вкладка ли
         if name:
@@ -256,13 +293,21 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
             self.tab_models.append(
                 TabModel(tab_name, '', Hosting.Youtube.name,
-                         [tab.choose_video_format_combo_box.currentIndex(), tab.choose_video_format_combo_box.currentData()],
+                         [tab.choose_video_format_combo_box.currentIndex(),
+                          tab.choose_video_format_combo_box.currentData()],
                          [tab.choose_video_quality_form.currentIndex(), tab.choose_video_quality_form.currentData()],
-                         [tab.extension_chooser_combo_box.currentIndex(), tab.extension_chooser_combo_box.currentData()],
+                         [tab.extension_chooser_combo_box.currentIndex(),
+                          tab.extension_chooser_combo_box.currentData()],
                          tab.remove_files_after_upload.checkState() != 0,
                          self.state_service.get_settings().download_dir))
             self.state_service.save_tabs_state(self.tab_models)
         self.tables.append(tab.table_widget)
+
+        tab.table_widget.setColumnWidth(0, int(self.state_service.get_tab_column_weight(self.tabText(len(self.tabs)), 0) * coef_x))
+        tab.table_widget.setColumnWidth(1, int(self.state_service.get_tab_column_weight(self.tabText(len(self.tabs)), 1) * coef_x))
+        tab.table_widget.setColumnWidth(2, int(self.state_service.get_tab_column_weight(self.tabText(len(self.tabs)), 2) * coef_x))
+        tab.table_widget.setColumnWidth(3, int(self.state_service.get_tab_column_weight(self.tabText(len(self.tabs)), 3) * coef_x))
+        tab.table_widget.setColumnWidth(4, int(self.state_service.get_tab_column_weight(self.tabText(len(self.tabs)), 4) * coef_x))
 
         tab.add_media_to_query_button.clicked.connect(self.on_add_media_to_query)
         tab.channel_box.currentTextChanged.connect(self.on_channel_changed)
@@ -270,6 +315,17 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
     def set_current_table(self, index):
         self.current_table_index = index
+
+    change = True
+
+    def section_resized(self, index):
+        if hasattr(self, 'current_table_index') and len(self.tabs) > self.current_table_index and self.change:
+            coef_x = self.parent().width() / 950
+
+            name = self.tabText(self.current_table_index)
+
+            self.state_service.save_tab_column_weight(name, index, int(
+                self.tabs[self.current_table_index].table_widget.columnWidth(index) / coef_x))
 
     def section_clicked(self, index):
         if index == 3:
@@ -326,24 +382,12 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             upload_interval = upload_after_download_form.upload_interval  # сам интервал выгрузки после загрузки
             upload_targets = list()  # выбранные канали для выгрузки
 
-        current_media_query = self.state_service.get_download_queue_media()
-
         new_media = list()
         upload_date = datetime.datetime.now()
+        approve_download = False
         for i in range(0, table.rowCount()):
 
             if table.item(i, 3).checkState() == 0:
-                continue
-
-            is_exist = False
-
-            for media in current_media_query:
-                if media.url == table.item(i, 1).text():
-                    log_info(get_str('media_already_in_the_queue').format(media.url))
-                    is_exist = True
-                    break
-
-            if is_exist:
                 continue
 
             channel = self.state_service.get_channel_by_url(self.tab_models[self.currentIndex()].channel)
@@ -363,6 +407,25 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                     description = video_info['description']
                     if description is None:
                         description = ''
+
+                if video_info['is_exists_format'][0] is False and approve_download is False:
+                    agree_to_download_dialog = AgreeToDownloadDialog(self, video_info['is_exists_format'][1])
+                    agree_to_download_dialog.exec_()
+
+                    if agree_to_download_dialog.is_agree is False:
+                        return
+                    else:
+                        approve_download = True
+
+                if self.state_service.if_video_has_been_loaded(table.item(i, 1).text(),
+                                                               self.tab_models[self.currentIndex()].video_quality[1],
+                                                               self.tab_models[self.currentIndex()].video_extension[1]):
+                    agree_to_repeat_download_dialog = AgreeToRepeatDownloadDialog(self)
+                    agree_to_repeat_download_dialog.exec_()
+
+                    if agree_to_repeat_download_dialog.is_agree is False:
+                        continue
+
             except:
                 log_error(traceback.format_exc())
                 self.event_service.add_event(
@@ -388,18 +451,27 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
+                        self.add_error_upload_item(upload_target,
+                                                   f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
+                                                   f'{upload_hosting.name}, {upload_target["login"]}')
                         continue
                     except FileSizeException:
                         log_error(traceback.format_exc())
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
+                        self.add_error_upload_item(upload_target,
+                                                   f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
+                                                   f'{upload_hosting.name}, {upload_target["login"]}')
                         continue
                     except FileFormatException:
                         log_error(traceback.format_exc())
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
+                        self.add_error_upload_item(upload_target,
+                                                   f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
+                                                   f'{upload_hosting.name}, {upload_target["login"]}')
                         continue
                     except NameIsTooLongException:
                         while (upload_hosting.value[0].title_size_restriction is not None and
@@ -424,10 +496,15 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                                current_text=description)
                             form.exec_()
                             description = form.str
+                    except Exception:
+                        log_error(traceback.format_exc())
+                        if StateService().get_settings().send_crash_notifications is True:
+                            MailService().send_log()
 
                     upload_targets.append(upload_target)
 
-            queue_media = LoadQueuedMedia(url=table.item(i, 1).text(),
+            queue_media = LoadQueuedMedia(media_id=str(uuid.uuid4()),
+                                          url=table.item(i, 1).text(),
                                           account=self.tab_models[self.currentIndex()].account,
                                           hosting=hosting.name,
                                           status=0,
@@ -459,9 +536,11 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
                 for target in queue_media.upload_targets:
                     account = self.state_service.get_account_by_hosting_and_login(target['hosting'], target['login'])
-                    self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(video_dir=get_str('upload_yet'),
+                    self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(uuid.uuid4()),
+                                                                                      video_dir=get_str('upload_yet'),
                                                                                       hosting=target['hosting'],
-                                                                                      destination=target['upload_target'],
+                                                                                      destination=target[
+                                                                                          'upload_target'],
                                                                                       status=5,
                                                                                       account=account,
                                                                                       remove_files_after_upload=queue_media.remove_files_after_upload))
@@ -555,6 +634,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         while table.rowCount() > 0:
             table.removeRow(0)
 
+        self.tab_models[self.currentIndex()].video_list.clear()
+
         index = 0
         try:
             for video in service.get_videos_by_url(url=channel.url, account=account):
@@ -579,6 +660,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 table.setItem(index, 3, item4)
                 table.setItem(index, 4, item5)
 
+                self.tab_models[self.currentIndex()].video_list.append(video)
+
                 index += 1
         except:
             msg = QtWidgets.QMessageBox()
@@ -586,34 +669,68 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             msg.exec_()
             log_error(traceback.format_exc())
 
+        self.state_service.save_tabs_state(self.tab_models)
+
         table.update()
         button.stop_animation()
 
     def resizeEvent(self, event):
+        self.change = False
+
         coef_x = self.parent().width() / 950
         coef_y = self.parent().height() / 600
         for tab in self.tabs:
-
             tab.choose_dir_button.setMaximumWidth(int(350 * coef_x))
 
-            tab.channel_box.setGeometry(QtCore.QRect(int(20 * coef_x), int(40 * coef_y), int(590 * coef_x), int(30 * coef_y)))
-            tab.add_button.setGeometry(QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(40 * coef_y), int(75 * coef_x), int(30 * coef_y))))
-            tab.add_by_link_button.setGeometry(QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(100 * coef_y), int(300 * coef_x), int(30 * coef_y))))
-            tab.choose_video_quality_form.setGeometry(QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(200 * coef_y), int(300 * coef_x), int(30 * coef_y))))
-            tab.extension_chooser_combo_box.setGeometry(QtCore.QRect(int(620 * coef_x), int(250 * coef_y), int(300 * coef_x), int(30 * coef_y)))
-            tab.remove_files_after_upload_label.setGeometry(QtCore.QRect(int(670 * coef_x), int(350 * coef_y), int(250 * coef_x), int(30 * coef_y)))
-            tab.remove_files_after_upload.setGeometry(QtCore.QRect(int(620 * coef_x), int(350 * coef_y), int(30 * coef_x), int(30 * coef_y)))
-            tab.choose_dir_button.setGeometry(QtCore.QRect(int(620 * coef_x), int(300 * coef_y), int(300 * coef_x), int(30 * coef_y)))
-            tab.choose_video_format_combo_box.setGeometry(QtCore.QRect(int(620 * coef_x), int(150 * coef_y), int(300 * coef_x), int(30 * coef_y)))
-            tab.add_media_to_query_button.setGeometry(QtCore.QRect(int(700 * coef_x), int(40 * coef_y), int(150 * coef_x), int(30 * coef_y)))
-            tab.table_widget.setGeometry(QtCore.QRect(int(20 * coef_x), int(80 * coef_y), int(590 * coef_x), int(420 * coef_y)))
-            tab.reset_tab_settings_button.setGeometry(QtCore.QRect(int(620 * coef_x), int(470 * coef_y), int(300 * coef_x), int(30 * coef_y)))
+            tab.channel_box.setGeometry(
+                QtCore.QRect(int(20 * coef_x), int(40 * coef_y), int(590 * coef_x), int(30 * coef_y)))
+            tab.add_button.setGeometry(
+                QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(40 * coef_y), int(75 * coef_x), int(30 * coef_y))))
+            tab.add_by_link_button.setGeometry(
+                QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(100 * coef_y), int(300 * coef_x), int(30 * coef_y))))
+            tab.choose_video_quality_form.setGeometry(
+                QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(200 * coef_y), int(300 * coef_x), int(30 * coef_y))))
+            tab.extension_chooser_combo_box.setGeometry(
+                QtCore.QRect(int(620 * coef_x), int(250 * coef_y), int(300 * coef_x), int(30 * coef_y)))
+            tab.remove_files_after_upload_label.setGeometry(
+                QtCore.QRect(int(670 * coef_x), int(350 * coef_y), int(250 * coef_x), int(30 * coef_y)))
+            tab.remove_files_after_upload.setGeometry(
+                QtCore.QRect(int(620 * coef_x), int(350 * coef_y), int(30 * coef_x), int(30 * coef_y)))
+            tab.choose_dir_button.setGeometry(
+                QtCore.QRect(int(620 * coef_x), int(300 * coef_y), int(300 * coef_x), int(30 * coef_y)))
+            tab.choose_video_format_combo_box.setGeometry(
+                QtCore.QRect(int(620 * coef_x), int(150 * coef_y), int(300 * coef_x), int(30 * coef_y)))
+            tab.add_media_to_query_button.setGeometry(
+                QtCore.QRect(int(700 * coef_x), int(40 * coef_y), int(150 * coef_x), int(30 * coef_y)))
+            tab.table_widget.setGeometry(
+                QtCore.QRect(int(20 * coef_x), int(80 * coef_y), int(590 * coef_x), int(420 * coef_y)))
+            tab.reset_tab_settings_button.setGeometry(
+                QtCore.QRect(int(620 * coef_x), int(470 * coef_y), int(300 * coef_x), int(30 * coef_y)))
 
-            column_width = int(590 * coef_x / 5)
-            tab.table_widget.setColumnWidth(0, column_width)
-            tab.table_widget.setColumnWidth(1, column_width)
-            tab.table_widget.setColumnWidth(2, column_width)
-            tab.table_widget.setColumnWidth(3, column_width)
-            tab.table_widget.setColumnWidth(4, column_width)
+            tab.table_widget.setColumnWidth(0, int(self.state_service.get_tab_column_weight(
+                self.tabText(self.tabs.index(tab)), 0) * coef_x))
+            tab.table_widget.setColumnWidth(1, int(self.state_service.get_tab_column_weight(
+                self.tabText(self.tabs.index(tab)), 1) * coef_x))
+            tab.table_widget.setColumnWidth(2, int(self.state_service.get_tab_column_weight(
+                self.tabText(self.tabs.index(tab)), 2) * coef_x))
+            tab.table_widget.setColumnWidth(3, int(self.state_service.get_tab_column_weight(
+                self.tabText(self.tabs.index(tab)), 3) * coef_x))
+            tab.table_widget.setColumnWidth(4, int(self.state_service.get_tab_column_weight(
+                self.tabText(self.current_table_index), 4) * coef_x))
 
+        self.change = True
         return super(LoadPageWidget, self).resizeEvent(event)
+
+    def add_error_upload_item(self, target, error: str):
+        self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(uuid.uuid4()),
+                                                                          video_dir=get_str('error'),
+                                                                          hosting=target['hosting'],
+                                                                          status=3,
+                                                                          account=self.state_service.get_account_by_hosting_and_login(
+                                                                              target['hosting'],
+                                                                              target['login']),
+                                                                          destination=target[
+                                                                              'upload_target'],
+                                                                          upload_date=None,
+                                                                          remove_files_after_upload=False,
+                                                                          error_name=error))

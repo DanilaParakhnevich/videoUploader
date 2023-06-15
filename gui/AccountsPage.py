@@ -1,4 +1,5 @@
 import traceback
+import uuid
 
 from PyQt5 import QtCore, QtWidgets
 
@@ -74,6 +75,8 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
             self.setItem(input_position, 0, item1)
             self.setItem(input_position, 1, item2)
 
+        self.horizontalHeader().sectionResized.connect(self.section_resized)
+
     def on_add(self):
         self.add_button.start_animation()
         hosting = Hosting[self.comboBox.currentText()]
@@ -108,9 +111,10 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
                 account.url = form.url
             except:
                 msg = QtWidgets.QMessageBox(self)
-                msg.setText(get_str('error'))
+                msg.setText(f'{get_str("failed_account_validation"): {form.url}}')
                 msg.exec_()
                 log_error(traceback.format_exc())
+                self.event_service.add_event(f'{get_str("failed_account_validation"): {form.url}}')
                 self.add_button.stop_animation()
                 return
 
@@ -148,13 +152,35 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
             self.accounts.pop(row)
             self.state_service.save_accounts(self.accounts)
 
+    change = True
+
+    def section_resized(self, index, width):
+        if self.change:
+            coef_x = self.parent().width() / 950
+            self.state_service.save_column_row('accounts', index, int(width / coef_x))
+
     def resizeEvent(self, event):
+        self.change = False
         coef_x = self.parent().width() / 950
 
-        column_width = int(950 * coef_x / 3)
+        if self.state_service.column_row('accounts', 0) is None or self.state_service.column_row('accounts', 1) is None or self.state_service.column_row('accounts', 2) is None:
+            column_width = int(950 / 3)
 
-        self.setColumnWidth(0, column_width)
-        self.setColumnWidth(1, column_width)
-        self.setColumnWidth(2, column_width)
+            if self.state_service.column_row('accounts', 0) is None:
+                self.state_service.save_column_row('accounts', 0, column_width)
+            if self.state_service.column_row('accounts', 1) is None:
+                self.state_service.save_column_row('accounts', 1, column_width)
+            if self.state_service.column_row('accounts', 2) is None:
+                self.state_service.save_column_row('accounts', 2, column_width)
+
+        width_0 = int(self.state_service.column_row('accounts', 0) * coef_x)
+        width_1 = int(self.state_service.column_row('accounts', 1) * coef_x)
+        width_2 = int(self.state_service.column_row('accounts', 2) * coef_x)
+
+        self.setColumnWidth(0, width_0)
+        self.setColumnWidth(1, width_1)
+        self.setColumnWidth(2, width_2)
+
+        self.change = True
 
         return super(AccountsPageWidget, self).resizeEvent(event)

@@ -182,7 +182,7 @@ class VideohostingService(ABC):
         simple_download_opts = {
             'progress_hooks': [lambda d: prog_hook(d, table_item)],
             'ffmpeg_location': ffmpeg_location,
-            'outtmpl': f'{download_dir}/{hosting}/%(title)s.%(ext)s',
+            'outtmpl': f'{download_dir}/{hosting}/%(title)s_{video_quality}.%(ext)s',
             'writeinfojson': True,
             'retries': settings.retries,
             'nocheckcertificate': settings.no_check_certificate,
@@ -216,9 +216,9 @@ class VideohostingService(ABC):
         if format == 'NOT_MERGE':
             download_video_opts = {
                 'ffmpeg_location': os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin'),
-                'format': f'bestvideo[height<={video_quality}][ext=?{video_extension}]/best[height<={video_quality}][ext=?{video_extension}]/best',
+                'format': f'bestvideo[ext={video_extension}][height<={video_quality}]/bestvideo[ext=?{video_extension}][height<={video_quality}]/best[ext=?{video_extension}][height<={video_quality}]/best',
                 '--list-formats ': True,
-                'outtmpl': f'{download_dir}/{hosting}/%(title)s.%(ext)s',
+                'outtmpl': f'{download_dir}/{hosting}/%(title)s_{video_quality}.%(ext)s',
                 'writeinfojson': True,
                 'retries': settings.retries,
                 'nocheckcertificate': settings.no_check_certificate,
@@ -234,7 +234,7 @@ class VideohostingService(ABC):
                 'ffmpeg_location': os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin'),
                 'format': 'bestaudio/best',
                 '--list-formats ': True,
-                'outtmpl': f'{download_dir}/{hosting}/audio_%(title)s.%(ext)s',
+                'outtmpl': f'{download_dir}/{hosting}/audio_%(title)s_{video_quality}.%(ext)s',
                 'retries': settings.retries,
                 'nocheckcertificate': settings.no_check_certificate,
                 '--audio-quality': settings.audio_quality,
@@ -273,11 +273,9 @@ class VideohostingService(ABC):
             if format == 'AUDIO':
                 simple_download_opts['format'] = 'bestaudio/best'
             elif format == 'VIDEO':
-                simple_download_opts[
-                    'format'] = f'bestvideo[height<={video_quality}][ext=?{video_extension}]/best[height<={video_quality}][ext=?{video_extension}]/best'
+                simple_download_opts['format'] = f'bestvideo[ext={video_extension}][height<={video_quality}]/bestvideo[ext=?{video_extension}][height<={video_quality}]/best[ext=?{video_extension}][height<={video_quality}]/best'
             else:
-                simple_download_opts[
-                    'format'] = f'bestvideo[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[height<={video_quality}][ext=?{video_extension}]/best'
+                simple_download_opts['format'] = f'bestvideo[height<={video_quality}][ext={video_extension}]+bestaudio/bestvideo[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[height<={video_quality}][ext=?{video_extension}]/best'
 
             with YoutubeDL(simple_download_opts) as ydl:
                 info = ydl.extract_info(url)
@@ -290,9 +288,9 @@ class VideohostingService(ABC):
             ext = info['entries'][0]['ext']
 
         if 'video_ext' in info:
-            return f'{download_dir}/{hosting}/{title}.{ext}'
+            return f'{download_dir}/{hosting}/{title}_{video_quality}.{ext}'
         else:
-            return f'{download_dir}/{hosting}/{title}.{ext}'
+            return f'{download_dir}/{hosting}/{title}_{video_quality}.{ext}'
 
     def get_video_info(self, url: str, video_quality, video_extension, account=None):
 
@@ -303,7 +301,7 @@ class VideohostingService(ABC):
 
         download_opts = {
             'skip_download': True,
-            'format': f'bestvideo[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[height<={video_quality}][ext=?{video_extension}]/best'
+            'format': f'bestvideo[height<={video_quality}][ext={video_extension}]+bestaudio/bestvideo[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[height<={video_quality}][ext=?{video_extension}]/best'
         }
 
         # Чтобы нормально добавить куки в обычном json, приходится использовать http_headers
@@ -320,12 +318,41 @@ class VideohostingService(ABC):
             filesize = int(info['filesize'] / 1024 ** 2)
         elif 'filesize_approx' in info:
             filesize = int(info['filesize_approx'] / 1024 ** 2)
+
+        is_exists_format = None
+        saved_video_height = None
+
+        for format in info['formats']:
+
+            extracted_video_ext = None
+
+            if 'video_ext' in format:
+                extracted_video_ext = format['video_ext']
+            elif 'ext' in format:
+                extracted_video_ext = format['ext']
+
+            extracted_video_height = None
+
+            if 'height' in format:
+                extracted_video_height = format['height']
+
+            if video_extension == extracted_video_ext and int(video_quality.replace('p', '')) == extracted_video_height:
+                is_exists_format = [True, saved_video_height]
+                break
+            elif video_extension == extracted_video_ext:
+                if extracted_video_ext is not None and (saved_video_height is None or extracted_video_ext <= video_quality):
+                    saved_video_height = extracted_video_height
+
+        if is_exists_format is None:
+            is_exists_format = [False, saved_video_height]
+
         return {
             'title': info['title'],
             'description': info['description'] if hasattr(info, 'description') else '',
             'duration': info['duration'],
             'filesize': filesize,
-            'ext': info['ext'] if info['ext'] else info['video_ext']
+            'ext': info['ext'] if info['ext'] else info['video_ext'],
+            'is_exists_format': is_exists_format
         }
 
     # Возвращает: False, если ссылка не является ссылкой на канал аккаунта, True, если является

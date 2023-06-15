@@ -26,7 +26,6 @@
   "need_load_video_list": "Need to load video from channel",
   "not_found_accounts_for_videohosting": "No video hosting accounts found",
   "not_found_channels_for_videohosting": "No channels found for video hosting",
-  "media_already_in_the_queue": "Media {} is already in the queue list",
   "need_authorize": "You need to authorize on the \"Accounts\" page",
   "happened_error": "An error occurred",
   "download_page": "Download Page",
@@ -146,5 +145,7 @@
   "preparing": "Preparing",
   "uploading": "Uploading",
   "ending": "Ending",
-  "reset_from_settings": "Restore add-ons to default"
+  "reset_from_settings": "Restore add-ons to default",
+  "failed_account_validation": "Failed to validate account",
+  "no_available":
 }

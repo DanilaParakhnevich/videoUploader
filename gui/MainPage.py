@@ -47,6 +47,10 @@ class Ui_BuxarVideoUploader(object):
         self.upload_queue_page.hide()
         self.vertical_layout.addLayout(self.main_layout)
 
+        self.horizontal_action_layout = QtWidgets.QHBoxLayout()
+        self.horizontal_action_layout.setObjectName('horizontal_action_layout')
+        self.horizontal_action_layout.setAlignment(QtCore.Qt.AlignBottom)
+
         self.horizontal_layout = QtWidgets.QHBoxLayout()
         self.horizontal_layout.setObjectName("horizontalLayout")
         self.load_button = QtWidgets.QPushButton(self.central_widget)
@@ -67,6 +71,7 @@ class Ui_BuxarVideoUploader(object):
         self.settings_button = QtWidgets.QPushButton(self.central_widget)
         self.settings_button.setObjectName("settings_button")
         self.horizontal_layout.addWidget(self.settings_button)
+        self.vertical_layout.addLayout(self.horizontal_action_layout)
         self.vertical_layout.addLayout(self.horizontal_layout)
         ui.setCentralWidget(self.central_widget)
 
@@ -102,6 +107,9 @@ class Ui_BuxarVideoUploader(object):
         self.download_queue_page_button.setStyleSheet("")
         self.upload_queue_page_button.setStyleSheet("")
 
+        for i in reversed(range(self.horizontal_action_layout.count())):
+            self.horizontal_action_layout.itemAt(i).widget().setParent(None)
+
         self.channels_page.hide()
         self.load_page.show()
         self.accounts_page.hide()
@@ -115,6 +123,13 @@ class Ui_BuxarVideoUploader(object):
         self.accounts_button.setStyleSheet("")
         self.download_queue_page_button.setStyleSheet("")
         self.upload_queue_page_button.setStyleSheet("")
+
+        for i in reversed(range(self.horizontal_action_layout.count())):
+            self.horizontal_action_layout.itemAt(i).widget().setParent(None)
+
+        self.horizontal_action_layout.addWidget(self.channels_page.comboBox)
+        self.horizontal_action_layout.addWidget(self.channels_page.url_edit)
+        self.horizontal_action_layout.addWidget(self.channels_page.add_button)
 
         self.channels_page.show()
         self.load_page.hide()
@@ -130,6 +145,12 @@ class Ui_BuxarVideoUploader(object):
         self.download_queue_page_button.setStyleSheet("")
         self.upload_queue_page_button.setStyleSheet("")
 
+        for i in reversed(range(self.horizontal_action_layout.count())):
+            self.horizontal_action_layout.itemAt(i).widget().setParent(None)
+
+        self.horizontal_action_layout.addWidget(self.accounts_page.comboBox)
+        self.horizontal_action_layout.addWidget(self.accounts_page.add_button)
+
         self.channels_page.hide()
         self.load_page.hide()
         self.accounts_page.show()
@@ -144,6 +165,11 @@ class Ui_BuxarVideoUploader(object):
         self.accounts_button.setStyleSheet("")
         self.upload_queue_page_button.setStyleSheet("")
 
+        for i in reversed(range(self.horizontal_action_layout.count())):
+            self.horizontal_action_layout.itemAt(i).widget().setParent(None)
+
+        self.horizontal_action_layout.addWidget(self.download_queue_page.add_button)
+
         self.channels_page.hide()
         self.load_page.hide()
         self.accounts_page.hide()
@@ -157,6 +183,11 @@ class Ui_BuxarVideoUploader(object):
         self.load_button.setStyleSheet("")
         self.accounts_button.setStyleSheet("")
         self.download_queue_page_button.setStyleSheet("")
+
+        for i in reversed(range(self.horizontal_action_layout.count())):
+            self.horizontal_action_layout.itemAt(i).widget().setParent(None)
+
+        self.horizontal_action_layout.addWidget(self.upload_queue_page.add_button)
 
         self.channels_page.hide()
         self.load_page.hide()
