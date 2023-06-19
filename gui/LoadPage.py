@@ -451,7 +451,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
-                        self.add_error_upload_item(upload_target,
+                        self.add_error_upload_item(table.item(i, 1).text(),
+                                                   upload_target,
                                                    f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
                                                    f'{upload_hosting.name}, {upload_target["login"]}')
                         continue
@@ -460,7 +461,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
-                        self.add_error_upload_item(upload_target,
+                        self.add_error_upload_item(table.item(i, 1).text(),
+                                                   upload_target,
                                                    f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
                                                    f'{upload_hosting.name}, {upload_target["login"]}')
                         continue
@@ -469,7 +471,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
-                        self.add_error_upload_item(upload_target,
+                        self.add_error_upload_item(table.item(i, 1).text(),
+                                                   upload_target,
                                                    f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
                                                    f'{upload_hosting.name}, {upload_target["login"]}')
                         continue
@@ -721,9 +724,9 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         self.change = True
         return super(LoadPageWidget, self).resizeEvent(event)
 
-    def add_error_upload_item(self, target, error: str):
+    def add_error_upload_item(self, video_link, target, error: str):
         self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(uuid.uuid4()),
-                                                                          video_dir=get_str('error'),
+                                                                          video_dir=video_link,
                                                                           hosting=target['hosting'],
                                                                           status=3,
                                                                           account=self.state_service.get_account_by_hosting_and_login(

@@ -56,8 +56,9 @@ class YandexDzenService(VideohostingService):
     
     def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
         with sync_playwright() as p:
-            table_item.setText(get_str('preparing'))
-            context = self.new_context(p=p, headless=False, use_user_agent_arg=True)
+            if table_item is not None:
+                table_item.setText(get_str('preparing'))
+            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto('https://dzen.ru/profile/editor/create#video-editor', timeout=0)
@@ -68,11 +69,13 @@ class YandexDzenService(VideohostingService):
 
             with page.expect_file_chooser() as fc_info:
                 page.click('.base-button__rootElement-75.base-button__xl-28.base-button__accentPrimary-B4', timeout=0)
-            table_item.setText(get_str('uploading'))
+            if table_item is not None:
+                table_item.setText(get_str('uploading'))
             file_chooser = fc_info.value
             file_chooser.set_files(file_path)
 
-            table_item.setText(get_str('ending'))
+            if table_item is not None:
+                table_item.setText(get_str('ending'))
             page.click('.ql-editor', click_count=3)
 
             page.keyboard.type(text=name)

@@ -261,15 +261,17 @@ class StateService(object):
             'quality': video_quality,
             'ext': video_extension
         })
-
-        history = self.q_settings.setValue('history', history)
+        self.q_settings.setValue('history', history)
 
     def if_video_has_been_loaded(self, link, video_quality, video_extension):
         history = self.q_settings.value('history')
 
-        for video in history:
-            if video['link'] == link and video['quality'] == video_quality and video['ext'] == video_extension:
-                return True
+        if history is not None:
+            for video in history:
+                if video['link'] == link and video['quality'] == video_quality and video['ext'] == video_extension:
+                    return True
+        else:
+            self.q_settings.setValue('history', list())
 
         return False
 

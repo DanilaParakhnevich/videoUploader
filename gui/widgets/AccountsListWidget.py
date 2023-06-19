@@ -20,6 +20,7 @@ class AccountsListWidget(QtWidgets.QTableWidget):
         self.setHorizontalHeaderItem(1, item)
         item = QtWidgets.QTableWidgetItem()
         self.setHorizontalHeaderItem(2, item)
+        self.horizontalHeader().sectionClicked.connect(self.section_clicked)
         self.horizontalHeader().setDefaultSectionSize(155)
 
         for account in account_list:
@@ -43,3 +44,11 @@ class AccountsListWidget(QtWidgets.QTableWidget):
         item = self.horizontalHeaderItem(2)
         item.setText(get_str("upload"))
 
+    def section_clicked(self, index):
+        if index == 2:
+
+            if self.rowCount() > 0:
+                to_set = QtCore.Qt.Checked if self.item(0, 2).checkState() == 0 else 0
+
+            for index in range(0, self.rowCount()):
+                self.item(index, 2).setCheckState(to_set)

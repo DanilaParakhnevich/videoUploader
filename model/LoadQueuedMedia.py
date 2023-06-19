@@ -27,3 +27,4 @@ class LoadQueuedMedia(object):
         self.description = description
         self.download_dir = download_dir
         self.video_size = video_size
+        self.downloaded_dir = None

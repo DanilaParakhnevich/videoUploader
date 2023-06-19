@@ -90,7 +90,7 @@ class RutubeService(VideohostingService):
                     selector='.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y')
             table_item.setText(get_str('uploading'))
             file_chooser = fc_info.value
-            file_chooser.set_files(file_path)
+            file_chooser.set_files(file_path, timeout=0)
 
             table_item.setText(get_str('ending'))
             page.wait_for_selector('[name=title]', timeout=0)

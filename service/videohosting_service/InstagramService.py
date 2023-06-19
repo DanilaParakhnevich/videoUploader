@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import QTableWidgetItem
+from googletrans import Translator
 
 from service.LocalizationService import get_str
 from service.videohosting_service.VideohostingService import VideohostingService
@@ -35,6 +36,7 @@ class InstagramService(VideohostingService):
             page.wait_for_selector('.x1iyjqo2', timeout=20_000)
             self.scroll_page_to_the_bottom(page=page)
             stream_boxes = page.locator("//a[contains(@class,'x1i10hfl xjbqb8w x6umtig x1b1mbwd xaqea5y xav7gou x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz _a6hd')]")
+            translator = Translator()
 
             for box in stream_boxes.element_handles():
                 svg = box.query_selector('svg')
@@ -42,8 +44,7 @@ class InstagramService(VideohostingService):
                 if svg is not None:
                     aria_label = svg.get_attribute('aria-label')
 
-                    if aria_label == 'Clip' or\
-                            aria_label == 'Video':
+                    if translator.translate(aria_label).text == 'Clip' or translator.translate(aria_label).text == 'Video':
 
                         aagu = box.query_selector('._aagu')
                         not_parsed_date = aagu.query_selector('img').get_property('alt')

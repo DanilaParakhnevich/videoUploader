@@ -1,5 +1,3 @@
-from io import BytesIO
-
 from service.LocalizationService import get_str
 from service.LoggingService import log_error
 from service.videohosting_service.VideohostingService import VideohostingService
@@ -8,7 +6,6 @@ from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
 from gui.widgets.AuthenticationConfirmationForm import AuthenticationConfirmationForm
 from PyQt5.QtWidgets import QTableWidgetItem
-from service.StateService import StateService
 import json
 import os
 
@@ -21,7 +18,7 @@ class TelegramService(VideohostingService):
 
     def __init__(self):
         self.video_regex = 'https:\/\/t.me/.*\/.*'
-        self.channel_regex = '.*'
+        self.channel_regex = 'https://t.me/.*'
         self.title_size_restriction = 100
         self.min_title_size = 0
         self.duration_restriction = 240
@@ -30,12 +27,13 @@ class TelegramService(VideohostingService):
                                           'm2ts', 'm4v', 'mkv', 'mod', 'mov', 'mp4', 'mpe', 'mpeg', 'mpeg4', 'mpg',
                                           'mts', 'nsv', 'ogm', 'ogv', 'qt', 'tod', 'ts', 'vob', 'wmv', 'webm'])
 
-    def get_videos_by_url(self, url, account=None):
+    def get_videos_by_url(self, url: str, account=None):
         result = list()
 
         with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
                     workdir='service/videohosting_service/tmp') as app:
-            for message in app.get_chat_history(chat_id=url):
+            history = app.get_chat_history(chat_id=url.replace('https://t.me/', ''))
+            for message in history:
                 if message.video is not None:
                     message_url = f'https://t.me/c/me/{message.id}' if url == 'me' else message.link
                     result.append(VideoModel(url=message_url, name=message.caption, date=str(message.date)))
@@ -84,7 +82,7 @@ class TelegramService(VideohostingService):
                         break
             app.disconnect()
             return True
-        except:
+        finally:
             app.disconnect()
 
     def handle_auth(self, enter_auth_code):
@@ -104,13 +102,13 @@ class TelegramService(VideohostingService):
         #             workdir='service/videohosting_service/tmp') as app:
         pass
 
-    def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
+    def upload_video(self, account, file_path, name, description, destination: str = None, table_item: QTableWidgetItem = None):
 
         with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
                     workdir='service/videohosting_service/tmp') as app:
-            app.send_video(chat_id=destination, video=file_path, caption=name)
+            app.send_video(chat_id=destination.replace('https://t.me/', ''), video=file_path, caption=name)
 
-    def download_video(self, url, hosting, video_quality, video_extension, format, download_dir, account=None,
+    def download_video(self, url: str, hosting, video_quality, video_extension, format, download_dir, account=None,
                        table_item: QTableWidgetItem = None):
 
         video_info = self.get_video_info(url, video_quality, [5, 'mp4'], account=account)

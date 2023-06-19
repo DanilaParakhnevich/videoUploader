@@ -6,14 +6,12 @@ from PyQt5.QtWidgets import (QDialog, QPushButton, QLabel, QMessageBox, QComboBo
 from dateutil.relativedelta import relativedelta
 
 from gui.widgets.ChooseAccountsForUploadingForm import ChooseAccountsForUploadingForm
-from gui.widgets.ChooseLoadedVideoForm import ChooseLoadedVideoForm
 from model.Event import Event
 from model.Hosting import Hosting
 from model.UploadQueueMedia import UploadQueueMedia
 from service.EventService import EventService
 from service.LocalizationService import *
 from gui.widgets.TypeStrForm import TypeStrForm
-from gui.widgets.ChooseIntervalsForm import ChooseIntervalForm
 import os
 
 from service.LoggingService import log_error
@@ -27,7 +25,7 @@ from service.videohosting_service.exception.VideoDurationException import VideoD
 
 class AddUploadQueueByUploadedMediaForm(QDialog):
 
-    def __init__(self, parent):
+    def __init__(self, parent, dir):
 
         super().__init__(parent)
         self.setWindowTitle(get_str('adding_video_by_uploaded_media'))
@@ -45,6 +43,7 @@ class AddUploadQueueByUploadedMediaForm(QDialog):
         self.directory = None
         self.video_info = None
         self.passed = False
+        self.dir = dir
 
         self.setLayout(layout)
         self.state_service = StateService()
@@ -52,15 +51,6 @@ class AddUploadQueueByUploadedMediaForm(QDialog):
         self.queue_media_service = QueueMediaService()
 
     def choose(self):
-        choose_loaded_video_form = ChooseLoadedVideoForm(self)
-        choose_loaded_video_form.exec_()
-
-        if choose_loaded_video_form.passed is False or len(choose_loaded_video_form.video_dirs) == 0:
-            self.close()
-            return
-
-        video_dirs = choose_loaded_video_form.video_dirs
-
         choose_accounts_for_uploading_form = ChooseAccountsForUploadingForm(self)
         choose_accounts_for_uploading_form.exec_()
 
@@ -77,42 +67,12 @@ class AddUploadQueueByUploadedMediaForm(QDialog):
 
         self.video_info = list()
 
-        for target in video_dirs:
-            if os.path.isfile(target):
-                handle_result = self.handle_file(target)
-                if handle_result is not False:
-                    self.video_info.append(handle_result)
+        self.result = None
 
-        upload_interval = 0
-        upload_interval_type = 0
-
-        if len(self.video_info) > 1:
-            form = ChooseIntervalForm(self)
-            form.exec_()
-
-            if form.passed is False:
-                self.close()
-                return
-            elif form.yes:
-                upload_interval_type = form.upload_interval_type
-                upload_interval = form.upload_interval
-        elif len(self.video_info) == 0:
-            self.close()
-            return
-
-        upload_date = datetime.now()
-
-        for info in self.video_info:
-            info[3] = upload_date
-
-            if upload_interval_type == 0:
-                upload_date = upload_date + relativedelta(minutes=upload_interval)
-            elif upload_interval_type == 1:
-                upload_date = upload_date + relativedelta(hours=upload_interval)
-            elif upload_interval_type == 2:
-                upload_date = upload_date + relativedelta(days=upload_interval)
-            else:
-                upload_date = upload_date + relativedelta(months=upload_interval)
+        if os.path.isfile(self.dir) and os.path.exists(self.dir):
+            handle_result = self.handle_file(self.dir)
+            if handle_result is not False:
+                self.result = handle_result
 
         self.passed = True
         self.close()
@@ -129,17 +89,17 @@ class AddUploadQueueByUploadedMediaForm(QDialog):
             except VideoDurationException:
                 log_error(traceback.format_exc())
                 self.event_service.add_event(Event(f'{get_str("bad_file_duration")}{file_dir}'))
-                self.add_error_upload_item(target, f'{get_str("bad_file_duration")}{file_dir}')
+                self.add_error_upload_item(file_dir, target, f'{get_str("bad_file_duration")}{file_dir}')
                 continue
             except FileSizeException:
                 log_error(traceback.format_exc())
                 self.event_service.add_event(Event(f'{get_str("bad_file_size")}{file_dir}'))
-                self.add_error_upload_item(target, f'{get_str("bad_file_size")}{file_dir}')
+                self.add_error_upload_item(file_dir, target, f'{get_str("bad_file_size")}{file_dir}')
                 continue
             except FileFormatException:
                 log_error(traceback.format_exc())
                 self.event_service.add_event(Event(f'{get_str("bad_file_format")}{file_dir}'))
-                self.add_error_upload_item(target, f'{get_str("bad_file_format")}{file_dir}')
+                self.add_error_upload_item(file_dir, target, f'{get_str("bad_file_format")}{file_dir}')
                 continue
 
             if title is None:
@@ -197,9 +157,9 @@ class AddUploadQueueByUploadedMediaForm(QDialog):
         else:
             return False
 
-    def add_error_upload_item(self, target, error: str):
+    def add_error_upload_item(self, file_dir, target, error: str):
         self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(uuid.uuid4()),
-                                                                          video_dir=get_str('error'),
+                                                                          video_dir=file_dir,
                                                                           hosting=target['hosting'],
                                                                           status=3,
                                                                           account=self.state_service.get_account_by_hosting_and_login(

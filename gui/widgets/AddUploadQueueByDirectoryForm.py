@@ -141,17 +141,17 @@ class AddUploadQueueByDirectoryForm(QDialog):
             except VideoDurationException:
                 log_error(traceback.format_exc())
                 self.event_service.add_event(Event(f'{get_str("bad_file_duration")}{file_dir}'))
-                self.add_error_upload_item(target, f'{get_str("bad_file_duration")}{file_dir}')
+                self.add_error_upload_item(file_dir, target, f'{get_str("bad_file_duration")}{file_dir}')
                 continue
             except FileSizeException:
                 log_error(traceback.format_exc())
                 self.event_service.add_event(Event(f'{get_str("bad_file_size")}{file_dir}'))
-                self.add_error_upload_item(target, f'{get_str("bad_file_size")}{file_dir}')
+                self.add_error_upload_item(file_dir, target, f'{get_str("bad_file_size")}{file_dir}')
                 continue
             except FileFormatException:
                 log_error(traceback.format_exc())
                 self.event_service.add_event(Event(f'{get_str("bad_file_format")}{file_dir}'))
-                self.add_error_upload_item(target, f'{get_str("bad_file_format")}{file_dir}')
+                self.add_error_upload_item(file_dir, target, f'{get_str("bad_file_format")}{file_dir}')
                 continue
 
             if title is None:
@@ -209,9 +209,9 @@ class AddUploadQueueByDirectoryForm(QDialog):
         else:
             return False
 
-    def add_error_upload_item(self, target, error: str):
+    def add_error_upload_item(self, video_dir, target, error: str):
         self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(uuid.uuid4()),
-                                                                          video_dir=get_str('error'),
+                                                                          video_dir=video_dir,
                                                                           hosting=target['hosting'],
                                                                           status=3,
                                                                           account=self.state_service.get_account_by_hosting_and_login(

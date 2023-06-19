@@ -4,7 +4,7 @@ import os
 
 # Мною был выбран подход реализовать свою локализацию через .json, тк необходимо было динамическое добавление локализаций
 state_service = StateService()
-locale_json = json.load(open(os.path.abspath(f'service/locale/{state_service.get_settings().language}.json')))
+locale_json = json.load(open(os.path.abspath(f'service/locale/{state_service.get_settings().language}.json'), encoding='utf8'))
 
 def get_str(key: str) -> str:
     return locale_json[key]

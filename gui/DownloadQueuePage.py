@@ -2,10 +2,10 @@ import asyncio
 import uuid
 from threading import Lock
 
+from youtube_dl import DownloadError
+from yt_dlp import DownloadError
 from PyQt5 import QtCore, QtWidgets
-
 from gui.widgets.AddUploadQueueByUploadedMediaForm import AddUploadQueueByUploadedMediaForm
-from gui.widgets.LoadingButton import AnimatedButton
 from model.Event import Event
 from service.EventService import EventService
 from service.MailService import MailService
@@ -49,17 +49,6 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
         horizontal_layout = QtWidgets.QHBoxLayout(self)
         horizontal_layout.setObjectName("horizontal_layout")
 
-        self.add_button = AnimatedButton(central_widget)
-        self.add_button.setObjectName("add_button")
-        self.add_button.setText(get_str('add_video_for_uploading'))
-        horizontal_layout.addWidget(self.add_button)
-        horizontal_layout.setAlignment(QtCore.Qt.AlignBottom)
-
-        self.add_button.clicked.connect(self.on_add)
-
-        horizontal_layout = QtWidgets.QHBoxLayout(self)
-        horizontal_layout.setObjectName("horizontal_layout")
-
         item = self.horizontalHeaderItem(0)
         item.setText(get_str('link'))
         item = self.horizontalHeaderItem(1)
@@ -89,24 +78,25 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
         self.horizontalHeader().sectionResized.connect(self.section_resized)
 
     def on_add(self):
-        form = AddUploadQueueByUploadedMediaForm(self)
-        form.exec_()
+        button = self.sender()
+        if button:
+            form = AddUploadQueueByUploadedMediaForm(self, self.queue_media_list[self.indexAt(button.pos()).row()].video_dir)
+            form.exec_()
 
-        if form.passed is True:
-            for item in form.video_info:
-                for target in item[4]:
+            if form.passed is True and form.result is not None:
+                for target in form.result[4]:
                     self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(uuid.uuid4()),
-                                                                                      video_dir=item[0],
+                                                                                      video_dir=form.result[0],
                                                                                       hosting=target['hosting'],
-                                                                                      status=0,
+                                                                                      status=5,
                                                                                       account=self.state_service.get_account_by_hosting_and_login(
                                                                                           target['hosting'],
                                                                                           target['login']),
                                                                                       destination=target[
                                                                                           'upload_target'],
-                                                                                      upload_date=item[3],
-                                                                                      title=item[1],
-                                                                                      description=item[2],
+                                                                                      upload_date=form.result[3],
+                                                                                      title=form.result[1],
+                                                                                      description=form.result[2],
                                                                                       remove_files_after_upload=False))
 
     def downloading_serial_hook(self):
@@ -187,6 +177,9 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             log_error(traceback.format_exc())
             self.set_media_status(media.id, 3, status_name=get_str('no_free_space'))
             return
+        except DownloadError as er:
+            log_error(traceback.format_exc())
+            self.set_media_status(media.id, 3, status_name=f'{get_str("technical_error")}: {er.args[1]}')
         except Exception:
             log_error(traceback.format_exc())
             self.set_media_status(media.id, 3)
@@ -235,7 +228,8 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
         elif queue_media.status == 2:
             item2 = QtWidgets.QTableWidgetItem(get_str('end'))
-            action_button.setText('-')
+            action_button.setText(get_str('add_video_for_uploading'))
+            action_button.clicked.connect(self.on_add)
         else:
             item2 = QtWidgets.QTableWidgetItem(get_str('error'))
             action_button.setText(get_str('retry'))
@@ -273,8 +267,9 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                     self.cellWidget(i, 2).clicked.connect(self.on_stop_download)
                 elif status == 2:
                     self.item(i, 1).setText(get_str('end'))
-                    self.cellWidget(i, 2).setText('-')
+                    self.cellWidget(i, 2).setText(get_str('add_video_for_uploading'))
                     self.cellWidget(i, 2).clicked.disconnect()
+                    self.cellWidget(i, 2).clicked.connect(self.on_add)
                 elif status == 3:
                     if status_name is None:
                         self.item(i, 1).setText(get_str('error'))

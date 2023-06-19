@@ -18,8 +18,7 @@ class Ui_BuxarVideoUploader(object):
         ui.setObjectName(f'BuxarVideoUploader {version}')
         ui.setWindowModality(QtCore.Qt.ApplicationModal)
         ui.resize(950, 600)
-        ui.setMaximumSize(950, 600)
-        ui.setMinimumSize(949, 599)
+        ui.setMinimumSize(950, 600)
         ui.setStyleSheet("")
         ui.setToolButtonStyle(QtCore.Qt.ToolButtonFollowStyle)
         ui.setAnimated(True)
@@ -167,8 +166,6 @@ class Ui_BuxarVideoUploader(object):
 
         for i in reversed(range(self.horizontal_action_layout.count())):
             self.horizontal_action_layout.itemAt(i).widget().setParent(None)
-
-        self.horizontal_action_layout.addWidget(self.download_queue_page.add_button)
 
         self.channels_page.hide()
         self.load_page.hide()

@@ -90,7 +90,7 @@ class VideohostingService(ABC):
         if clip is not None:
             if self.duration_restriction is not None and (clip.duration / 60) > self.duration_restriction:
                 raise VideoDurationException(
-                    f'Продолжительность ролика слишком большая ({clip.duration} > {self.duration_restriction})')
+                    f'Продолжительность ролика слишком большая ({clip.duration / 60} > {self.duration_restriction})')
 
             size = get_size()
             if self.size_restriction is not None and size is not None and size > self.size_restriction:
@@ -275,14 +275,14 @@ class VideohostingService(ABC):
             elif format == 'VIDEO':
                 simple_download_opts['format'] = f'bestvideo[ext={video_extension}][height<={video_quality}]/bestvideo[ext=?{video_extension}][height<={video_quality}]/best[ext=?{video_extension}][height<={video_quality}]/best'
             else:
-                simple_download_opts['format'] = f'bestvideo[height<={video_quality}][ext={video_extension}]+bestaudio/bestvideo[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[height<={video_quality}][ext=?{video_extension}]/best'
+                simple_download_opts['format'] = f'bestvideo[height<={video_quality}][ext={video_extension}]/bestvideo[height<={video_quality}][ext=?{video_extension}]/best[height<={video_quality}][ext=?{video_extension}]/best'
 
             with YoutubeDL(simple_download_opts) as ydl:
                 info = ydl.extract_info(url)
 
         if 'title' in info:
             title = info['title']
-            ext = info['video_ext']
+            ext = info['ext'] if 'ext' in info and info['ext'] is not None else info['video_ext']
         else:
             title = info['entries'][0]['title']
             ext = info['entries'][0]['ext']
@@ -301,7 +301,7 @@ class VideohostingService(ABC):
 
         download_opts = {
             'skip_download': True,
-            'format': f'bestvideo[height<={video_quality}][ext={video_extension}]+bestaudio/bestvideo[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[height<={video_quality}][ext=?{video_extension}]/best'
+            'format': f'bestvideo[height<={video_quality}][ext={video_extension}]/bestvideo[height<={video_quality}][ext=?{video_extension}]/best[height<={video_quality}][ext=?{video_extension}]/best'
         }
 
         # Чтобы нормально добавить куки в обычном json, приходится использовать http_headers
@@ -314,7 +314,7 @@ class VideohostingService(ABC):
         with YoutubeDL(download_opts) as ydl:
             info = ydl.extract_info(url)
         filesize = get_str('no_info')
-        if 'filesize' in info:
+        if 'filesize' in info and info['filesize'] is not None:
             filesize = int(info['filesize'] / 1024 ** 2)
         elif 'filesize_approx' in info:
             filesize = int(info['filesize_approx'] / 1024 ** 2)

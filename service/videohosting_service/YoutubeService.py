@@ -21,7 +21,7 @@ class YoutubeService(VideohostingService):
         self.size_restriction = 256 * 1024
         self.duration_restriction = 12 * 60
         self.upload_video_formats = list(['mov', 'mpeg-1', 'mpeg-2', 'mp4', 'mpg', 'avi', 'wmv', 'mpegps',
-                                          'flv', '3gpp', 'webm', 'DNxHR', 'ProRes', 'CineForm', 'hevc'])
+                                          'flv', '3gpp', 'webm', 'DNxHR', 'ProRes', 'CineForm', 'hevc', 'mkv'])
 
     def get_videos_by_url(self, url, account=None):
         c = scrapetube.get_channel(channel_url=url)
@@ -109,7 +109,7 @@ class YoutubeService(VideohostingService):
 
             table_item.setText(get_str('uploading'))
             file_chooser = fc_info.value
-            file_chooser.set_files(file_path)
+            file_chooser.set_files(file_path, timeout=0)
 
             table_item.setText(get_str('ending'))
             page.wait_for_selector('#input', timeout=0)

@@ -147,5 +147,14 @@
   "ending": "Ending",
   "reset_from_settings": "Restore add-ons to default",
   "failed_account_validation": "Failed to validate account",
-  "no_available":
+  "agree_to_download": "The selected video format is not available. Do you want to continue?",
+  "only_available": "A quality video is available with the selected extension",
+  "no_available": "There are no videos available for download with the selected extension",
+  "agree_to_repeat": "Download video again",
+  "video_has_been_loaded": "A video with the selected settings has already been loaded before",
+  "adding_video_by_uploaded_media": "Adding Uploaded Video to Upload",
+  "choose_video_for_uploading": "Choose a video to upload",
+  "video_dir": "Location",
+  "is_upload": "Run?",
+  "add_video_for_uploading": "Add video to upload"
 }

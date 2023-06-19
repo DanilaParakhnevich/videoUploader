@@ -37,17 +37,6 @@ class QueueMediaService(object):
         return result
 
     def replace_to_the_upload_queue(self, queue_media):
-        old_queue_media = self.state_service.get_upload_queue_media()
-        i = 0
-        for upload_queue_media in old_queue_media:
-            if upload_queue_media.status == 5 and upload_queue_media.account.login == queue_media.account.login \
-                    and upload_queue_media.hosting == queue_media.hosting:
-                old_queue_media[i] = queue_media
-                break
-            else:
-                i += 1
-
-        self.state_service.save_upload_queue_media(old_queue_media)
         # А так же и в список для итемов очереди с обновленным статусом (см UploadQueuePage.py)
         QueueMediaService.last_added_temp_upload_queue_media.append(queue_media)
 

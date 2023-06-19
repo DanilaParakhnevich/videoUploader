@@ -98,8 +98,6 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             if queue_media.upload_date is not None and queue_media.upload_date < datetime.now() \
                     and queue_media.status == 0:
 
-                time.sleep(5)
-
                 queue_media.status = 1
                 self.state_service.save_upload_queue_media(self.queue_media_list)
 
@@ -108,12 +106,12 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 if Hosting[queue_media.hosting].value[0].is_async():
                     event_loop = asyncio.new_event_loop()
 
-                upload_thread = kthread.KThread(target=self.upload_video, daemon=True, args=[queue_media, self.get_status_table_item_by_id(queue_media.id), event_loop])
+                upload_thread = kthread.KThread(target=self.upload_video, daemon=True, args=[queue_media, queue_media.id, event_loop])
 
                 self.upload_thread_dict[queue_media.id] = upload_thread
                 upload_thread.start()
 
-    def upload_video(self, queue_media, table_item, event_loop):
+    def upload_video(self, queue_media, queue_media_id, event_loop):
         try:
             if event_loop is not None:
                 asyncio.set_event_loop(event_loop)
@@ -144,7 +142,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 name=name,
                 description=description,
                 destination=queue_media.destination,
-                table_item=table_item)
+                table_item=self.get_status_table_item_by_id(queue_media_id))
 
             if queue_media.remove_files_after_upload:
                 for filename in glob.glob(os.path.dirname(queue_media.video_dir) + '/*'):
@@ -193,14 +191,16 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 self.queue_media_list[i] = queue_media
 
     def find_row_number_by_login_and_hosting(self, login, hosting, target):
-        for i in range(0, self.rowCount()):
-            if (self.item(i, 1).text() == login or self.item(i, 1).text() == target) and self.item(i, 2).text() == hosting \
-                    and self.cellWidget(i, 3).text() == get_str('on_download'):
+        i = 0
+        for queue_media in self.queue_media_list:
+            if (queue_media.account.login == login or queue_media.destination == target) and queue_media.hosting == hosting \
+                    and queue_media.status == 5:
                 return i
+            i += 1
         return None
 
     def insert_queue_media(self, queue_media, index=None):
-
+        upload_video_thread = None
         if index is None:
             self.insertRow(self.rowCount())
             input_position = self.rowCount() - 1
@@ -237,10 +237,9 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
                 upload_video_thread = kthread.KThread(target=self.upload_video,
                                                       daemon=True,
-                                                      args=[queue_media, self.get_status_table_item_by_id(queue_media.id), event_loop])
+                                                      args=[queue_media, queue_media.id, event_loop])
 
                 self.upload_thread_dict[queue_media.id] = upload_video_thread
-                upload_video_thread.start()
 
         elif queue_media.status == 2:
             item4 = QtWidgets.QPushButton(get_str('end'))
@@ -254,8 +253,8 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 action_button.clicked.connect(self.on_start_upload)
             else:
                 item4.clicked.connect(partial(self.show_error, queue_media.error_name))
-                action_button.setText('-')
-                action_button.clicked.connect(self.do_nothing)
+                action_button.setText(get_str('retry'))
+                action_button.clicked.connect(self.on_start_upload)
 
         elif queue_media.status == 5:
             item4 = QtWidgets.QPushButton(get_str('on_download'))
@@ -281,9 +280,12 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         self.setCellWidget(input_position, 3, item4)
         self.update()
 
+        if upload_video_thread is not None:
+            upload_video_thread.start()
+
     def set_media_status(self, media_id, status, error_name=None):
-        i = 0
         self.lock.acquire()
+        i = 0
         for media in self.queue_media_list:
             if media.id == media_id:
                 media.status = status
@@ -413,7 +415,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                         event_loop = asyncio.new_event_loop()
 
                     upload_video_thread = kthread.KThread(target=self.upload_video, daemon=True,
-                                                          args=[media, self.get_status_table_item_by_id(media.id), event_loop])
+                                                          args=[media, media.id, event_loop])
 
                     self.upload_thread_dict[media_id] = upload_video_thread
                     upload_video_thread.start()

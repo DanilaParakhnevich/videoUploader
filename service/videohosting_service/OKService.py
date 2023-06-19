@@ -95,19 +95,20 @@ class OKService(VideohostingService):
             context = self.new_context(p=p, headless=True)
             context.add_cookies(account.auth)
             page = context.new_page()
-            page.goto(destination)
-            if page.query_selector('[hrefattrs="st.cmd=userMain&cmd=PopLayer&st.layer.cmd=PopLayerChangeUserAvatarLayer&st._aid=LeftColumn_TopCardUser_ChangeAvatarLink"]') is not None:
-                page.click('[href="/video/showcase"]')
-                page.click('.svg-ico_video_add_16')
+            page.goto(destination, timeout=0)
+            if page.url.__contains__('profile') or page.url == 'https://ok.ru/':
+                page.goto('https://ok.ru/video/manager', timeout=0)
             else:
                 page.click('a[data-l="outlandermenu,altGroupVideoAll"]', timeout=0)
                 page.click(selector='a[hrefattrs*="GroupVideo_upload_leftButton"]')
+
+            page.wait_for_selector('.button-pro.js-upload-button', timeout=0)
 
             with page.expect_file_chooser() as fc_info:
                 page.click(selector='.button-pro.js-upload-button')
             table_item.setText(get_str('uploading'))
             file_chooser = fc_info.value
-            file_chooser.set_files(file_path)
+            file_chooser.set_files(file_path, timeout=0)
 
             table_item.setText(get_str('ending'))
             page.click('.__small.video-uploader_ac.__go-to-editor-btn.js-uploader-editor-link', timeout=60_000)
