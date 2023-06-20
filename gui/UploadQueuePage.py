@@ -184,17 +184,28 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             self.insert_queue_media(queue_media)
 
         for queue_media in last_added_temp_queue_media:
-            i = self.find_row_number_by_login_and_hosting(queue_media.account.login, queue_media.hosting,
-                                                          queue_media.destination)
+            if queue_media.status == 3:
+                i = self.find_row_number_by_login_and_hosting(queue_media.account.login, queue_media.hosting,
+                                                              queue_media.destination, 3)
+                if i is not None:
+                    queue_media.error_name = self.queue_media_list[i].error_name
+                    self.queue_media_list[i] = queue_media
+            else:
+                i = self.find_row_number_by_login_and_hosting(queue_media.account.login, queue_media.hosting,
+                                                              queue_media.destination)
+                if i is not None:
+                    self.queue_media_list[i] = queue_media
+
             if i is not None:
                 self.insert_queue_media(queue_media, i)
-                self.queue_media_list[i] = queue_media
 
-    def find_row_number_by_login_and_hosting(self, login, hosting, target):
+        self.state_service.save_upload_queue_media(self.queue_media_list)
+
+    def find_row_number_by_login_and_hosting(self, login, hosting, target, status=5):
         i = 0
         for queue_media in self.queue_media_list:
             if (queue_media.account.login == login or queue_media.destination == target) and queue_media.hosting == hosting \
-                    and queue_media.status == 5:
+                    and queue_media.status == status and queue_media.video_dir == get_str('upload_yet'):
                 return i
             i += 1
         return None
@@ -253,8 +264,8 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 action_button.clicked.connect(self.on_start_upload)
             else:
                 item4.clicked.connect(partial(self.show_error, queue_media.error_name))
-                action_button.setText(get_str('retry'))
-                action_button.clicked.connect(self.on_start_upload)
+                action_button.setText('-')
+                action_button.clicked.connect(self.do_nothing)
 
         elif queue_media.status == 5:
             item4 = QtWidgets.QPushButton(get_str('on_download'))
@@ -371,6 +382,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         button = self.sender()
         if button:
             row = self.indexAt(button.pos()).row()
+            pos = self.horizontalScrollBar().sliderPosition()
             media_id = self.item(row, 0).data(11)
             self.removeRow(row)
 
@@ -382,6 +394,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 if self.upload_thread_dict[media_id] is not None and self.upload_thread_dict[media_id].is_alive():
                     self.upload_thread_dict[media_id].terminate()
                 self.upload_thread_dict[media_id] = None
+            self.horizontalScrollBar().setSliderPosition(pos)
 
     # Функции для кнопок остановить и начать
     def on_stop_upload(self):

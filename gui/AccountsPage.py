@@ -148,9 +148,11 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
         button = self.sender()
         if button:
             row = self.indexAt(button.pos()).row()
+            pos = self.horizontalScrollBar().sliderPosition()
             self.removeRow(row)
             self.accounts.pop(row)
             self.state_service.save_accounts(self.accounts)
+            self.horizontalScrollBar().setSliderPosition(pos)
 
     change = True
 

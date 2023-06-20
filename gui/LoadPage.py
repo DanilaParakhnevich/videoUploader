@@ -438,6 +438,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 for upload_target in upload_after_download_form.upload_targets:
                     upload_hosting = Hosting[upload_target['hosting']]
                     try:
+                        upload_target['error'] = False
                         upload_hosting.value[0].validate_video_info_for_uploading(title=title,
                                                                                   description=description,
                                                                                   duration=video_info[
@@ -451,31 +452,31 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
-                        self.add_error_upload_item(table.item(i, 1).text(),
+                        self.add_error_upload_item(get_str('upload_yet'),
                                                    upload_target,
                                                    f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
                                                    f'{upload_hosting.name}, {upload_target["login"]}')
-                        continue
+                        upload_target['error'] = True
                     except FileSizeException:
                         log_error(traceback.format_exc())
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
-                        self.add_error_upload_item(table.item(i, 1).text(),
+                        self.add_error_upload_item(get_str('upload_yet'),
                                                    upload_target,
                                                    f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
                                                    f'{upload_hosting.name}, {upload_target["login"]}')
-                        continue
+                        upload_target['error'] = True
                     except FileFormatException:
                         log_error(traceback.format_exc())
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
-                        self.add_error_upload_item(table.item(i, 1).text(),
+                        self.add_error_upload_item(get_str('upload_yet'),
                                                    upload_target,
                                                    f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
                                                    f'{upload_hosting.name}, {upload_target["login"]}')
-                        continue
+                        upload_target['error'] = True
                     except NameIsTooLongException:
                         while (upload_hosting.value[0].title_size_restriction is not None and
                                len(title) > upload_hosting.value[0].title_size_restriction) or \
@@ -538,15 +539,16 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                     upload_date = upload_date + relativedelta(months=upload_interval)
 
                 for target in queue_media.upload_targets:
-                    account = self.state_service.get_account_by_hosting_and_login(target['hosting'], target['login'])
-                    self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(uuid.uuid4()),
-                                                                                      video_dir=get_str('upload_yet'),
-                                                                                      hosting=target['hosting'],
-                                                                                      destination=target[
-                                                                                          'upload_target'],
-                                                                                      status=5,
-                                                                                      account=account,
-                                                                                      remove_files_after_upload=queue_media.remove_files_after_upload))
+                    if target['error'] is False:
+                        account = self.state_service.get_account_by_hosting_and_login(target['hosting'], target['login'])
+                        self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(uuid.uuid4()),
+                                                                                          video_dir=get_str('upload_yet'),
+                                                                                          hosting=target['hosting'],
+                                                                                          destination=target[
+                                                                                              'upload_target'],
+                                                                                          status=5,
+                                                                                          account=account,
+                                                                                          remove_files_after_upload=queue_media.remove_files_after_upload))
 
             new_media.append(queue_media)
 

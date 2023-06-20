@@ -80,7 +80,7 @@ class YoutubeService(VideohostingService):
             context.add_cookies(account.auth)
             page = context.new_page()
 
-            page.goto(destination)
+            page.goto(destination, timeout=0)
 
             for channel_handle in page.query_selector_all('#channel-handle'):
                 if channel_handle is not None:

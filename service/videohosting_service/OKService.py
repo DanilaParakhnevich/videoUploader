@@ -14,7 +14,7 @@ class OKService(VideohostingService):
 
     def __init__(self):
         self.video_regex = 'https://ok.ru/video/.*'
-        self.channel_regex = 'https:\/\/ok.ru\/.*\/.*'
+        self.channel_regex = 'https:\/\/ok.ru\/.*'
         self.duration_restriction = sys.maxsize
         self.size_restriction = 2 * 1024
         self.min_title_size = 1
@@ -99,8 +99,7 @@ class OKService(VideohostingService):
             if page.url.__contains__('profile') or page.url == 'https://ok.ru/':
                 page.goto('https://ok.ru/video/manager', timeout=0)
             else:
-                page.click('a[data-l="outlandermenu,altGroupVideoAll"]', timeout=0)
-                page.click(selector='a[hrefattrs*="GroupVideo_upload_leftButton"]')
+                page.goto(page.url + '/video/manager', timeout=0)
 
             page.wait_for_selector('.button-pro.js-upload-button', timeout=0)
 

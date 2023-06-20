@@ -118,9 +118,11 @@ class ChannelsPageWidget(QtWidgets.QTableWidget):
         button = self.sender()
         if button:
             row = self.indexAt(button.pos()).row()
+            pos = self.horizontalScrollBar().sliderPosition()
             self.removeRow(row)
             self.channels.pop(row)
             self.state_service.save_channels(self.channels)
+            self.horizontalScrollBar().setSliderPosition(pos)
 
     change = True
 

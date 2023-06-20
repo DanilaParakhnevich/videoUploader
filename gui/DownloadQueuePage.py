@@ -85,19 +85,20 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
             if form.passed is True and form.result is not None:
                 for target in form.result[4]:
-                    self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(uuid.uuid4()),
-                                                                                      video_dir=form.result[0],
-                                                                                      hosting=target['hosting'],
-                                                                                      status=5,
-                                                                                      account=self.state_service.get_account_by_hosting_and_login(
-                                                                                          target['hosting'],
-                                                                                          target['login']),
-                                                                                      destination=target[
-                                                                                          'upload_target'],
-                                                                                      upload_date=form.result[3],
-                                                                                      title=form.result[1],
-                                                                                      description=form.result[2],
-                                                                                      remove_files_after_upload=False))
+                    if 'error' not in target or target['error'] is False:
+                        self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(uuid.uuid4()),
+                                                                                          video_dir=form.result[0],
+                                                                                          hosting=target['hosting'],
+                                                                                          status=0,
+                                                                                          account=self.state_service.get_account_by_hosting_and_login(
+                                                                                              target['hosting'],
+                                                                                              target['login']),
+                                                                                          destination=target[
+                                                                                              'upload_target'],
+                                                                                          upload_date=form.result[3],
+                                                                                          title=form.result[1],
+                                                                                          description=form.result[2],
+                                                                                          remove_files_after_upload=False))
 
     def downloading_serial_hook(self):
         if len(self.download_thread_dict) == 0:
@@ -155,11 +156,16 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             media.video_dir = video_dir
             if media.upload_after_download:
                 for upload_target in media.upload_targets:
+                    if upload_target['error'] is False:
+                        status = 0
+                    else:
+                        status = 3
+
                     self.queue_media_service.replace_to_the_upload_queue(UploadQueueMedia(media_id=uuid.uuid4(),
                                                                                           video_dir=video_dir,
                                                                                           hosting=upload_target[
                                                                                               'hosting'],
-                                                                                          status=0,
+                                                                                          status=status,
                                                                                           account=self.state_service.get_account_by_hosting_and_login(
                                                                                               upload_target['hosting'],
                                                                                               upload_target['login']),
@@ -297,6 +303,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
         button = self.sender()
         if button:
             row = self.indexAt(button.pos()).row()
+            pos = self.horizontalScrollBar().sliderPosition()
             self.removeRow(row)
             media_id = self.queue_media_list.pop(row).id
             self.state_service.save_download_queue_media(self.queue_media_list)
@@ -305,6 +312,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                 if self.download_thread_dict[media_id] is not None and self.download_thread_dict[media_id].is_alive():
                     self.download_thread_dict[media_id].terminate()
                 self.download_thread_dict[media_id] = None
+            self.horizontalScrollBar().setSliderPosition(pos)
 
     # Функции для кнопок остановить и начать
     def on_stop_download(self):

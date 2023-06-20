@@ -63,8 +63,10 @@ class YandexDzenService(VideohostingService):
             page = context.new_page()
             page.goto('https://dzen.ru/profile/editor/create#video-editor', timeout=0)
 
-            page.click('.author-studio-header__addButton-1Z.author-studio-header__rightItemButton-3a', timeout=0)
+            page.wait_for_selector('.author-studio-header__addButton-1Z.author-studio-header__rightItemButton-3a', timeout=60_000)
+            page.click('.author-studio-header__addButton-1Z.author-studio-header__rightItemButton-3a')
 
+            page.wait_for_selector('.ui-lib-context-menu__item.new-publication-dropdown__button-rl')
             page.query_selector_all('.ui-lib-context-menu__item.new-publication-dropdown__button-rl')[2].click()
 
             with page.expect_file_chooser() as fc_info:
