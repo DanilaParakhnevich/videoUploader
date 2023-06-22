@@ -12,6 +12,7 @@ from playwright.sync_api import sync_playwright
 
 from service.videohosting_service.exception.NeedCreateSomeActionOnVideohostingException import \
     NeedCreateSomeActionOnVideohostingException
+from service.videohosting_service.exception.VideoInTooLowResolutionException import VideoInTooLowResolutionException
 
 
 class YandexDzenService(VideohostingService):
@@ -79,7 +80,10 @@ class YandexDzenService(VideohostingService):
 
             if table_item is not None:
                 table_item.setText(get_str('ending'))
-            page.click('.ql-editor', click_count=3)
+            try:
+                page.click('.ql-editor', click_count=3)
+            except:
+                raise VideoInTooLowResolutionException('Видео в слишком низком разрешении')
 
             page.keyboard.type(text=name)
 
@@ -87,7 +91,7 @@ class YandexDzenService(VideohostingService):
                 '.form-actions__action-15.base-button__rootElement-75.base-button__l-3Z.base-button__accentPrimary-B4',
                 timeout=0)
 
-            time.sleep(1)
+            time.sleep(5)
 
             if page.query_selector('.prepublish-popup-publisher-data__content') is not None:
                 raise NeedCreateSomeActionOnVideohostingException(get_str('need_make_some_action_on_videohosting'))

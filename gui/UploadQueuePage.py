@@ -25,6 +25,7 @@ import os, glob
 
 from service.videohosting_service.exception.NeedCreateSomeActionOnVideohostingException import \
     NeedCreateSomeActionOnVideohostingException
+from service.videohosting_service.exception.VideoInTooLowResolutionException import VideoInTooLowResolutionException
 
 
 class UploadQueuePageWidget(QtWidgets.QTableWidget):
@@ -164,6 +165,10 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             log_error(traceback.format_exc())
             self.set_media_status(queue_media.id, 3, get_str('need_make_some_action_on_videohosting'))
             return
+        except VideoInTooLowResolutionException:
+            log_error(traceback.format_exc())
+            self.set_media_status(queue_media.id, 3, get_str('video_in_low_resolution'))
+            return
         except Exception:
             log_error(traceback.format_exc())
             self.set_media_status(queue_media.id, 3, get_str('technical_error'))
@@ -258,7 +263,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             action_button.setText('-')
         elif queue_media.status == 3:
             item4 = QtWidgets.QPushButton(get_str('error'))
-            if queue_media.error_name is None:
+            if queue_media.error_name is None or queue_media.error_name == get_str('technical_error'):
                 item4.clicked.connect(self.do_nothing)
                 action_button.setText(get_str('retry'))
                 action_button.clicked.connect(self.on_start_upload)
@@ -334,9 +339,15 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                             self.cellWidget(i, 3).clicked.connect(self.do_nothing)
                             self.cellWidget(i, 3).setText(get_str('error'))
 
-                        self.cellWidget(i, 4).setText(get_str('retry'))
-                        self.cellWidget(i, 4).clicked.disconnect()
-                        self.cellWidget(i, 4).clicked.connect(self.on_start_upload)
+                        if error_name is None or error_name == get_str('technical_error'):
+                            self.cellWidget(i, 4).setText(get_str('retry'))
+                            self.cellWidget(i, 4).clicked.disconnect()
+                            self.cellWidget(i, 4).clicked.connect(self.on_start_upload)
+                        else:
+                            self.cellWidget(i, 4).setText('-')
+                            self.cellWidget(i, 4).clicked.disconnect()
+                            self.cellWidget(i, 4).clicked.connect(self.do_nothing)
+
                 break
             i += 1
         self.update()

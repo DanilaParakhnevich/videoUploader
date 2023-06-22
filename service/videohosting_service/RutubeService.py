@@ -86,8 +86,7 @@ class RutubeService(VideohostingService):
             page.goto('https://studio.rutube.ru/uploader/', timeout=0)
 
             with page.expect_file_chooser() as fc_info:
-                page.click(
-                    selector='.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y')
+                page.click(selector='.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
             table_item.setText(get_str('uploading'))
             file_chooser = fc_info.value
             file_chooser.set_files(file_path, timeout=0)
