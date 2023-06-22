@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from PyQt5.QtWidgets import QTableWidgetItem
 
 from gui.widgets.LoginForm import LoginForm
@@ -65,3 +67,13 @@ class TikTokService(VideohostingService):
                 return
 
         raise Exception('Что-то пошло не так')
+
+    def check_auth(self, account) -> bool:
+        for auth in account.auth:
+            if auth['name'] == 'sessionid':
+                if datetime.utcfromtimestamp(auth['expires']) > datetime.now():
+                    return True
+                else:
+                    return False
+
+        return False

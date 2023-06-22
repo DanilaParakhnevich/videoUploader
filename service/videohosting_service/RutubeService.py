@@ -111,3 +111,13 @@ class RutubeService(VideohostingService):
             page.click(
                 selector='.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__regular__ksZLL.freyja_char-base-button__pointerCursor__JNA7y',
                 timeout=0)
+
+    def check_auth(self, account) -> bool:
+        for auth in account.auth:
+            if auth['name'] == 'csrftoken':
+                if datetime.utcfromtimestamp(auth['expires']) > datetime.now():
+                    return True
+                else:
+                    return False
+
+        return False

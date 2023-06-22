@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from service.LocalizationService import get_str
 from service.LoggingService import log_error
 from service.videohosting_service.VideohostingService import VideohostingService
@@ -131,7 +133,7 @@ class TelegramService(VideohostingService):
             msg = app.get_messages(chat_id=chat_id, message_ids=int(message_id))
 
             result = app.download_media(msg,
-                                        file_name=f'{download_dir}/{hosting}/{chat_id}_{message_id}_{video_quality}.mp4',
+                                        file_name=fr'{download_dir}/{hosting}/{chat_id}_{message_id}_{video_quality}.mp4',
                                         progress=progress)
 
             data = {"title": msg.caption}
@@ -159,6 +161,14 @@ class TelegramService(VideohostingService):
                 'ext': msg.video.mime_type.split('/')[1],
                 'is_exists_format': [True, 1080]
             }
+
+    def check_auth(self, account) -> bool:
+        try:
+            with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
+                        workdir='service/videohosting_service/tmp'):
+                return True
+        except:
+            return False
 
     def need_to_be_uploaded_to_special_source(self) -> bool:
         return True

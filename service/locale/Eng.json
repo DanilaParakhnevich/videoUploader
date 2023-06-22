@@ -156,5 +156,7 @@
   "choose_video_for_uploading": "Choose a video to upload",
   "video_dir": "Location",
   "is_upload": "Run?",
-  "add_video_for_uploading": "Add video to upload"
+  "add_video_for_uploading": "Add video to upload",
+  "save_password": "Save password?",
+  "check_auth": "Check"
 }

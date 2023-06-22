@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 
 from PyQt5.QtWidgets import QTableWidgetItem
 
@@ -75,12 +76,16 @@ class YoutubeService(VideohostingService):
 
     def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
         with sync_playwright() as p:
-            table_item.setText(get_str('preparing'))
-            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+            if table_item is not None:
+                table_item.setText(get_str('preparing'))
+            context = self.new_context(p=p, headless=False, use_user_agent_arg=True)
             context.add_cookies(account.auth)
             page = context.new_page()
 
             page.goto(destination, timeout=0)
+
+            page.wait_for_selector('#channel-handle', timeout=0, state='hidden')
+            channel_id = None
 
             for channel_handle in page.query_selector_all('#channel-handle'):
                 if channel_handle is not None:
@@ -107,11 +112,15 @@ class YoutubeService(VideohostingService):
             with page.expect_file_chooser() as fc_info:
                 page.query_selector(selector='#select-files-button').click()
 
-            table_item.setText(get_str('uploading'))
+            if table_item is not None:
+                table_item.setText(get_str('uploading'))
+
             file_chooser = fc_info.value
             file_chooser.set_files(file_path, timeout=0)
 
-            table_item.setText(get_str('ending'))
+            if table_item is not None:
+                table_item.setText(get_str('ending'))
+
             page.wait_for_selector('#input', timeout=0)
 
             page.query_selector('#title-textarea').click(click_count=3)
@@ -133,7 +142,17 @@ class YoutubeService(VideohostingService):
 
             page.click(selector='#done-button', timeout=0)
 
-            time.sleep(1)
+            time.sleep(10)
 
     def need_to_be_uploaded_to_special_source(self) -> bool:
         return True
+
+    def check_auth(self, account) -> bool:
+        for auth in account.auth:
+            if auth['name'] == 'ACCOUNT_CHOOSER':
+                if datetime.utcfromtimestamp(auth['expires']) > datetime.now():
+                    return True
+                else:
+                    return False
+
+        return False

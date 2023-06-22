@@ -237,16 +237,21 @@ class SettingsPage(QtWidgets.QDialog):
         self.send_crash_notifications.setChecked(self.old_settings.send_crash_notifications)
         self.gridLayout.addWidget(self.send_crash_notifications, 23, 0)
 
+        self.save_password = QtWidgets.QCheckBox(self.settings_box)
+        self.save_password.setObjectName("save_password")
+        self.save_password.setChecked(self.old_settings.save_password)
+        self.gridLayout.addWidget(self.save_password, 24, 0)
+
         self.save_button = QtWidgets.QPushButton(self.settings_box)
         self.save_button.setObjectName("save_button")
         self.save_button.setMaximumWidth(80)
         self.save_button.clicked.connect(self.on_save)
-        self.gridLayout.addWidget(self.save_button, 24, 0)
+        self.gridLayout.addWidget(self.save_button, 25, 0)
 
         self.autostart = QtWidgets.QCheckBox(self.settings_box)
         self.autostart.setObjectName("autostart")
         self.autostart.setChecked(self.old_settings.autostart)
-        self.gridLayout.addWidget(self.autostart, 24, 1)
+        self.gridLayout.addWidget(self.autostart, 25, 1)
 
         self.retranslate_ui()
 
@@ -258,6 +263,7 @@ class SettingsPage(QtWidgets.QDialog):
         self.pack_count_label.setText(get_str('count_media_for_synchronous_downloading'))
         self.rate_limit_label.setText(get_str('download_speed_limit'))
         self.autostart.setText(get_str('application_autostart'))
+        self.save_password.setText(get_str('save_password'))
         self.retries_label.setText(get_str('retries'))
         self.no_check_certificate_label.setText(get_str('no_check_certificate'))
         self.audio_quality_label.setText(get_str('audio_quality'))

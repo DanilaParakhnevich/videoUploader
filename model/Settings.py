@@ -2,7 +2,7 @@ class Settings(object):
 
     def __init__(self, language: str, download_strategy: int, rate_limit: int,
                  download_dir: str, pack_count: int = 0, send_crash_notifications: bool = True,
-                 video_quality=0, video_extension=5, format=0, remove_files_after_upload=False, autostart: bool = False,
+                 video_quality=0, video_extension=5, format=0, save_password=True, remove_files_after_upload=False, autostart: bool = False,
                  retries=10, no_check_certificate=False, audio_quality=9, no_cache_dir=False, referer='',
                  geo_bypass_country='', keep_fragments=False, buffer_size=1024, write_sub=False, embed_subs=False):
         self.language = language
@@ -26,3 +26,4 @@ class Settings(object):
         self.buffer_size = buffer_size
         self.write_sub = write_sub
         self.embed_subs = embed_subs
+        self.save_password = save_password

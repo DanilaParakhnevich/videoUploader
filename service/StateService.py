@@ -216,6 +216,8 @@ class StateService(object):
                     StateService.settings.embed_subs = False
                 if hasattr(StateService.settings, 'video_extension') is False:
                     StateService.settings.video_extension = [5, 'mp4']
+                if hasattr(StateService.settings, 'save_password') is False:
+                    StateService.settings.save_password = True
         return StateService.settings
 
     # GUI

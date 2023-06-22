@@ -81,6 +81,14 @@ class InstagramService(VideohostingService):
     def need_to_pass_channel_after_login(self):
         return False
 
+    def check_auth(self, account) -> bool:
+        try:
+            cl = Client()
+            cl.login(account.login, account.password)
+        except:
+            return False
+        return True
+
     def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
         table_item.setText(get_str('preparing'))
         cl = Client()

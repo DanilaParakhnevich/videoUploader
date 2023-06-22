@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 
 from PyQt5.QtWidgets import QTableWidgetItem
 
@@ -112,7 +113,7 @@ class OKService(VideohostingService):
             table_item.setText(get_str('ending'))
             page.click('.__small.video-uploader_ac.__go-to-editor-btn.js-uploader-editor-link', timeout=60_000)
 
-            time.sleep(0.5)
+            page.wait_for_selector('#movie-title')
 
             page.query_selector('#movie-title').fill('')
             page.query_selector('#movie-title').type(text=name)
@@ -122,6 +123,16 @@ class OKService(VideohostingService):
             page.click('.button-pro.js-submit-annotations-form', timeout=0)
 
             time.sleep(0.5)
+
+    def check_auth(self, account) -> bool:
+        for auth in account.auth:
+            if auth['name'] == 'AUTHCODE':
+                if datetime.utcfromtimestamp(auth['expires']) > datetime.now():
+                    return True
+                else:
+                    return False
+
+        return False
 
     def need_to_be_uploaded_to_special_source(self) -> bool:
         return True

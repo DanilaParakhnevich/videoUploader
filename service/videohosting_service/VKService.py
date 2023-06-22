@@ -174,5 +174,15 @@ class VKService(VideohostingService):
 
         return form.code_edit.text()
 
+    def check_auth(self, account) -> bool:
+        for auth in account.auth:
+            if auth['name'] == 'access_token':
+                if datetime.utcfromtimestamp(auth['expires']) > datetime.now():
+                    return True
+                else:
+                    return False
+
+        return False
+
     def need_to_be_uploaded_to_special_source(self) -> bool:
         return True

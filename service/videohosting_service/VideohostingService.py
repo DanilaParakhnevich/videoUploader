@@ -182,7 +182,7 @@ class VideohostingService(ABC):
         simple_download_opts = {
             'progress_hooks': [lambda d: prog_hook(d, table_item)],
             'ffmpeg_location': ffmpeg_location,
-            'outtmpl': f'{download_dir}/{hosting}/%(title)s_{video_quality}.%(ext)s',
+            'outtmpl': fr'{download_dir}/{hosting}/%(title)s_{video_quality}.%(ext)s',
             'writeinfojson': True,
             'retries': settings.retries,
             'nocheckcertificate': settings.no_check_certificate,
@@ -191,6 +191,7 @@ class VideohostingService(ABC):
             'keepvideo': settings.keep_fragments,
             'buffersize': settings.buffer_size,
             'writesubtitles': settings.write_sub,
+            'restrictfilenames': True,
             'overwrites': True
         }
 
@@ -218,7 +219,7 @@ class VideohostingService(ABC):
                 'ffmpeg_location': os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin'),
                 'format': f'bestvideo[ext={video_extension}][height<={video_quality}]/bestvideo[ext=?{video_extension}][height<={video_quality}]/best[ext=?{video_extension}][height<={video_quality}]/best',
                 '--list-formats ': True,
-                'outtmpl': f'{download_dir}/{hosting}/%(title)s_{video_quality}.%(ext)s',
+                'outtmpl': fr'{download_dir}/{hosting}/%(title)s_{video_quality}.%(ext)s',
                 'writeinfojson': True,
                 'retries': settings.retries,
                 'nocheckcertificate': settings.no_check_certificate,
@@ -227,6 +228,7 @@ class VideohostingService(ABC):
                 'keepvideo': settings.keep_fragments,
                 'buffersize': settings.buffer_size,
                 'writesubtitles': settings.write_sub,
+                'restrictfilenames': True,
                 'overwrites': True
             }
 
@@ -234,7 +236,7 @@ class VideohostingService(ABC):
                 'ffmpeg_location': os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin'),
                 'format': 'bestaudio/best',
                 '--list-formats ': True,
-                'outtmpl': f'{download_dir}/{hosting}/audio_%(title)s_{video_quality}.%(ext)s',
+                'outtmpl': fr'{download_dir}/{hosting}/audio_%(title)s_{video_quality}.%(ext)s',
                 'retries': settings.retries,
                 'nocheckcertificate': settings.no_check_certificate,
                 '--audio-quality': settings.audio_quality,
@@ -242,6 +244,7 @@ class VideohostingService(ABC):
                 'keepvideo': settings.keep_fragments,
                 'buffersize': settings.buffer_size,
                 'writesubtitles': settings.write_sub,
+                'restrictfilenames': True,
                 'overwrites': True
             }
 
@@ -263,7 +266,10 @@ class VideohostingService(ABC):
                 download_video_opts['ratelimit'] = simple_download_opts['ratelimit']
 
             with YoutubeDL(download_video_opts) as ydl:
-                info = ydl.extract_info(url)
+                info = ydl.extract_info(url, download=False)
+                file_path = ydl.prepare_filename(info)
+
+                ydl.process_info(info)
 
             with YoutubeDL(download_audio_opts) as ydl:
                 ydl.extract_info(url)
@@ -278,19 +284,13 @@ class VideohostingService(ABC):
                 simple_download_opts['format'] = f'bestvideo[height<={video_quality}][ext={video_extension}]/bestvideo[height<={video_quality}][ext=?{video_extension}]/best[height<={video_quality}][ext=?{video_extension}]/best'
 
             with YoutubeDL(simple_download_opts) as ydl:
-                info = ydl.extract_info(url)
+                info = ydl.extract_info(url, download=False)
+                file_path = ydl.prepare_filename(info)
 
-        if 'title' in info:
-            title = info['title']
-            ext = info['ext'] if 'ext' in info and info['ext'] is not None else info['video_ext']
-        else:
-            title = info['entries'][0]['title']
-            ext = info['entries'][0]['ext']
+                ydl.process_info(info)
 
-        if 'video_ext' in info:
-            return f'{download_dir}/{hosting}/{title}_{video_quality}.{ext}'
-        else:
-            return f'{download_dir}/{hosting}/{title}_{video_quality}.{ext}'
+        return file_path
+
 
     def get_video_info(self, url: str, video_quality, video_extension, account=None):
 
@@ -354,6 +354,9 @@ class VideohostingService(ABC):
             'ext': info['ext'] if info['ext'] else info['video_ext'],
             'is_exists_format': is_exists_format
         }
+
+    def check_auth(self, account) -> bool:
+        pass
 
     # Возвращает: False, если ссылка не является ссылкой на канал аккаунта, True, если является
     def validate_url_by_account(self, url: str, account) -> int:

@@ -156,5 +156,9 @@
   "choose_video_for_uploading": "Выберите видео для выгрузки",
   "video_dir": "Расположение",
   "is_upload": "Выгружать?",
-  "add_video_for_uploading": "Добавить видео в выгрузку"
+  "add_video_for_uploading": "Добавить видео в выгрузку",
+  "save_password": "Сохранять пароль?",
+  "check_auth": "Проверка",
+  "check_success": "Реавторизовываться не нужно",
+  "check_fail": "Необходимо реавторизоваться"
 }

@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 
 from PyQt5.QtWidgets import QTableWidgetItem
 
@@ -90,3 +91,13 @@ class YandexDzenService(VideohostingService):
 
             if page.query_selector('.prepublish-popup-publisher-data__content') is not None:
                 raise NeedCreateSomeActionOnVideohostingException(get_str('need_make_some_action_on_videohosting'))
+
+    def check_auth(self, account) -> bool:
+        for auth in account.auth:
+            if auth['name'] == 'yandex_login':
+                if datetime.utcfromtimestamp(auth['expires']) > datetime.now():
+                    return True
+                else:
+                    return False
+
+        return False

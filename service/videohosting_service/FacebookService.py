@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from PyQt5.QtWidgets import QTableWidgetItem
 
 from service.LocalizationService import get_str
@@ -157,6 +159,16 @@ class FacebookService(VideohostingService):
             but1.click()
 
             time.sleep(30)
+
+    def check_auth(self, account) -> bool:
+        for auth in account.auth:
+            if auth['name'] == 'c_user':
+                if datetime.utcfromtimestamp(auth['expires']) > datetime.now():
+                    return True
+                else:
+                    return False
+
+        return False
 
     def need_to_be_uploaded_to_special_source(self) -> bool:
         return True
