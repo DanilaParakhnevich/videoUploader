@@ -79,12 +79,13 @@ class RutubeService(VideohostingService):
     def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
         table_item.setText(get_str('preparing'))
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+            context = self.new_context(p=p, headless=False, use_user_agent_arg=True)
             context.add_cookies(account.auth)
 
             page = context.new_page()
             page.goto('https://studio.rutube.ru/uploader/', timeout=0)
 
+            page.wait_for_selector('.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
             with page.expect_file_chooser() as fc_info:
                 page.click(selector='.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
             table_item.setText(get_str('uploading'))

@@ -53,6 +53,7 @@ class AddUploadQueueByDirectoryForm(QDialog):
         self.queue_media_service = QueueMediaService()
 
     def choose(self):
+        self.upload_targets = list()
         choose_accounts_for_uploading_form = ChooseAccountsForUploadingForm(self)
         choose_accounts_for_uploading_form.exec_()
 

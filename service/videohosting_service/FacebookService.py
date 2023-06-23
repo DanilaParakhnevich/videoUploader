@@ -99,8 +99,8 @@ class FacebookService(VideohostingService):
 
             if switch_item is not None:
                 page.wait_for_selector('.x78zum5.x1a02dak.x139jcc6.xcud41i.x9otpla.x1ke80iy', timeout=120_000, state='attached')
-                page.wait_for_load_state('load', timeout=0)
-                items = page.query_selector('.x78zum5.x1a02dak.x139jcc6.xcud41i.x9otpla.x1ke80iy').query_selector_all('.x6s0dn4.x78zum5.xl56j7k.x1608yet.xljgi0e.x1e0frkt')
+                page.wait_for_load_state('domcontentloaded', timeout=0)
+                items = page.query_selector_all('.xsgj6o6.xw3qccf.x1xmf6yo.x187ir9o.xihhdvq')
                 for item in items:
                     if item is not None and item.text_content() is not None and translator.translate(item.text_content()).text == 'Edit':
                         page_item = item

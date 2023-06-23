@@ -1,4 +1,8 @@
+import os
+import uuid
+
 from PyQt5.QtWidgets import QTableWidgetItem
+from ffmpeg import FFmpeg
 from googletrans import Translator
 
 from service.LocalizationService import get_str
@@ -35,7 +39,8 @@ class InstagramService(VideohostingService):
             page.goto(url)
             page.wait_for_selector('.x1iyjqo2', timeout=20_000)
             self.scroll_page_to_the_bottom(page=page)
-            stream_boxes = page.locator("//a[contains(@class,'x1i10hfl xjbqb8w x6umtig x1b1mbwd xaqea5y xav7gou x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz _a6hd')]")
+            stream_boxes = page.locator(
+                "//a[contains(@class,'x1i10hfl xjbqb8w x6umtig x1b1mbwd xaqea5y xav7gou x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz _a6hd')]")
             translator = Translator()
 
             for box in stream_boxes.element_handles():
@@ -44,7 +49,8 @@ class InstagramService(VideohostingService):
                 if svg is not None:
                     aria_label = svg.get_attribute('aria-label')
 
-                    if translator.translate(aria_label).text == 'Clip' or translator.translate(aria_label).text == 'Video':
+                    if translator.translate(aria_label).text == 'Clip' or translator.translate(
+                            aria_label).text == 'Video':
 
                         aagu = box.query_selector('._aagu')
                         not_parsed_date = aagu.query_selector('img').get_property('alt')
@@ -89,12 +95,25 @@ class InstagramService(VideohostingService):
             return False
         return True
 
-    def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
+    def upload_video(self, account, file_path, name, description, destination=None,
+                     table_item: QTableWidgetItem = None):
         table_item.setText(get_str('preparing'))
         cl = Client()
         cl.login(account.login, account.password)
+        key = uuid.uuid4()
+        final_path = f'{os.path.dirname(file_path)}/{key}.mp4'
+        ffmpeg = (FFmpeg(
+            executable=f'{self.state_service.settings.ffmpeg}/bin/ffmpeg')
+                  .input(file_path)
+                  .option('y')
+                  .output(final_path)
+              )
+        ffmpeg.execute()
+
         table_item.setText(get_str('uploading'))
-        cl.video_upload(file_path, caption=name)
+        cl.video_upload(final_path, caption=name)
+        os.remove(final_path)
+        os.remove(f'{os.path.dirname(file_path)}/{key}.mp4.jpg')
 
         # pillow
         # moviepy

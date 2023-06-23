@@ -1,7 +1,6 @@
 import traceback
 
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QMessageBox
 
 from gui.widgets.TypeUrlForm import TypeUrlForm
 from model.Event import Event
@@ -24,7 +23,7 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
         super(AccountsPageWidget, self).__init__(central_widget)
         self.setMinimumSize(QtCore.QSize(0, 440))
         self.setObjectName("accounts_page_widget")
-        self.setColumnCount(4)
+        self.setColumnCount(3)
         self.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
         self.setHorizontalHeaderItem(0, item)
@@ -32,8 +31,6 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
         self.setHorizontalHeaderItem(1, item)
         item = QtWidgets.QTableWidgetItem()
         self.setHorizontalHeaderItem(2, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.setHorizontalHeaderItem(3, item)
         self.horizontalHeader().setDefaultSectionSize(310)
 
         horizontal_layout = QtWidgets.QHBoxLayout(self)
@@ -58,8 +55,6 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
         item = self.horizontalHeaderItem(1)
         item.setText(get_str('channel'))
         item = self.horizontalHeaderItem(2)
-        item.setText(get_str('check_auth'))
-        item = self.horizontalHeaderItem(3)
         item.setText(get_str('delete'))
         self.add_button.setText(get_str('add'))
 
@@ -71,14 +66,9 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
             input_position = self.rowCount() - 1
 
             btn = QtWidgets.QPushButton(self)
-            btn.setText(get_str('check_auth'))
-            btn.clicked.connect(self.on_check_auth)
-            self.setCellWidget(input_position, 2, btn)
-
-            btn = QtWidgets.QPushButton(self)
             btn.setText('-')
             btn.clicked.connect(self.on_delete_row)
-            self.setCellWidget(input_position, 3, btn)
+            self.setCellWidget(input_position, 2, btn)
 
             self.setItem(input_position, 0, item1)
             self.setItem(input_position, 1, item2)
@@ -151,18 +141,6 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
             self.state_service.save_accounts(current_accounts)
 
         self.add_button.stop_animation()
-
-    def on_check_auth(self):
-        button = self.sender()
-        if button:
-            row = self.indexAt(button.pos()).row()
-            msg = QMessageBox(self)
-
-            if Hosting[self.accounts[row].hosting].value[0].check_auth(self.accounts[row]):
-                msg.setText(get_str('check_success'))
-            else:
-                msg.setText(get_str('check_fail'))
-            msg.exec_()
 
     def on_delete_row(self):
         button = self.sender()

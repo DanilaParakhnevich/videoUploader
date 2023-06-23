@@ -130,14 +130,16 @@ class YoutubeService(VideohostingService):
             page.query_selector('#description-textarea').click()
             page.query_selector('#description-textarea').type(text=description if description is not None else '')
 
-            page.click(selector='#next-button', timeout=0)
-
             page.click(selector='[name=VIDEO_MADE_FOR_KIDS_NOT_MFK]', timeout=0)
 
-            page.click(selector='#next-button', timeout=0)
-            page.click(selector='#next-button', timeout=0)
-            page.click(selector='#next-button', timeout=0)
+            page.wait_for_selector('#next-button[aria-disabled="false"]', timeout=0)
+            page.click(selector='#next-button[aria-disabled="false"]', timeout=0)
+            page.wait_for_selector('#next-button[aria-disabled="false"]', timeout=0)
+            page.click(selector='#next-button[aria-disabled="false"]', timeout=0)
+            page.wait_for_selector('#next-button[aria-disabled="false"]', timeout=0)
+            page.click(selector='#next-button[aria-disabled="false"]', timeout=0)
 
+            page.wait_for_selector('[name=PUBLIC]', timeout=0)
             page.click(selector='[name=PUBLIC]', timeout=0)
 
             page.click(selector='#done-button', timeout=0)

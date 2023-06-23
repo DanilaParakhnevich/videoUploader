@@ -93,14 +93,13 @@ class OKService(VideohostingService):
     def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
         with sync_playwright() as p:
             table_item.setText(get_str('preparing'))
-            context = self.new_context(p=p, headless=True)
+            context = self.new_context(p=p, headless=False)
             context.add_cookies(account.auth)
             page = context.new_page()
-            page.goto(destination, timeout=0)
-            if page.url.__contains__('profile') or page.url == 'https://ok.ru/':
+            if destination.__contains__('profile') or destination == 'https://ok.ru/':
                 page.goto('https://ok.ru/video/manager', timeout=0)
             else:
-                page.goto(page.url + '/video/manager', timeout=0)
+                page.goto(destination + '/video/manager', timeout=0)
 
             page.wait_for_selector('.button-pro.js-upload-button', timeout=0)
 

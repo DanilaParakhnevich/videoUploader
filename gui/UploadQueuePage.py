@@ -137,6 +137,9 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 description = queue_media.description
 
             self.set_media_status(queue_media.id, 1)
+            result = Hosting[queue_media.hosting].value[0].check_auth(queue_media.account)
+            if result is False:
+                self.set_media_status(queue_media.id, 3, get_str('check_fail'))
             Hosting[queue_media.hosting].value[0].upload_video(
                 file_path=queue_media.video_dir,
                 account=queue_media.account,

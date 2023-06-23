@@ -158,8 +158,6 @@
   "is_upload": "Run?",
   "add_video_for_uploading": "Add video to upload",
   "save_password": "Save password?",
-  "check_auth": "Check",
-  "check_success": "No need to reauthorize",
   "check_fail": "Reauthorization required",
   "video_in_low_resolution": "Video in too low resolution"
 }

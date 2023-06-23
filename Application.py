@@ -8,7 +8,6 @@ import requests
 from gui.widgets.ExistsNewVersionDialog import ExistsNewVersionDialog
 from gui.widgets.introduction.AcceptLoadingPackagesForm import AcceptLoadingPackagesForm
 from service.LoggingService import log_error
-from service.MailService import MailService
 from service.StateService import StateService
 from service.VersionService import VersionService
 
@@ -19,9 +18,16 @@ if __name__ == "__main__":
 
     from gui.MainPage import Ui_BuxarVideoUploader
 
+    settings = StateService().get_settings()
+
     # Подгрузка зависимостей
     try:
-        open(os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/LICENSE.txt'))
+        if os.name == 'nt':
+            settings.ffmpeg = os.path.abspath('dist/Application/ffmpeg-master-latest-win64-gpl')
+        else:
+            settings.ffmpeg = os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl')
+
+        open(f'{settings.ffmpeg}/LICENSE.txt')
     except:
         failed = False
         while True:
@@ -29,10 +35,9 @@ if __name__ == "__main__":
             form.exec_()
             if form.accept:
                 try:
+                    if os.name == 'nt':
 
-                    if os.name.__contains__('Windows'):
-                        os.system('PLAYWRIGHT_BROWSERS_PATH=0 sh playwright/driver/playwright.sh install chromium')
-
+                        os.system('PLAYWRIGHT_BROWSERS_PATH=0 playwright\\driver\\playwright.cmd install chromium')
                         response = requests.get(
                             'https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip',
                             stream=True, timeout=3000)
@@ -40,11 +45,12 @@ if __name__ == "__main__":
                             with open('ffmpeg-master-latest-win64-gpl.zip', 'wb') as f:
                                 f.write(response.raw.read())
 
-                        os.system(f'mkdir dist')
-                        os.system(f'mkdir dist/Application')
-                        os.system(f'tar -xf ffmpeg-master-latest-win64-gpl.tar.xz -C {os.path.abspath("dist/Application/")}')
-                        os.system('del ffmpeg-master-latest-win64-gpl.tar.xz')
+                        os.makedirs('dist\\Application', exist_ok=True)
+                        os.system(
+                            f'powershell Expand-Archive -Path ffmpeg-master-latest-win64-gpl.zip -DestinationPath {os.path.abspath("dist/Application")}')
+                        os.remove('ffmpeg-master-latest-win64-gpl.zip')
                     else:
+
                         os.system('PLAYWRIGHT_BROWSERS_PATH=0 sh playwright/driver/playwright.sh install chromium')
 
                         response = requests.get(
@@ -59,16 +65,15 @@ if __name__ == "__main__":
                         os.system(
                             f'tar -xf ffmpeg-master-latest-linux64-gpl.tar.xz -C {os.path.abspath("dist/Application/")}')
                         os.system('rm ffmpeg-master-latest-linux64-gpl.tar.xz')
-
                 except:
-                    if os.name.__contains__('Windows'):
-                        os.system('del ffmpeg-master-latest-linux64-gpl.tar.xz')
-                        os.system('rmdir dist/Application/ffmpeg-master-latest-linux64-gpl/')
-                        os.system('rmdir playwright/driver/package/.local-browsers')
+                    if os.name == 'nt':
+                        os.remove('ffmpeg-master-latest-win64-gpl.zip')
                     else:
                         os.system('rm ffmpeg-master-latest-linux64-gpl.tar.xz')
-                        os.system('rm -r dist/Application/ffmpeg-master-latest-linux64-gpl/')
-                        os.system('rm -r playwright/driver/package/.local-browsers')
+
+                    os.removedirs(settings.ffmpeg)
+                    os.removedirs(os.path.abspath('playwright/driver/package/.local-browsers'))
+
                     failed = True
                     form.close()
                     continue
@@ -87,7 +92,7 @@ if __name__ == "__main__":
         dialog = ExistsNewVersionDialog(current_version)
         dialog.exec_()
 
-    #pyinstaller --add-data "service/locale/*.json:./service/locale/" --add-data "gui/widgets/button_icons/*.gif:./gui/widgets/button_icons/" Application.py
+    # pyinstaller --add-data "service/locale/*.json:./service/locale/" --add-data "gui/widgets/button_icons/*.gif:./gui/widgets/button_icons/" Application.py
     try:
         ui = Ui_BuxarVideoUploader()
         ui.setupUi(BuxarVideoUploader, current_version)

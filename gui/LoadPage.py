@@ -352,8 +352,11 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         tab.choose_video_format_combo_box.setCurrentIndex(tab_model.format[0])
         tab.choose_video_quality_form.setCurrentIndex(tab_model.video_quality[0])
         tab.extension_chooser_combo_box.setCurrentIndex(tab_model.video_extension[0])
+        if tab_model.download_dir == '..':
+            tab.choose_dir_button.setText(get_str('choose_the_dir'))
+        else:
+            tab.choose_dir_button.setText(tab_model.download_dir)
         tab.remove_files_after_upload.setChecked(tab_model.remove_files_after_upload)
-        tab.choose_dir_button.setText(tab_model.download_dir)
 
     def on_add_media_to_query(self):
         table = self.tables[self.currentIndex()]

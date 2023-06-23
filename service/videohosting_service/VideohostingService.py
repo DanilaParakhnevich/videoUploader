@@ -175,9 +175,7 @@ class VideohostingService(ABC):
 
         settings = self.state_service.get_settings()
 
-        ffmpeg_location = os.path.abspath(
-            'dist/Application/ffmpeg-master-latest-win64-gpl/bin') if os.name.__contains__(
-            'Windows') else os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin')
+        ffmpeg_location = settings.ffmpeg
 
         simple_download_opts = {
             'progress_hooks': [lambda d: prog_hook(d, table_item)],
@@ -216,7 +214,7 @@ class VideohostingService(ABC):
 
         if format == 'NOT_MERGE':
             download_video_opts = {
-                'ffmpeg_location': os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin'),
+                'ffmpeg_location': ffmpeg_location,
                 'format': f'bestvideo[ext={video_extension}][height<={video_quality}]/bestvideo[ext=?{video_extension}][height<={video_quality}]/best[ext=?{video_extension}][height<={video_quality}]/best',
                 '--list-formats ': True,
                 'outtmpl': fr'{download_dir}/{hosting}/%(title)s_{video_quality}.%(ext)s',
@@ -233,7 +231,7 @@ class VideohostingService(ABC):
             }
 
             download_audio_opts = {
-                'ffmpeg_location': os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl/bin'),
+                'ffmpeg_location': ffmpeg_location,
                 'format': 'bestaudio/best',
                 '--list-formats ': True,
                 'outtmpl': fr'{download_dir}/{hosting}/audio_%(title)s_{video_quality}.%(ext)s',

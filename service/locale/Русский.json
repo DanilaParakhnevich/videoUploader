@@ -158,8 +158,6 @@
   "is_upload": "Выгружать?",
   "add_video_for_uploading": "Добавить видео в выгрузку",
   "save_password": "Сохранять пароль?",
-  "check_auth": "Проверка",
-  "check_success": "Реавторизовываться не нужно",
   "check_fail": "Необходимо реавторизоваться",
   "video_in_low_resolution": "Видео в слишком низком разрешении"
 }
