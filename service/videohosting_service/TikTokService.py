@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 from PyQt5.QtWidgets import QTableWidgetItem
@@ -60,13 +61,32 @@ class TikTokService(VideohostingService):
     # Пришлось использовать готовое чужое решение для выгрузки видео для TikTok, тк на сайте хорошая защита от ботов
     def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
         table_item.setText(get_str('preparing'))
-        for cookie in account.auth:
-            if cookie['name'] == 'sessionid':
-                table_item.setText(get_str('uploading'))
-                uploadVideo(session_id=cookie['value'], video=file_path, title=name, tags=list())
-                return
+        with sync_playwright() as p:
+            context = self.new_context(p=p, headless=False, use_user_agent_arg=True)
+            context.add_cookies(account.auth)
 
-        raise Exception('Что-то пошло не так')
+            page = context.new_page()
+            page.goto('https://www.tiktok.com/upload', timeout=0)
+
+            time.sleep(15)
+
+            with page.expect_file_chooser() as fc_info:
+                page.frame_locator('iframe').locator('.css-byn4hh').click()
+            table_item.setText(get_str('uploading'))
+            file_chooser = fc_info.value
+            file_chooser.set_files(file_path, timeout=0)
+
+            table_item.setText(get_str('ending'))
+
+            time.sleep(5)
+
+            page.frame_locator('iframe').locator('.public-DraftStyleDefault-block.public-DraftStyleDefault-ltr').click(click_count=3)
+            page.keyboard.press("Backspace")
+            page.keyboard.type(name)
+
+            page.frame_locator('iframe').locator('.css-y1m958').click()
+
+            time.sleep(3)
 
     def check_auth(self, account) -> bool:
         for auth in account.auth:

@@ -3,6 +3,7 @@ from datetime import datetime
 from PyQt5.QtWidgets import QTableWidgetItem
 
 from service.LocalizationService import get_str
+from service.LoggingService import log_info
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
@@ -120,6 +121,8 @@ class FacebookService(VideohostingService):
 
             is_group = False
 
+            log_info('1 facebook')
+
             if destination.__contains__('groups'):
                 with page.expect_file_chooser() as fc_info:
                     page.wait_for_selector('.x3nfvp2.x1c4vz4f.x2lah0s.x1emribx')
@@ -140,11 +143,15 @@ class FacebookService(VideohostingService):
                     if done_btn is not None:
                         page.click('[aria-label="Done"]')
 
+            log_info('2 facebook')
+
             table_item.setText(get_str('uploading'))
             file_chooser = fc_info.value
             file_chooser.set_files(file_path, timeout=0)
 
             table_item.setText(get_str('ending'))
+
+            log_info('3 facebook')
 
             if is_group is False:
                 page.click('.xzsf02u.x1a2a7pz.x1n2onr6.x14wi4xw.x9f619.x1lliihq.x5yr21d.xh8yej3.notranslate')
@@ -155,6 +162,8 @@ class FacebookService(VideohostingService):
                 but1 = page.query_selector_all('.x9f619.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.x1qughib.x1qjc9v5.xozqiw3.x1q0g3np.x1pi30zi.x1swvt13.xyamay9.xykv574.xbmpl8g.x4cne27.xifccgj')[1]
 
             page.keyboard.type(name)
+
+            log_info('4 facebook')
 
             but1.click()
 
