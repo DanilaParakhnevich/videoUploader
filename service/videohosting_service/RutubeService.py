@@ -96,6 +96,7 @@ class RutubeService(VideohostingService):
 
             table_item.setText(get_str('ending'))
             page.wait_for_selector('[name=title]', timeout=0)
+            page.wait_for_selector('[name=description]', timeout=0)
 
             time.sleep(1)
 

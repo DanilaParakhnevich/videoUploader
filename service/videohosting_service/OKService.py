@@ -96,7 +96,14 @@ class OKService(VideohostingService):
             context = self.new_context(p=p, headless=False)
             context.add_cookies(account.auth)
             page = context.new_page()
-            if destination.__contains__('profile') or destination == 'https://ok.ru/':
+
+            page.goto('https://ok.ru/', timeout=0)
+            page.goto(destination, timeout=0)
+
+            page.wait_for_selector('.portlet_h', timeout=0)
+            user_item = page.query_selector('.u-menu.__items-count-2.header-action-menu.__v4.__small.__user')
+
+            if user_item is not None:
                 page.goto('https://ok.ru/video/manager', timeout=0)
             else:
                 page.goto(destination + '/video/manager', timeout=0)

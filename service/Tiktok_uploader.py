@@ -3,6 +3,9 @@
 
 import requests, datetime, hashlib, hmac, random, zlib, json
 
+from service.LoggingService import log_error
+
+
 def sign(key, msg):
 	return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
 
@@ -65,12 +68,14 @@ def uploadVideo(session_id, video, title, tags, schedule_time=0, verbose=True):
 	url = "https://www.tiktok.com/upload/"
 	r = session.get(url)
 	if not assertSuccess(url, r):
-		return False
+		log_error(r.__str__())
+		raise Exception()
 
 	url = "https://www.tiktok.com/passport/web/account/info/"
 	r = session.get(url)
 	if not assertSuccess(url, r):
-		return False
+		log_error(r.__str__())
+		raise Exception()
 	user_id = r.json()["data"]["user_id_str"]
 
 	url = "https://www.tiktok.com/api/v1/video/upload/auth/"
@@ -98,7 +103,8 @@ def uploadVideo(session_id, video, title, tags, schedule_time=0, verbose=True):
 	headers["authorization"] = authorization
 	r = session.get(f"{url}?{request_parameters}", headers=headers)
 	if not assertSuccess(url, r):
-		return False
+		log_error(r.__str__())
+		raise Exception()
 	upload_node = r.json()["Result"]["InnerUploadAddress"]["UploadNodes"][0]
 	video_id = upload_node["Vid"]
 	store_uri = upload_node["StoreInfos"][0]["StoreUri"]
@@ -116,7 +122,8 @@ def uploadVideo(session_id, video, title, tags, schedule_time=0, verbose=True):
 	data = f"-----------------------------{rand}--"
 	r = session.post(url, headers=headers, data=data)
 	if not assertSuccess(url, r):
-		return False
+		log_error(r.__str__())
+		raise Exception()
 	upload_id = r.json()["payload"]["uploadID"]
 
 	# Split file in chunks of 5242880 bytes
@@ -142,7 +149,8 @@ def uploadVideo(session_id, video, title, tags, schedule_time=0, verbose=True):
 		}
 		r = session.post(url, headers=headers, data=chunk)
 		if not assertSuccess(url, r):
-			return False
+			log_error(r.__str__())
+			raise Exception()
 
 	url = f"https://{upload_host}/{store_uri}?uploadID={upload_id}"
 	headers = {
@@ -152,7 +160,8 @@ def uploadVideo(session_id, video, title, tags, schedule_time=0, verbose=True):
 	data = ','.join([f"{i+1}:{crcs[i]}" for i in range(len(crcs))])
 	r = requests.post(url, headers=headers, data=data)
 	if not assertSuccess(url, r):
-		return False
+		log_error(r.__str__())
+		raise Exception()
 
 	url = "https://vod-us-east-1.bytevcloudapi.com/"
 	request_parameters = f'Action=CommitUploadInner&SpaceName=tiktok&Version=2020-11-19'
@@ -172,7 +181,8 @@ def uploadVideo(session_id, video, title, tags, schedule_time=0, verbose=True):
 	headers["Content-Type"] = "text/plain;charset=UTF-8"
 	r = session.post(f"{url}?{request_parameters}", headers=headers, data=data)
 	if not assertSuccess(url, r):
-		return False
+		log_error(r.__str__())
+		raise Exception()
 
 	text = title
 	text_extra = []
@@ -181,7 +191,8 @@ def uploadVideo(session_id, video, title, tags, schedule_time=0, verbose=True):
 		params = {"keyword":tag}
 		r = session.get(url, params=params)
 		if not assertSuccess(url, r):
-			return False
+			log_error(r.__str__())
+			raise Exception()
 		try:
 			verified_tag = r.json()["sug_list"][0]["cha_name"]
 		except:
@@ -196,7 +207,8 @@ def uploadVideo(session_id, video, title, tags, schedule_time=0, verbose=True):
 	}
 	r = session.head(url, headers=headers)
 	if not assertSuccess(url, r):
-		return False
+		log_error(r.__str__())
+		raise Exception()
 	x_csrf_token = r.headers["X-Ware-Csrf-Token"].split(',')[1]
 
 	params = {
@@ -216,13 +228,15 @@ def uploadVideo(session_id, video, title, tags, schedule_time=0, verbose=True):
 	headers = {"X-Secsdk-Csrf-Token": x_csrf_token}
 	r = session.post(url, params=params, headers=headers)
 	if not assertSuccess(url, r):
-		return False
+		log_error(r.__str__())
+		raise Exception()
 	if r.json()["status_code"] == 0:
 		if verbose:
 			print(f"[+] Video upload uploaded successfully {'| Scheduled for '+str(schedule_time) if schedule_time else ''}")
 	else:
 		printError(url, r)
-		return False
+		log_error(r.__str__())
+		raise Exception()
 
 	return True
 

@@ -109,10 +109,10 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
                 account.url = form.url
             except:
                 msg = QtWidgets.QMessageBox(self)
-                msg.setText(f'{get_str("failed_account_validation"): {form.url}}')
+                msg.setText(f'{get_str("failed_account_validation")}: {form.url}')
                 msg.exec_()
                 log_error(traceback.format_exc())
-                self.event_service.add_event(f'{get_str("failed_account_validation"): {form.url}}')
+                self.event_service.add_event(f'{get_str("failed_account_validation")}: {form.url}')
                 self.add_button.stop_animation()
                 return
 

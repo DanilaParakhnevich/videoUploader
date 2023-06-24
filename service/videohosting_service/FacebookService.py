@@ -78,6 +78,14 @@ class FacebookService(VideohostingService):
             page = context.new_page()
             page.goto(url, wait_until='load', timeout=0)
 
+            try:
+                page.wait_for_selector('.xsgj6o6.xw3qccf.x1xmf6yo.x1w6jkce.xusnbm3', timeout=1_000)
+            except:
+                try:
+                    page.wait_for_selector('.x9f619.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.x13a6bvl.x6s0dn4.xozqiw3.x1q0g3np.xcud41i.x139jcc6.x4vbgl9.x1rdy4ex', timeout=1_000)
+                except:
+                    pass
+
             items = page.query_selector_all('.xsgj6o6.xw3qccf.x1xmf6yo.x1w6jkce.xusnbm3')
             group_elem = page.query_selector('.x9f619.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.x13a6bvl.x6s0dn4.xozqiw3.x1q0g3np.xcud41i.x139jcc6.x4vbgl9.x1rdy4ex')
 
@@ -93,14 +101,16 @@ class FacebookService(VideohostingService):
 
             switch_item = page.query_selector('.x9f619.x1n2onr6.x1ja2u2z.x78zum5.xdt5ytf.x2lah0s.x193iq5w.xeuugli.xamitd3.x1sxyh0.xurb0ha.x10b6aqq.x1yrsyyn')
 
-            if user_item is None and group_item is None and switch_item is not None and translator.translate(switch_item.text_content()).text == 'Switch Now' or translator.translate(switch_item.text_content()).text == 'Toggle':
-                switch_item.click()
+            if switch_item is not None:
+                if translator.translate(switch_item.text_content()).text == 'Switch Now' or translator.translate(switch_item.text_content()).text == 'Toggle':
+                    switch_item.click()
 
             page_item = None
 
             if switch_item is not None:
-                page.wait_for_selector('.x78zum5.x1a02dak.x139jcc6.xcud41i.x9otpla.x1ke80iy', timeout=120_000, state='attached')
                 page.wait_for_load_state('domcontentloaded', timeout=0)
+                page.wait_for_selector('.xsgj6o6.xw3qccf.x1xmf6yo.x187ir9o.xihhdvq', timeout=120_000, state='attached')
+                time.sleep(3)
                 items = page.query_selector_all('.xsgj6o6.xw3qccf.x1xmf6yo.x187ir9o.xihhdvq')
                 for item in items:
                     if item is not None and item.text_content() is not None and translator.translate(item.text_content()).text == 'Edit':

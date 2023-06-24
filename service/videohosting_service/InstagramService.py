@@ -102,18 +102,27 @@ class InstagramService(VideohostingService):
         cl.login(account.login, account.password)
         key = uuid.uuid4()
         final_path = f'{os.path.dirname(file_path)}/{key}.mp4'
-        ffmpeg = (FFmpeg(
-            executable=f'{self.state_service.settings.ffmpeg}/bin/ffmpeg')
-                  .input(file_path)
-                  .option('y')
-                  .output(final_path)
-              )
-        ffmpeg.execute()
+        try:
+            ffmpeg = (FFmpeg(
+                executable=f'{self.state_service.settings.ffmpeg}/bin/ffmpeg')
+                      .input(file_path)
+                      .option('y')
+                      .output(final_path)
+                  )
+            ffmpeg.execute()
 
-        table_item.setText(get_str('uploading'))
-        cl.video_upload(final_path, caption=name)
-        os.remove(final_path)
-        os.remove(f'{os.path.dirname(file_path)}/{key}.mp4.jpg')
+            table_item.setText(get_str('uploading'))
+            cl.video_upload(final_path, caption=name)
+        finally:
+            ffmpeg.terminate()
+            if os.path.exists(final_path):
+                os.remove(final_path)
+            else:
+                raise Exception
+            if os.path.exists(f'{os.path.dirname(file_path)}/{key}.mp4.jpg'):
+                os.remove(f'{os.path.dirname(file_path)}/{key}.mp4.jpg')
+            else:
+                raise Exception
 
         # pillow
         # moviepy
