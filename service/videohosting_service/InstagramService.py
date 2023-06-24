@@ -114,7 +114,8 @@ class InstagramService(VideohostingService):
             table_item.setText(get_str('uploading'))
             cl.video_upload(final_path, caption=name)
         finally:
-            ffmpeg.terminate()
+            if ffmpeg._executed:
+                ffmpeg.terminate()
             if os.path.exists(final_path):
                 os.remove(final_path)
             else:
