@@ -1,24 +1,86 @@
+import hashlib
+import json
+from getmac import get_mac_address
 import sys
 import traceback
+import uuid
 
 from PyQt5 import QtWidgets
 import os
 import requests
 
+from gui.widgets.EnterLicenseKeyForm import EnterLicenseKeyForm
 from gui.widgets.ExistsNewVersionDialog import ExistsNewVersionDialog
+from gui.widgets.ShowErrorDialog import ShowErrorDialog
 from gui.widgets.introduction.AcceptLoadingPackagesForm import AcceptLoadingPackagesForm
+from service.LocalizationService import get_str
 from service.LoggingService import log_error
 from service.StateService import StateService
 from service.VersionService import VersionService
 
 if __name__ == "__main__":
 
+    state_service = StateService()
+
+    class MainWindow(QtWidgets.QMainWindow):
+
+        def __init__(self):
+            super().__init__()
+
+        def resizeEvent(self, event):
+            state_service.save_main_window_size(self.width(), self.height())
+
     app = QtWidgets.QApplication(sys.argv)
-    BuxarVideoUploader = QtWidgets.QMainWindow()
+    BuxarVideoUploader = MainWindow()
 
     from gui.MainPage import Ui_BuxarVideoUploader
 
-    settings = StateService().get_settings()
+    version_service = VersionService()
+
+    current_client_version = version_service.get_current_client_version()
+    settings = state_service.get_settings()
+
+    activated = False
+
+    if hasattr(settings, 'encrypted_key') and hasattr(settings, 'user_mail'):
+        hash = hashlib.sha256()
+        result = requests.post('http://bvu.buxarnet.ru/lc/chek.php', data={'version': current_client_version, 'encrypted_key': settings.encrypted_key, 'mac_id': get_mac_address(), 'mail': settings.user_mail})
+
+        if result.status_code == 200:
+            result = json.loads(('{' + result.content.__str__().split('{')[1]).replace('\'', ''))
+            if result['activated'] is True:
+                arr = current_client_version.split(".")
+                arr.pop(3)
+                version = ".".join(arr)
+
+                hash.update(f'{settings.encrypted_key}{version}{get_mac_address()}{settings.user_mail}{result["data"]}{result["time"]}'.encode('utf-8'))
+                key = hash.hexdigest()
+                activated = key == hash.hexdigest()
+
+    while activated is False:
+        form = EnterLicenseKeyForm()
+        form.exec_()
+
+        if form.passed is False:
+            sys.exit(0)
+
+        result = requests.post('http://bvu.buxarnet.ru/lc/activate.php',
+                               data={'version': current_client_version, 'key': form.license,
+                                     'mac_id': get_mac_address(), 'mail': form.mail})
+
+        if result.status_code == 200:
+            result = json.loads(('{' + result.content.__str__().split('{')[1]).replace('\'', ''))
+            if result['activated'] is True:
+                settings.user_mail = form.mail
+                settings.encrypted_key = result['encrypted_key']
+                state_service.save_settings(settings)
+                activated = True
+
+        if activated is False:
+            dialog = ShowErrorDialog(None, get_str('activation_failed'), get_str('error'))
+            dialog.exec_()
+            log_error(f'Неудачная попытка активации: mac_id: {get_mac_address()}, mail: {form.mail}, license_key: {form.license}, version: {current_client_version}')
+
 
     # Подгрузка зависимостей
     try:
@@ -83,9 +145,7 @@ if __name__ == "__main__":
             break
 
     # Проверка новой версии
-    version_service = VersionService()
 
-    current_client_version = version_service.get_current_client_version()
     current_version = version_service.get_current_version()
 
     if current_version != current_client_version:

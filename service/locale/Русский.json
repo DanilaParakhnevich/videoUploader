@@ -159,5 +159,20 @@
   "add_video_for_uploading": "Добавить видео в выгрузку",
   "save_password": "Сохранять пароль?",
   "check_fail": "Необходимо реавторизоваться",
-  "video_in_low_resolution": "Видео в слишком низком разрешении"
+  "video_in_low_resolution": "Видео в слишком низком разрешении",
+  "enter_license": "Ввод лицензии",
+  "print_license": "Введите ключ лицензии",
+  "enter_mail": "Введите почту",
+  "report_bug": "Сообщить об ошибке",
+  "activate": "Активировать",
+  "activation_failed": "Неудачная попытка активации",
+  "send_successfully": "Отчет успешно отправлен",
+  "send_failed": "Ошибка при отправлении отчёта",
+  "about_page": "О приложении",
+  "link_text": "Ссылка на сайт производителя:",
+  "link_value": "http://tracking.buxarnet.ru/",
+  "email_text": "Почта производителя:",
+  "email_value": "stormpayclicker@gmail.com",
+  "text_info_text": "Информация о приложении:",
+  "text_info_value": "Что-то о приложении dasjhshdjkdas dsasdn kjdsajkbdas adsjb as"
 }

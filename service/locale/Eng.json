@@ -159,5 +159,6 @@
   "add_video_for_uploading": "Add video to upload",
   "save_password": "Save password?",
   "check_fail": "Reauthorization required",
-  "video_in_low_resolution": "Video in too low resolution"
+  "video_in_low_resolution": "Video in too low resolution",
+  "about_page": "About application"
 }

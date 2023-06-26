@@ -295,3 +295,14 @@ class StateService(object):
         if value is not None:
             return int(value)
         return value
+
+    def save_main_window_size(self, width, height):
+        self.q_settings.setValue('main_window_size', [width, height])
+
+    def get_main_window_size(self):
+        result = self.q_settings.value('main_window_size')
+
+        if result is None:
+            return [950, 600]
+
+        return [int(result[0]), int(result[1])]

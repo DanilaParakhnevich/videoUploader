@@ -1,4 +1,6 @@
 from PyQt5 import QtCore, QtWidgets
+
+from gui.AboutPage import AboutPage
 from gui.ChannelsPage import ChannelsPageWidget
 from gui.AccountsPage import AccountsPageWidget
 from gui.DownloadQueuePage import DownloadQueuePageWidget
@@ -17,7 +19,7 @@ class Ui_BuxarVideoUploader(object):
     def setupUi(self, ui, version):
         ui.setObjectName(f'BuxarVideoUploader {version}')
         ui.setWindowModality(QtCore.Qt.ApplicationModal)
-        ui.resize(950, 600)
+        ui.resize(state_service.get_main_window_size()[0], state_service.get_main_window_size()[1])
         ui.setMinimumSize(950, 600)
         ui.setStyleSheet("")
         ui.setToolButtonStyle(QtCore.Qt.ToolButtonFollowStyle)
@@ -34,6 +36,7 @@ class Ui_BuxarVideoUploader(object):
         self.download_queue_page = DownloadQueuePageWidget(self.central_widget)
         self.upload_queue_page = UploadQueuePageWidget(self.central_widget)
         self.settings_dialog = SettingsPage(self.central_widget)
+        self.about_dialog = AboutPage(self.central_widget)
         self.main_layout = QtWidgets.QVBoxLayout(self.central_widget)
         self.main_layout.addWidget(self.load_page)
         self.main_layout.addWidget(self.accounts_page)
@@ -70,6 +73,9 @@ class Ui_BuxarVideoUploader(object):
         self.settings_button = QtWidgets.QPushButton(self.central_widget)
         self.settings_button.setObjectName("settings_button")
         self.horizontal_layout.addWidget(self.settings_button)
+        self.about_button = QtWidgets.QPushButton(self.central_widget)
+        self.about_button.setObjectName("about_button")
+        self.horizontal_layout.addWidget(self.about_button)
         self.vertical_layout.addLayout(self.horizontal_action_layout)
         self.vertical_layout.addLayout(self.horizontal_layout)
         ui.setCentralWidget(self.central_widget)
@@ -85,6 +91,7 @@ class Ui_BuxarVideoUploader(object):
         self.download_queue_page_button.setText(get_str('download_queue_page'))
         self.upload_queue_page_button.setText(get_str('upload_queue_page'))
         self.settings_button.setText(get_str('settings_page'))
+        self.about_button.setText(get_str('about_page'))
 
         self.load_button.clicked.connect(self.show_load_page)
         self.load_button.setStyleSheet("border: 2px solid blue; border-radius: 5px")
@@ -94,9 +101,13 @@ class Ui_BuxarVideoUploader(object):
         self.download_queue_page_button.clicked.connect(self.show_download_queue_page)
         self.upload_queue_page_button.clicked.connect(self.show_upload_queue_page)
         self.settings_button.clicked.connect(self.show_settings_dialog)
+        self.about_button.clicked.connect(self.show_about_dialog)
 
     def show_settings_dialog(self):
         self.settings_dialog.exec_()
+
+    def show_about_dialog(self):
+        self.about_dialog.exec_()
 
     def show_load_page(self):
         self.load_button.setStyleSheet("border: 2px solid blue; border-radius: 5px")

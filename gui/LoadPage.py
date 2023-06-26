@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import uuid
+from functools import partial
 
 from dateutil.relativedelta import relativedelta
 
@@ -229,6 +230,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         tab.table_widget.setHorizontalHeaderItem(4, item)
         tab.table_widget.horizontalHeader().sectionClicked.connect(self.section_clicked)
         tab.table_widget.horizontalHeader().sectionResized.connect(self.section_resized)
+        tab.table_widget.itemClicked.connect(partial(self.on_clicked, len(self.tabs)))
         index = 0
 
         for video in video_list:
@@ -240,7 +242,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             item4 = QtWidgets.QTableWidgetItem()
             item4.setFlags(QtCore.Qt.ItemIsUserCheckable |
                            QtCore.Qt.ItemIsEnabled)
-            item4.setCheckState(QtCore.Qt.Checked)
+            item4.setCheckState(QtCore.Qt.Checked if hasattr(video, 'checked') and video.checked else 0)
 
             is_downloaded = get_str('yes') \
                 if self.state_service.get_download_queue_media_by_url(video.url) is not None else get_str('no')
@@ -312,6 +314,11 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         tab.add_media_to_query_button.clicked.connect(self.on_add_media_to_query)
         tab.channel_box.currentTextChanged.connect(self.on_channel_changed)
         self.tabs.append(tab)
+
+    def on_clicked(self, tab_index, item):
+        if item.column() == 3:
+            self.tab_models[tab_index].video_list[item.row()].checked = True if item.checkState() == 2 else False
+            self.state_service.save_tabs_state(self.tab_models)
 
     def set_current_table(self, index):
         self.current_table_index = index
@@ -656,6 +663,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 item4.setFlags(QtCore.Qt.ItemIsUserCheckable |
                                QtCore.Qt.ItemIsEnabled)
                 item4.setCheckState(QtCore.Qt.Checked)
+
+                video.checked = True
 
                 is_downloaded = get_str('yes') \
                     if self.state_service.get_download_queue_media_by_url(video.url) is not None else get_str('no')

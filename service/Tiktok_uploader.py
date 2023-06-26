@@ -235,7 +235,7 @@ def uploadVideo(session_id, video, title, tags, schedule_time=0, verbose=True):
 			print(f"[+] Video upload uploaded successfully {'| Scheduled for '+str(schedule_time) if schedule_time else ''}")
 	else:
 		printError(url, r)
-		log_error(r.__str__())
+		log_error(r.content.__str__())
 		raise Exception()
 
 	return True

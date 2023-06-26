@@ -92,7 +92,8 @@ class OKService(VideohostingService):
 
     def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
         with sync_playwright() as p:
-            table_item.setText(get_str('preparing'))
+            if table_item is not None:
+                table_item.setText(get_str('preparing'))
             context = self.new_context(p=p, headless=False)
             context.add_cookies(account.auth)
             page = context.new_page()
@@ -112,19 +113,25 @@ class OKService(VideohostingService):
 
             with page.expect_file_chooser() as fc_info:
                 page.click(selector='.button-pro.js-upload-button')
-            table_item.setText(get_str('uploading'))
+            if table_item is not None:
+                table_item.setText(get_str('uploading'))
             file_chooser = fc_info.value
             file_chooser.set_files(file_path, timeout=0)
 
-            table_item.setText(get_str('ending'))
+            if table_item is not None:
+                table_item.setText(get_str('ending'))
             page.click('.__small.video-uploader_ac.__go-to-editor-btn.js-uploader-editor-link', timeout=60_000)
 
-            page.wait_for_selector('#movie-title')
+            page.wait_for_selector('#movie-title', timeout=0)
 
-            page.query_selector('#movie-title').fill('')
-            page.query_selector('#movie-title').type(text=name)
+            page.query_selector('#movie-title').click(click_count=3)
+            page.keyboard.press('Backspace')
+            page.keyboard.type(text=name)
 
-            page.query_selector('#movie-description').type(text=description if description is not None else '')
+            page.wait_for_selector('#movie-description')
+
+            page.query_selector('#movie-description').click()
+            page.keyboard.type(text=description if description is not None else '')
 
             page.click('.button-pro.js-submit-annotations-form', timeout=0)
 

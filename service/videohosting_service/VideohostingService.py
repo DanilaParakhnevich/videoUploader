@@ -175,7 +175,7 @@ class VideohostingService(ABC):
 
         settings = self.state_service.get_settings()
 
-        ffmpeg_location = settings.ffmpeg
+        ffmpeg_location = f'{settings.ffmpeg}/bin/ffmpeg'
 
         simple_download_opts = {
             'progress_hooks': [lambda d: prog_hook(d, table_item)],
@@ -189,7 +189,6 @@ class VideohostingService(ABC):
             'keepvideo': settings.keep_fragments,
             'buffersize': settings.buffer_size,
             'writesubtitles': settings.write_sub,
-            'restrictfilenames': True,
             'overwrites': True
         }
 
@@ -226,7 +225,6 @@ class VideohostingService(ABC):
                 'keepvideo': settings.keep_fragments,
                 'buffersize': settings.buffer_size,
                 'writesubtitles': settings.write_sub,
-                'restrictfilenames': True,
                 'overwrites': True
             }
 
@@ -242,7 +240,6 @@ class VideohostingService(ABC):
                 'keepvideo': settings.keep_fragments,
                 'buffersize': settings.buffer_size,
                 'writesubtitles': settings.write_sub,
-                'restrictfilenames': True,
                 'overwrites': True
             }
 
@@ -264,10 +261,7 @@ class VideohostingService(ABC):
                 download_video_opts['ratelimit'] = simple_download_opts['ratelimit']
 
             with YoutubeDL(download_video_opts) as ydl:
-                info = ydl.extract_info(url, download=False)
-                file_path = ydl.prepare_filename(info)
-
-                ydl.process_info(info)
+                info = ydl.extract_info(url)
 
             with YoutubeDL(download_audio_opts) as ydl:
                 ydl.extract_info(url)
@@ -279,16 +273,25 @@ class VideohostingService(ABC):
             elif format == 'VIDEO':
                 simple_download_opts['format'] = f'bestvideo[ext={video_extension}][height<={video_quality}]/bestvideo[ext=?{video_extension}][height<={video_quality}]/best[ext=?{video_extension}][height<={video_quality}]/best'
             else:
-                simple_download_opts['format'] = f'bestvideo[height<={video_quality}][ext={video_extension}]/bestvideo[height<={video_quality}][ext=?{video_extension}]/best[height<={video_quality}][ext=?{video_extension}]/best'
+                simple_download_opts['format'] = f'bestvideo[height<={video_quality}][ext={video_extension}]+bestaudio/bestvideo[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[height<={video_quality}][ext=?{video_extension}]+bestaudio/best'
+                simple_download_opts['merge_output_format'] = video_extension
 
             with YoutubeDL(simple_download_opts) as ydl:
-                info = ydl.extract_info(url, download=False)
-                file_path = ydl.prepare_filename(info)
+                info = ydl.extract_info(url)
 
-                ydl.process_info(info)
+        if 'title' in info:
+            title = info['title']
+            ext = info['ext'] if 'ext' in info and info['ext'] is not None else info['video_ext']
+        else:
+            title = info['entries'][0]['title']
+            ext = info['entries'][0]['ext']
 
-        return file_path
+        title = title.replace('/', '|')
 
+        if 'video_ext' in info:
+            return f'{download_dir}/{hosting}/{title}_{video_quality}.{ext}'
+        else:
+            return f'{download_dir}/{hosting}/{title}_{video_quality}.{ext}'
 
     def get_video_info(self, url: str, video_quality, video_extension, account=None):
 
@@ -299,7 +302,8 @@ class VideohostingService(ABC):
 
         download_opts = {
             'skip_download': True,
-            'format': f'bestvideo[height<={video_quality}][ext={video_extension}]/bestvideo[height<={video_quality}][ext=?{video_extension}]/best[height<={video_quality}][ext=?{video_extension}]/best'
+            'format': f'bestvideo[height<={video_quality}][ext={video_extension}]+bestaudio/bestvideo[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[height<={video_quality}][ext=?{video_extension}]+bestaudio/best',
+            'merge_output_format': video_extension
         }
 
         # Чтобы нормально добавить куки в обычном json, приходится использовать http_headers

@@ -5,9 +5,9 @@ from service.LocalizationService import *
 
 class ShowErrorDialog(QDialog):
 
-    def __init__(self, parent: QWidget, error: str):
+    def __init__(self, parent: QWidget, error: str, title=get_str('upload_error')):
         super().__init__(parent)
-        self.setWindowTitle(get_str('upload_error'))
+        self.setWindowTitle(title)
         self.resize(500, 120)
 
         layout = QGridLayout()
