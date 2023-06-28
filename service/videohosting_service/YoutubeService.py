@@ -15,7 +15,7 @@ import scrapetube
 class YoutubeService(VideohostingService):
 
     def __init__(self):
-        self.video_regex = 'https:\/\/www.youtube.com\/watch\?v=.*'
+        self.video_regex = 'https:\/\/www.youtube.com.*watch\?v=.*'
         self.channel_regex = '(https:\/\/www.youtube.com\/@.*)|(https:\/\/www.youtube.com\/channel\/)'
         self.title_size_restriction = 100
         self.min_title_size = 1

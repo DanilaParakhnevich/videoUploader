@@ -104,6 +104,20 @@ class StateService(object):
                     tab.download_dir = StateService.settings.download_dir
                 if hasattr(tab, 'video_list') is False:
                     tab.video_list = list()
+                if hasattr(tab, 'manual_settings') is False:
+                    tab.manual_settings = True
+                if hasattr(tab, 'video_quality_str') is False:
+                    tab.video_quality_str = self.get_settings().video_quality_str
+                if hasattr(tab, 'video_bitrate') is False:
+                    tab.video_bitrate = self.get_settings().video_bitrate
+                if hasattr(tab, 'audio_quality_str') is False:
+                    tab.audio_quality_str = self.get_settings().audio_quality_str
+                if hasattr(tab, 'audio_bitrate') is False:
+                    tab.audio_bitrate = self.get_settings().audio_bitrate
+                if hasattr(tab, 'audio_sampling_rate') is False:
+                    tab.audio_sampling_rate = self.get_settings().audio_sampling_rate
+                if hasattr(tab, 'fps') is False:
+                    tab.fps = self.get_settings().fps
 
         return StateService.tabs
 
@@ -218,6 +232,20 @@ class StateService(object):
                     StateService.settings.video_extension = [5, 'mp4']
                 if hasattr(StateService.settings, 'save_password') is False:
                     StateService.settings.save_password = True
+                if hasattr(StateService.settings, 'manual_settings') is False:
+                    StateService.settings.manual_settings = False
+                if hasattr(StateService.settings, 'audio_quality_str') is False:
+                    StateService.settings.audio_quality_str = 0
+                if hasattr(StateService.settings, 'video_quality_str') is False:
+                    StateService.settings.video_quality_str = 0
+                if hasattr(StateService.settings, 'audio_bitrate') is False:
+                    StateService.settings.audio_bitrate = 0
+                if hasattr(StateService.settings, 'video_bitrate') is False:
+                    StateService.settings.video_bitrate = 0
+                if hasattr(StateService.settings, 'audio_sampling_rate') is False:
+                    StateService.settings.audio_sampling_rate = 0
+                if hasattr(StateService.settings, 'fps') is False:
+                    StateService.settings.fps = 0
         return StateService.settings
 
     # GUI

@@ -97,7 +97,8 @@ class InstagramService(VideohostingService):
 
     def upload_video(self, account, file_path, name, description, destination=None,
                      table_item: QTableWidgetItem = None):
-        table_item.setText(get_str('preparing'))
+        if table_item is not None:
+            table_item.setText(get_str('preparing'))
         cl = Client()
         cl.login(account.login, account.password)
         key = uuid.uuid4()
@@ -110,8 +111,8 @@ class InstagramService(VideohostingService):
                       .output(final_path)
                   )
             ffmpeg.execute()
-
-            table_item.setText(get_str('uploading'))
+            if table_item is not None:
+                table_item.setText(get_str('uploading'))
             cl.video_upload(final_path, caption=name)
         finally:
             if ffmpeg._executed:

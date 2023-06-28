@@ -2,6 +2,7 @@
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QLabel
 
+from gui.widgets.ClickableLabel import ClickableLabel
 from service.LocalizationService import *
 
 
@@ -22,16 +23,14 @@ class AboutPage(QtWidgets.QDialog):
 
         self.about_link_label = QLabel()
         self.about_link_label.setText(get_str('link_text'))
-        self.link_label = QLabel()
-        self.link_label.setText(self.parse_string(get_str('link_value')))
+        self.link_label = ClickableLabel(self.parse_string(get_str('link_value')), False)
 
         self.gridLayout.addWidget(self.about_link_label, 0, 0)
         self.gridLayout.addWidget(self.link_label, 0, 1)
 
         self.about_email_label = QLabel()
         self.about_email_label.setText(get_str('email_text'))
-        self.email_label = QLabel()
-        self.email_label.setText(self.parse_string(get_str('email_value')))
+        self.email_label = ClickableLabel(self.parse_string(get_str('email_value')), True)
 
         self.gridLayout.addWidget(self.about_email_label, 1, 0)
         self.gridLayout.addWidget(self.email_label, 1, 1)

@@ -150,8 +150,8 @@
   "agree_to_download": "The selected video format is not available. Do you want to continue?",
   "only_available": "A quality video is available with the selected extension",
   "no_available": "There are no videos available for download with the selected extension",
-  "agree_to_repeat": "Download video again",
-  "video_has_been_loaded": "A video with the selected settings has already been loaded before",
+  "agree_to_repeat": "Download video again?",
+  "video_has_been_loaded": "A video with the selected settings has already been loaded before.\nDownload it again?",
   "adding_video_by_uploaded_media": "Adding Uploaded Video to Upload",
   "choose_video_for_uploading": "Choose a video to upload",
   "video_dir": "Location",
@@ -160,5 +160,12 @@
   "save_password": "Save password?",
   "check_fail": "Reauthorization required",
   "video_in_low_resolution": "Video in too low resolution",
-  "about_page": "About application"
+  "about_page": "About application",
+  "link_text": "Ссылка на сайт производителя:",
+  "link_value": "http://tracking.buxarnet.ru/",
+  "email_text": "Почта производителя:",
+  "email_value": "stormpayclicker@gmail.com",
+  "text_info_text": "Информация о приложении:",
+  "text_info_value": "Что-то о приложении dasjhshdjkdas dsasdn kjdsajkbdas adsjb as",
+  "confirm_exit": "Not all processes are completed. Exit?"
 }

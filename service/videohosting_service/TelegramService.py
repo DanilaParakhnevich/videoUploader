@@ -110,8 +110,9 @@ class TelegramService(VideohostingService):
                     workdir='service/videohosting_service/tmp') as app:
             app.send_video(chat_id=destination.replace('https://t.me/', ''), video=file_path, caption=name)
 
-    def download_video(self, url: str, hosting, video_quality, video_extension, format, download_dir, account=None,
-                       table_item: QTableWidgetItem = None):
+    def download_video(self, url, hosting, manual_settings, video_quality_str, audio_quality_str, video_bitrate,
+                       audio_bitrate, audio_sampling_rate, fps, video_quality, video_extension, format, download_dir,
+                       account=None, table_item: QTableWidgetItem = None):
 
         video_info = self.get_video_info(url, video_quality, [5, 'mp4'], account=account)
 

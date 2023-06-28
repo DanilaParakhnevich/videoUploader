@@ -3,6 +3,7 @@ import datetime
 import uuid
 from functools import partial
 
+from PyQt5.QtGui import QIntValidator
 from dateutil.relativedelta import relativedelta
 
 from PyQt5 import QtCore, QtWidgets
@@ -10,10 +11,12 @@ from PyQt5 import QtCore, QtWidgets
 from gui.widgets.AddDownloadQueueViaLinkForm import AddDownloadQueueViaLinkForm
 from gui.widgets.AgreeToDownloadDialog import AgreeToDownloadDialog
 from gui.widgets.AgreeToRepeatDownloadDialog import AgreeToRepeatDownloadDialog
+from gui.widgets.AudioQualityComboBox import AudioQualityComboBox
 from gui.widgets.ChooseVideoQualityComboBox import ChooseVideoQualityComboBox
 from gui.widgets.ExstensionChooserComboBox import ExtensionChooserComboBox
 from gui.widgets.FormatChooserComboBox import FormatChooserComboBox
 from gui.widgets.TypeStrForm import TypeStrForm
+from gui.widgets.VideoQualityComboBox import VideoQualityComboBox
 from model.Event import Event
 from model.LoadQueuedMedia import LoadQueuedMedia
 from model.Hosting import Hosting
@@ -45,6 +48,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
     tab_models = state_service.get_last_tabs()  # Используются для хранения легких и необходимых данных
     tables = list()
     tabs = list()
+    current_table_index = None
 
     def __init__(self, central_widget):
 
@@ -73,7 +77,9 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             for tab in self.tab_models:
                 self.create_tab(tab.tab_name, tab.channel, tab.format[0], tab.video_quality[0], tab.video_extension[0],
                                 tab.remove_files_after_upload, tab.download_dir if hasattr(tab, 'download_dir')
-                                else self.state_service.get_settings().download_dir, tab.video_list)
+                                else self.state_service.get_settings().download_dir, tab.manual_settings,
+                                tab.video_quality_str, tab.audio_quality_str, tab.audio_bitrate, tab.video_bitrate,
+                                tab.audio_sampling_rate, tab.fps, tab.video_list)
 
         self.setCurrentIndex(0)
         self.event_service = EventService()
@@ -92,59 +98,135 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         settings = self.state_service.get_settings()
         if len(channels) == 0:
             return self.create_tab(None, None, settings.format, settings.video_quality, settings.video_extension,
-                                   settings.remove_files_after_upload, settings.download_dir)
+                                   settings.remove_files_after_upload, settings.download_dir, settings.manual_settings,
+                                   settings.video_quality_str, settings.audio_quality_str, settings.audio_bitrate,
+                                   settings.video_bitrate, settings.audio_sampling_rate, settings.fps)
         else:
             return self.create_tab(None, channels.__getitem__(0), settings.format, settings.video_quality,
-                                   settings.video_extension, settings.remove_files_after_upload, settings.download_dir)
+                                   settings.video_extension, settings.remove_files_after_upload, settings.download_dir,
+                                   settings.manual_settings, settings.video_quality_str, settings.audio_quality_str,
+                                   settings.audio_bitrate, settings.video_bitrate, settings.audio_sampling_rate, settings.fps)
 
     # Этот метод добавляет новую вкладку, либо вкладку по известным данным из tab_models
     def create_tab(self, name, selected_channel, format_index, video_quality_index, video_extension,
                    remove_files_after_upload,
-                   download_dir, video_list=list()):
+                   download_dir, manual_settings,
+                   video_quality, audio_quality,
+                   audio_bitrate, video_bitrate,
+                   audio_sampling_rate, fps,
+                   video_list=None):
+
+        if video_list is None:
+            video_list = list()
         tab = QtWidgets.QWidget()
         tab.setObjectName("Tab.py")
 
-        coef_x = self.parent().width() / 950
-        coef_y = self.parent().height() / 600
-
         tab.channel_box = ChannelComboBox(tab, selected_channel)
 
-        tab.channel_box.setGeometry(
-            QtCore.QRect(int(20 * coef_x), int(40 * coef_y), int(590 * coef_x), int(30 * coef_y)))
         tab.channel_box.setObjectName("channel_box")
         tab.add_button = AnimatedButton(tab)
-        tab.add_button.setGeometry(
-            QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(40 * coef_y), int(75 * coef_x), int(30 * coef_y))))
         tab.add_button.setObjectName("add_button")
         tab.add_media_to_query_button = QtWidgets.QPushButton(tab)
-        tab.add_media_to_query_button.setGeometry(
-            QtCore.QRect(int(700 * coef_x), int(40 * coef_y), int(150 * coef_x), int(30 * coef_y)))
         tab.add_media_to_query_button.setObjectName('add_media_to_query_button')
         tab.add_by_link_button = AnimatedButton(tab)
         tab.add_by_link_button.setObjectName("add_button")
-        tab.add_by_link_button.setGeometry(
-            QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(100 * coef_y), int(300 * coef_x), int(30 * coef_y))))
         tab.add_by_link_button.setText(get_str('add_download_single_video_by_link'))
+        tab.manual_settings = QtWidgets.QCheckBox(tab)
+        tab.manual_settings.setChecked(manual_settings)
+
+        def on_manual_settings_clicked():
+            if tab.manual_settings.checkState() != 0:
+                tab.choose_video_quality_form.show()
+                tab.extension_chooser_combo_box.show()
+                tab.video_bitrate.show()
+                tab.video_bitrate_label.show()
+                tab.audio_bitrate.show()
+                tab.audio_bitrate_label.show()
+                tab.audio_sampling_rate.show()
+                tab.audio_sampling_rate_label.show()
+                tab.fps.show()
+                tab.fps_label.show()
+                tab.audio_quality_label.hide()
+                tab.audio_quality.hide()
+                tab.video_quality.hide()
+                tab.video_quality_label.hide()
+            else:
+                tab.choose_video_quality_form.hide()
+                tab.extension_chooser_combo_box.hide()
+                tab.video_bitrate.hide()
+                tab.video_bitrate_label.hide()
+                tab.audio_bitrate.hide()
+                tab.audio_bitrate_label.hide()
+                tab.audio_sampling_rate.hide()
+                tab.audio_sampling_rate_label.hide()
+                tab.fps.hide()
+                tab.fps_label.hide()
+                tab.audio_quality_label.show()
+                tab.audio_quality.show()
+                tab.video_quality.show()
+                tab.video_quality_label.show()
+            self.resizeEvent(None)
+            if self.current_table_index is not None:
+                self.tab_models[self.current_table_index].manual_settings = tab.manual_settings.checkState() != 0
+                self.state_service.save_tabs_state(self.tab_models)
+
+        tab.manual_settings.clicked.connect(on_manual_settings_clicked)
+
+        tab.manual_settings_label = QtWidgets.QLabel(tab)
+        tab.manual_settings_label.setObjectName("write_sub_label")
+        tab.manual_settings_label.setText(get_str('manual_settings'))
+        tab.video_quality = VideoQualityComboBox(tab)
+        tab.video_quality.currentIndexChanged.connect(self.on_video_quality_changed)
+        tab.video_quality.setCurrentIndex(video_quality)
+        tab.video_quality_label = QtWidgets.QLabel(tab)
+        tab.video_quality_label.setText(get_str('video_quality'))
+        tab.audio_quality = AudioQualityComboBox(tab)
+        tab.audio_quality.currentIndexChanged.connect(self.on_audio_quality_changed)
+        tab.audio_quality.setCurrentIndex(audio_quality)
+        tab.audio_quality_label = QtWidgets.QLabel(tab)
+        tab.audio_quality_label.setText(get_str('audio_quality_str'))
         tab.choose_video_format_combo_box = FormatChooserComboBox(tab)
-        tab.choose_video_format_combo_box.setGeometry(QtCore.QRect(620, 150, 300, 30))
         tab.choose_video_format_combo_box.setObjectName('choose_video_format_combo_box')
         tab.choose_video_format_combo_box.setCurrentIndex(format_index)
         tab.choose_video_format_combo_box.currentIndexChanged.connect(self.on_video_format_changed)
         tab.choose_video_quality_form = ChooseVideoQualityComboBox(tab)
-        tab.choose_video_quality_form.setGeometry(
-            QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(200 * coef_y), int(300 * coef_x), int(30 * coef_y))))
         tab.choose_video_quality_form.setObjectName('choose_video_quality_form')
         tab.choose_video_quality_form.setCurrentIndex(video_quality_index)
         tab.choose_video_quality_form.currentIndexChanged.connect(self.on_video_quality_changed)
         tab.extension_chooser_combo_box = ExtensionChooserComboBox(tab)
-        tab.extension_chooser_combo_box.setGeometry(
-            QtCore.QRect(int(620 * coef_x), int(250 * coef_y), int(300 * coef_x), int(30 * coef_y)))
         tab.extension_chooser_combo_box.setObjectName('choose_video_quality_form')
         tab.extension_chooser_combo_box.setCurrentIndex(video_extension)
         tab.extension_chooser_combo_box.currentIndexChanged.connect(self.on_video_extension_changed)
+        tab.audio_bitrate_label = QtWidgets.QLabel(tab)
+        tab.audio_bitrate_label.setText(get_str('audio_bitrate'))
+        tab.audio_bitrate = QtWidgets.QLineEdit(tab)
+        tab.audio_bitrate.textChanged.connect(self.on_audio_bitrate_changed)
+        tab.audio_bitrate.setValidator(QIntValidator(0, 100000))
+        tab.audio_bitrate.setMaximumWidth(150)
+        tab.audio_bitrate.setText(str(audio_bitrate))
+        tab.video_bitrate_label = QtWidgets.QLabel(tab)
+        tab.video_bitrate_label.setText(get_str('video_bitrate'))
+        tab.video_bitrate = QtWidgets.QLineEdit(tab)
+        tab.video_bitrate.textChanged.connect(self.on_video_bitrate_changed)
+        tab.video_bitrate.setValidator(QIntValidator(0, 100000))
+        tab.video_bitrate.setMaximumWidth(150)
+        tab.video_bitrate.setText(str(video_bitrate))
+        tab.audio_sampling_rate_label = QtWidgets.QLabel(tab)
+        tab.audio_sampling_rate_label.setText(get_str('audio_sampling_rate'))
+        tab.audio_sampling_rate = QtWidgets.QLineEdit(tab)
+        tab.audio_sampling_rate.textChanged.connect(self.on_audio_sampling_rate_changed)
+        tab.audio_sampling_rate.setValidator(QIntValidator(0, 1000000))
+        tab.audio_sampling_rate.setMaximumWidth(150)
+        tab.audio_sampling_rate.setText(str(audio_sampling_rate))
+        tab.fps_label = QtWidgets.QLabel(tab)
+        tab.fps_label.setText(get_str('fps'))
+        tab.fps = QtWidgets.QLineEdit(tab)
+        tab.fps.textChanged.connect(self.on_fps_changed)
+        tab.fps.setValidator(QIntValidator(0, 1000))
+        tab.fps.setMaximumWidth(150)
+        tab.fps.setText(str(fps))
         tab.choose_dir_button = QtWidgets.QPushButton(tab)
         tab.choose_dir_button.setObjectName("choose_dir_button")
-        tab.choose_dir_button.setMaximumWidth(int(350 * coef_x))
         if download_dir == '..':
             tab.choose_dir_button.setText(get_str('choose_the_dir'))
         else:
@@ -159,30 +241,20 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 tab.choose_dir_button.setText(folder_path)
 
         tab.choose_dir_button.clicked.connect(pick_new)
-        tab.choose_dir_button.setGeometry(
-            QtCore.QRect(int(620 * coef_x), int(300 * coef_y), int(300 * coef_x), int(30 * coef_y)))
         tab.remove_files_after_upload = QtWidgets.QCheckBox(tab)
-        tab.remove_files_after_upload.setGeometry(
-            QtCore.QRect(int(620 * coef_x), int(350 * coef_y), int(30 * coef_x), int(30 * coef_y)))
         tab.remove_files_after_upload.setObjectName('remove_files_after_upload')
         tab.remove_files_after_upload.setChecked(remove_files_after_upload)
         tab.remove_files_after_upload.clicked.connect(self.on_remove_files_after_upload_changed)
         tab.remove_files_after_upload_label = QtWidgets.QLabel(tab)
         tab.remove_files_after_upload_label.setText(get_str('remove_files_after_upload'))
-        tab.remove_files_after_upload_label.setGeometry(
-            QtCore.QRect(int(670 * coef_x), int(350 * coef_y), int(250 * coef_x), int(30 * coef_y)))
         tab.remove_files_after_upload_label.setObjectName('remove_files_after_upload_label')
 
         tab.reset_tab_settings_button = QtWidgets.QPushButton(tab)
         tab.reset_tab_settings_button.setObjectName("reset_tab_settings_button")
         tab.reset_tab_settings_button.setText(get_str('reset_from_settings'))
         tab.reset_tab_settings_button.clicked.connect(self.reset_tab_settings)
-        tab.reset_tab_settings_button.setGeometry(
-            QtCore.QRect(int(620 * coef_x), int(450 * coef_y), int(300 * coef_x), int(30 * coef_y)))
 
         tab.choose_dir_button.clicked.connect(pick_new)
-        tab.choose_dir_button.setGeometry(
-            QtCore.QRect(int(620 * coef_x), int(300 * coef_y), int(300 * coef_x), int(30 * coef_y)))
 
         def on_add():
             form = AddDownloadQueueViaLinkForm(self, self.tab_models[self.current_table_index].format[0],
@@ -207,15 +279,23 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                               upload_targets=form.upload_targets,
                                               title=form.title,
                                               description=form.description,
-                                              download_dir=tab.choose_dir_button.text())
+                                              download_dir=tab.choose_dir_button.text(),
+                                              manual_settings=self.tab_models[self.current_table_index].manual_settings,
+                                              video_quality_str=self.tab_models[
+                                                  self.current_table_index].video_quality_str,
+                                              audio_quality_str=self.tab_models[
+                                                  self.current_table_index].audio_quality_str,
+                                              audio_bitrate=self.tab_models[self.current_table_index].audio_bitrate,
+                                              video_bitrate=self.tab_models[self.current_table_index].video_bitrate,
+                                              fps=self.tab_models[self.current_table_index].fps,
+                                              audio_sampling_rate=self.tab_models[
+                                                  self.current_table_index].audio_sampling_rate)
 
                 self.queue_media_service.add_to_the_download_queue(list([queue_media]))
 
         tab.add_by_link_button.clicked.connect(on_add)
 
         tab.table_widget = QtWidgets.QTableWidget(tab)
-        tab.table_widget.setGeometry(
-            QtCore.QRect(int(20 * coef_x), int(80 * coef_y), int(590 * coef_x), int(420 * coef_y)))
         tab.table_widget.setObjectName("table_widget")
         tab.table_widget.setColumnCount(5)
         item = QtWidgets.QTableWidgetItem()
@@ -305,11 +385,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             self.state_service.save_tabs_state(self.tab_models)
         self.tables.append(tab.table_widget)
 
-        tab.table_widget.setColumnWidth(0, int(self.state_service.get_tab_column_weight(self.tabText(len(self.tabs)), 0) * coef_x))
-        tab.table_widget.setColumnWidth(1, int(self.state_service.get_tab_column_weight(self.tabText(len(self.tabs)), 1) * coef_x))
-        tab.table_widget.setColumnWidth(2, int(self.state_service.get_tab_column_weight(self.tabText(len(self.tabs)), 2) * coef_x))
-        tab.table_widget.setColumnWidth(3, int(self.state_service.get_tab_column_weight(self.tabText(len(self.tabs)), 3) * coef_x))
-        tab.table_widget.setColumnWidth(4, int(self.state_service.get_tab_column_weight(self.tabText(len(self.tabs)), 4) * coef_x))
+        on_manual_settings_clicked()
 
         tab.add_media_to_query_button.clicked.connect(self.on_add_media_to_query)
         tab.channel_box.currentTextChanged.connect(self.on_channel_changed)
@@ -363,6 +439,49 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             tab.choose_dir_button.setText(get_str('choose_the_dir'))
         else:
             tab.choose_dir_button.setText(tab_model.download_dir)
+
+        tab.manual_settings.setChecked(settings.manual_settings)
+        tab.video_quality.setCurrentIndex(settings.video_quality_str)
+        tab.audio_quality.setCurrentIndex(settings.audio_quality_str)
+        tab.audio_bitrate.setText(str(settings.audio_bitrate))
+        tab.video_bitrate.setText(str(settings.video_bitrate))
+        tab.fps.setText(str(settings.fps))
+        tab.audio_sampling_rate.setText(str(settings.audio_sampling_rate))
+
+        if tab.manual_settings.checkState() != 0:
+            tab.choose_video_quality_form.show()
+            tab.extension_chooser_combo_box.show()
+            tab.video_bitrate.show()
+            tab.video_bitrate_label.show()
+            tab.audio_bitrate.show()
+            tab.audio_bitrate_label.show()
+            tab.audio_sampling_rate.show()
+            tab.audio_sampling_rate_label.show()
+            tab.fps.show()
+            tab.fps_label.show()
+            tab.audio_quality_label.hide()
+            tab.audio_quality.hide()
+            tab.video_quality.hide()
+            tab.video_quality_label.hide()
+        else:
+            tab.choose_video_quality_form.hide()
+            tab.extension_chooser_combo_box.hide()
+            tab.video_bitrate.hide()
+            tab.video_bitrate_label.hide()
+            tab.audio_bitrate.hide()
+            tab.audio_bitrate_label.hide()
+            tab.audio_sampling_rate.hide()
+            tab.audio_sampling_rate_label.hide()
+            tab.fps.hide()
+            tab.fps_label.hide()
+            tab.audio_quality_label.show()
+            tab.audio_quality.show()
+            tab.video_quality.show()
+            tab.video_quality_label.show()
+        self.resizeEvent(None)
+        if self.current_table_index is not None:
+            self.tab_models[self.current_table_index].manual_settings = tab.manual_settings.checkState() != 0
+            self.state_service.save_tabs_state(self.tab_models)
         tab.remove_files_after_upload.setChecked(tab_model.remove_files_after_upload)
 
     def on_add_media_to_query(self):
@@ -418,7 +537,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                     if description is None:
                         description = ''
 
-                if video_info['is_exists_format'][0] is False and approve_download is False:
+                if self.tab_models[self.current_table_index].manual_settings and video_info['is_exists_format'][0] is False\
+                        and approve_download is False:
                     agree_to_download_dialog = AgreeToDownloadDialog(self, video_info['is_exists_format'][1])
                     agree_to_download_dialog.exec_()
 
@@ -427,7 +547,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                     else:
                         approve_download = True
 
-                if self.state_service.if_video_has_been_loaded(table.item(i, 1).text(),
+                if self.tab_models[self.current_table_index].manual_settings and self.state_service.if_video_has_been_loaded(table.item(i, 1).text(),
                                                                self.tab_models[self.currentIndex()].video_quality[1],
                                                                self.tab_models[self.currentIndex()].video_extension[1]):
                     agree_to_repeat_download_dialog = AgreeToRepeatDownloadDialog(self)
@@ -519,7 +639,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
             queue_media = LoadQueuedMedia(media_id=str(uuid.uuid4()),
                                           url=table.item(i, 1).text(),
-                                          account=self.tab_models[self.currentIndex()].account,
+                                          account=self.tab_models[self.current_table_index].account,
                                           hosting=hosting.name,
                                           status=0,
                                           video_size=video_size,
@@ -527,14 +647,20 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                           upload_targets=upload_targets,
                                           upload_date=upload_date,
                                           format=self.tab_models[self.currentIndex()].format[1],
-                                          video_quality=self.tab_models[self.currentIndex()].video_quality[1],
-                                          video_extension=self.tab_models[self.currentIndex()].video_extension[1],
+                                          video_quality=self.tab_models[self.current_table_index].video_quality[1],
+                                          video_extension=self.tab_models[self.current_table_index].video_extension[1],
                                           remove_files_after_upload=self.tab_models[
                                               self.currentIndex()].remove_files_after_upload,
                                           title=title,
                                           description=description,
-                                          download_dir=self.tab_models[
-                                              self.currentIndex()].download_dir)
+                                          download_dir=self.tab_models[self.current_table_index].download_dir,
+                                          manual_settings=self.tab_models[self.current_table_index].manual_settings,
+                                          video_quality_str=self.tab_models[self.current_table_index].video_quality_str,
+                                          audio_quality_str=self.tab_models[self.current_table_index].audio_quality_str,
+                                          audio_bitrate=self.tab_models[self.current_table_index].audio_bitrate,
+                                          video_bitrate=self.tab_models[self.current_table_index].video_bitrate,
+                                          fps=self.tab_models[self.current_table_index].fps,
+                                          audio_sampling_rate=self.tab_models[self.current_table_index].audio_sampling_rate)
             upload_targets = list()
 
             # Если необходима выгрузка, учитывается интервал выгрузки, исходя из типа интервала. 1 видео выгружается сразу
@@ -569,6 +695,30 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             self.tab_models[self.currentIndex()].channel = item
             self.tab_models[self.currentIndex()].hosting = self.state_service.get_channel_by_url(item).hosting
             self.state_service.save_tabs_state(self.tab_models)  # Каждый раз, когда меняются данные, они сохраняются
+
+    def on_audio_bitrate_changed(self, item):
+        self.tab_models[self.currentIndex()].audio_bitrate = item
+        self.state_service.save_tabs_state(self.tab_models)
+
+    def on_video_bitrate_changed(self, item):
+        self.tab_models[self.currentIndex()].video_bitrate = item
+        self.state_service.save_tabs_state(self.tab_models)
+
+    def on_audio_sampling_rate_changed(self, item):
+        self.tab_models[self.currentIndex()].audio_sampling_rate = item
+        self.state_service.save_tabs_state(self.tab_models)
+
+    def on_fps_changed(self, item):
+        self.tab_models[self.currentIndex()].fps = item
+        self.state_service.save_tabs_state(self.tab_models)
+
+    def on_video_quality_changed(self, index):
+        self.tab_models[self.currentIndex()].video_qualty_str = index
+        self.state_service.save_tabs_state(self.tab_models)
+
+    def on_audio_quality_changed(self, index):
+        self.tab_models[self.currentIndex()].audio_quality_str = index
+        self.state_service.save_tabs_state(self.tab_models)
 
     def on_video_format_changed(self, item):
         format_list = list([None, 'NOT_MERGE', 'VIDEO', 'AUDIO'])
@@ -704,19 +854,60 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             tab.add_button.setGeometry(
                 QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(40 * coef_y), int(75 * coef_x), int(30 * coef_y))))
             tab.add_by_link_button.setGeometry(
-                QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(100 * coef_y), int(300 * coef_x), int(30 * coef_y))))
-            tab.choose_video_quality_form.setGeometry(
-                QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(200 * coef_y), int(300 * coef_x), int(30 * coef_y))))
-            tab.extension_chooser_combo_box.setGeometry(
-                QtCore.QRect(int(620 * coef_x), int(250 * coef_y), int(300 * coef_x), int(30 * coef_y)))
-            tab.remove_files_after_upload_label.setGeometry(
-                QtCore.QRect(int(670 * coef_x), int(350 * coef_y), int(250 * coef_x), int(30 * coef_y)))
-            tab.remove_files_after_upload.setGeometry(
-                QtCore.QRect(int(620 * coef_x), int(350 * coef_y), int(30 * coef_x), int(30 * coef_y)))
-            tab.choose_dir_button.setGeometry(
-                QtCore.QRect(int(620 * coef_x), int(300 * coef_y), int(300 * coef_x), int(30 * coef_y)))
-            tab.choose_video_format_combo_box.setGeometry(
-                QtCore.QRect(int(620 * coef_x), int(150 * coef_y), int(300 * coef_x), int(30 * coef_y)))
+                QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(80 * coef_y), int(300 * coef_x), int(30 * coef_y))))
+
+            tab.manual_settings.setGeometry(
+                QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(115 * coef_y), int(300 * coef_x), int(30 * coef_y))))
+            tab.manual_settings_label.setGeometry(
+                QtCore.QRect(QtCore.QRect(int(670 * coef_x), int(115 * coef_y), int(300 * coef_x), int(30 * coef_y))))
+
+            if tab.manual_settings.checkState() != 0:
+                tab.choose_video_quality_form.setGeometry(
+                    QtCore.QRect(QtCore.QRect(int(620 * coef_x), int(145 * coef_y), int(300 * coef_x), int(30 * coef_y))))
+                tab.extension_chooser_combo_box.setGeometry(
+                    QtCore.QRect(int(620 * coef_x), int(175 * coef_y), int(300 * coef_x), int(30 * coef_y)))
+                tab.choose_video_format_combo_box.setGeometry(
+                    QtCore.QRect(int(620 * coef_x), int(205 * coef_y), int(300 * coef_x), int(30 * coef_y)))
+                tab.audio_bitrate.setGeometry(
+                    QtCore.QRect(int(820 * coef_x), int(235 * coef_y), int(100 * coef_x), int(30 * coef_y)))
+                tab.audio_bitrate_label.setGeometry(
+                    QtCore.QRect(int(620 * coef_x), int(235 * coef_y), int(200 * coef_x), int(30 * coef_y)))
+                tab.video_bitrate.setGeometry(
+                    QtCore.QRect(int(820 * coef_x), int(265 * coef_y), int(100 * coef_x), int(30 * coef_y)))
+                tab.video_bitrate_label.setGeometry(
+                    QtCore.QRect(int(620 * coef_x), int(265 * coef_y), int(200 * coef_x), int(30 * coef_y)))
+                tab.audio_sampling_rate.setGeometry(
+                    QtCore.QRect(int(820 * coef_x), int(295 * coef_y), int(100 * coef_x), int(30 * coef_y)))
+                tab.audio_sampling_rate_label.setGeometry(
+                    QtCore.QRect(int(620 * coef_x), int(295 * coef_y), int(200 * coef_x), int(30 * coef_y)))
+                tab.fps.setGeometry(
+                    QtCore.QRect(int(820 * coef_x), int(325 * coef_y), int(100 * coef_x), int(30 * coef_y)))
+                tab.fps_label.setGeometry(
+                    QtCore.QRect(int(620 * coef_x), int(325 * coef_y), int(200 * coef_x), int(30 * coef_y)))
+                tab.remove_files_after_upload_label.setGeometry(
+                    QtCore.QRect(int(670 * coef_x), int(355 * coef_y), int(250 * coef_x), int(30 * coef_y)))
+                tab.remove_files_after_upload.setGeometry(
+                    QtCore.QRect(int(620 * coef_x), int(355 * coef_y), int(30 * coef_x), int(30 * coef_y)))
+                tab.choose_dir_button.setGeometry(
+                    QtCore.QRect(int(620 * coef_x), int(385 * coef_y), int(300 * coef_x), int(30 * coef_y)))
+            else:
+                tab.choose_video_format_combo_box.setGeometry(
+                    QtCore.QRect(int(620 * coef_x), int(145 * coef_y), int(300 * coef_x), int(30 * coef_y)))
+                tab.video_quality.setGeometry(
+                    QtCore.QRect(int(820 * coef_x), int(175 * coef_y), int(100 * coef_x), int(30 * coef_y)))
+                tab.video_quality_label.setGeometry(
+                    QtCore.QRect(int(620 * coef_x), int(175 * coef_y), int(200 * coef_x), int(30 * coef_y)))
+                tab.audio_quality.setGeometry(
+                    QtCore.QRect(int(820 * coef_x), int(205 * coef_y), int(100 * coef_x), int(30 * coef_y)))
+                tab.audio_quality_label.setGeometry(
+                    QtCore.QRect(int(620 * coef_x), int(205 * coef_y), int(200 * coef_x), int(30 * coef_y)))
+                tab.remove_files_after_upload_label.setGeometry(
+                    QtCore.QRect(int(670 * coef_x), int(235 * coef_y), int(250 * coef_x), int(30 * coef_y)))
+                tab.remove_files_after_upload.setGeometry(
+                    QtCore.QRect(int(620 * coef_x), int(235 * coef_y), int(30 * coef_x), int(30 * coef_y)))
+                tab.choose_dir_button.setGeometry(
+                    QtCore.QRect(int(620 * coef_x), int(275 * coef_y), int(300 * coef_x), int(30 * coef_y)))
+
             tab.add_media_to_query_button.setGeometry(
                 QtCore.QRect(int(700 * coef_x), int(40 * coef_y), int(150 * coef_x), int(30 * coef_y)))
             tab.table_widget.setGeometry(

@@ -125,7 +125,8 @@ class VideohostingService(ABC):
             raise DescriptionIsTooLongException(
                 f'Слишком большой размер описания(Ограничение {self.description_size_restriction} символов)')
 
-    def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
+    def upload_video(self, account, file_path, name, description, destination=None,
+                     table_item: QTableWidgetItem = None):
         raise NotImplementedError()
 
     def new_context(self, p: Playwright, headless: bool, use_user_agent_arg: bool = False) -> BrowserContext:
@@ -138,8 +139,9 @@ class VideohostingService(ABC):
         browser = p.chromium.launch(headless=headless, args=args)
         return browser.new_context()
 
-    def download_video(self, url, hosting, video_quality, video_extension, format, download_dir, account=None,
-                       table_item: QTableWidgetItem = None):
+    def download_video(self, url, hosting, manual_settings, video_quality_str, audio_quality_str, video_bitrate,
+                       audio_bitrate, audio_sampling_rate, fps, video_quality, video_extension, format, download_dir,
+                       account=None, table_item: QTableWidgetItem = None):
 
         from model.Hosting import Hosting
         video_info = Hosting[hosting].value[0].get_video_info(url, video_quality, video_extension)
@@ -154,6 +156,9 @@ class VideohostingService(ABC):
 
         if video_info['filesize'] is int and free - video_info['filesize'] < 100:
             raise NoFreeSpaceException(f'Нет свободного места: размер файла: {video_info["filesize"]}')
+
+        download_path = fr'{download_dir}/{hosting}/audio_%(title)s_{video_quality}.%(ext)s' if manual_settings \
+            else fr'{download_dir}/{hosting}/audio_%(title)s.%(ext)s'
 
         def prog_hook(d, table_item):
             try:
@@ -180,7 +185,7 @@ class VideohostingService(ABC):
         simple_download_opts = {
             'progress_hooks': [lambda d: prog_hook(d, table_item)],
             'ffmpeg_location': ffmpeg_location,
-            'outtmpl': fr'{download_dir}/{hosting}/%(title)s_{video_quality}.%(ext)s',
+            'outtmpl': download_path,
             'writeinfojson': True,
             'retries': settings.retries,
             'nocheckcertificate': settings.no_check_certificate,
@@ -211,12 +216,32 @@ class VideohostingService(ABC):
         if StateService.settings.rate_limit != 0:
             simple_download_opts['ratelimit'] = str(StateService.settings.rate_limit * 1024)
 
+        format_str = f'[height<={video_quality}]'
+        if manual_settings:
+            if audio_bitrate != 0:
+                format_str += f'[abr<={audio_bitrate}]'
+            if video_bitrate != 0:
+                format_str += f'[vbr<={video_bitrate}]'
+            if audio_sampling_rate != 0:
+                format_str += f'[asr<={audio_sampling_rate}]'
+            if fps != 0:
+                format_str += f'[fps<={fps}]'
+
         if format == 'NOT_MERGE':
+
+            if manual_settings:
+                video_format = f'bestvideo[ext={video_extension}][{format_str}/bestvideo[ext=?{video_extension}]{format_str}/best[ext=?{video_extension}]{format_str}/best'
+            else:
+                if video_quality_str == 0:
+                    video_format = 'bestvideo'
+                else:
+                    video_format = 'worstvideo'
+
             download_video_opts = {
                 'ffmpeg_location': ffmpeg_location,
-                'format': f'bestvideo[ext={video_extension}][height<={video_quality}]/bestvideo[ext=?{video_extension}][height<={video_quality}]/best[ext=?{video_extension}][height<={video_quality}]/best',
+                'format': video_format,
                 '--list-formats ': True,
-                'outtmpl': fr'{download_dir}/{hosting}/%(title)s_{video_quality}.%(ext)s',
+                'outtmpl': download_path,
                 'writeinfojson': True,
                 'retries': settings.retries,
                 'nocheckcertificate': settings.no_check_certificate,
@@ -228,11 +253,19 @@ class VideohostingService(ABC):
                 'overwrites': True
             }
 
+            if manual_settings:
+                audio_format = f'bestaudio[ext={video_extension}][{format_str}/bestaudio[ext=?{video_extension}]{format_str}/best[ext=?{video_extension}]{format_str}/best'
+            else:
+                if video_quality_str == 0:
+                    audio_format = 'bestaudio'
+                else:
+                    audio_format = 'worstaudio'
+
             download_audio_opts = {
                 'ffmpeg_location': ffmpeg_location,
-                'format': 'bestaudio/best',
+                'format': audio_format,
                 '--list-formats ': True,
-                'outtmpl': fr'{download_dir}/{hosting}/audio_%(title)s_{video_quality}.%(ext)s',
+                'outtmpl': download_path,
                 'retries': settings.retries,
                 'nocheckcertificate': settings.no_check_certificate,
                 '--audio-quality': settings.audio_quality,
@@ -267,13 +300,34 @@ class VideohostingService(ABC):
                 ydl.extract_info(url)
 
         else:
-
             if format == 'AUDIO':
-                simple_download_opts['format'] = 'bestaudio/best'
+                if manual_settings:
+                    audio_format = f'bestaudio{format_str}/best'
+                else:
+                    if video_quality_str == 0:
+                        audio_format = 'bestaudio'
+                    else:
+                        audio_format = 'worstaudio'
+                simple_download_opts['format'] = audio_format
             elif format == 'VIDEO':
-                simple_download_opts['format'] = f'bestvideo[ext={video_extension}][height<={video_quality}]/bestvideo[ext=?{video_extension}][height<={video_quality}]/best[ext=?{video_extension}][height<={video_quality}]/best'
+                if manual_settings:
+                    video_format = f'bestvideo[ext={video_extension}]{format_str}/bestvideo[ext=?{video_extension}]{format_str}/best[ext=?{video_extension}{format_str}/best'
+                else:
+                    if video_quality_str == 0:
+                        video_format = 'bestvideo'
+                    else:
+                        video_format = 'worstvideo'
+                simple_download_opts['format'] = video_format
             else:
-                simple_download_opts['format'] = f'bestvideo[height<={video_quality}][ext={video_extension}]+bestaudio/bestvideo[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[height<={video_quality}][ext=?{video_extension}]+bestaudio/best'
+                if manual_settings:
+                    video_format = f'bestvideo[ext={video_extension}]{format_str}+bestaudio{format_str}/bestvideo[ext=?{video_extension}]{format_str}+bestaudio/best[ext=?{video_extension}]{format_str}+bestaudio/best'
+                else:
+                    audio_format = 'bestaudio' if audio_quality_str == 0 else 'worstaudio'
+                    if video_quality_str == 0:
+                        video_format = f'bestvideo+{audio_format}'
+                    else:
+                        video_format = f'worstvideo+{audio_format}'
+                simple_download_opts['format'] = video_format
                 simple_download_opts['merge_output_format'] = video_extension
 
             with YoutubeDL(simple_download_opts) as ydl:
@@ -287,12 +341,16 @@ class VideohostingService(ABC):
             ext = info['entries'][0]['ext']
 
         title = title.replace('/', '|')
-
-        if 'video_ext' in info:
-            return f'{download_dir}/{hosting}/{title}_{video_quality}.{ext}'
+        if manual_settings:
+            if 'video_ext' in info:
+                return f'{download_dir}/{hosting}/{title}_{video_quality}.{ext}'
+            else:
+                return f'{download_dir}/{hosting}/{title}_{video_quality}.{ext}'
         else:
-            return f'{download_dir}/{hosting}/{title}_{video_quality}.{ext}'
-
+            if 'video_ext' in info:
+                return f'{download_dir}/{hosting}/{title}.{ext}'
+            else:
+                return f'{download_dir}/{hosting}/{title}.{ext}'
     def get_video_info(self, url: str, video_quality, video_extension, account=None):
 
         if url.__contains__('Facebook'):
@@ -342,7 +400,8 @@ class VideohostingService(ABC):
                 is_exists_format = [True, saved_video_height]
                 break
             elif video_extension == extracted_video_ext:
-                if extracted_video_ext is not None and (saved_video_height is None or extracted_video_ext <= video_quality):
+                if extracted_video_ext is not None and (
+                        saved_video_height is None or extracted_video_ext <= video_quality):
                     saved_video_height = extracted_video_height
 
         if is_exists_format is None:

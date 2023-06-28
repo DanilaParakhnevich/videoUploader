@@ -94,7 +94,7 @@ class OKService(VideohostingService):
         with sync_playwright() as p:
             if table_item is not None:
                 table_item.setText(get_str('preparing'))
-            context = self.new_context(p=p, headless=False)
+            context = self.new_context(p=p, headless=True)
             context.add_cookies(account.auth)
             page = context.new_page()
 

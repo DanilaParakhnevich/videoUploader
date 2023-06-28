@@ -9,6 +9,7 @@ from PyQt5 import QtWidgets
 import os
 import requests
 
+from gui.widgets.ConfirmExitForm import ConfirmExitForm
 from gui.widgets.EnterLicenseKeyForm import EnterLicenseKeyForm
 from gui.widgets.ExistsNewVersionDialog import ExistsNewVersionDialog
 from gui.widgets.ShowErrorDialog import ShowErrorDialog
@@ -29,6 +30,33 @@ if __name__ == "__main__":
 
         def resizeEvent(self, event):
             state_service.save_main_window_size(self.width(), self.height())
+
+        def closeEvent(self, event):
+            download_queue_media = state_service.get_download_queue_media()
+            upload_queue_media = state_service.get_upload_queue_media()
+
+            event.ignore()
+
+            process = False
+
+            for media in download_queue_media:
+                if media.status == 1:
+                    process = True
+                    break
+
+            for media in upload_queue_media:
+                if media.status == 1:
+                    process = True
+                    break
+
+            if process:
+                form = ConfirmExitForm()
+                form.exec_()
+
+                if form.passed and form.confirmed is False:
+                    return
+
+            event.accept()
 
     app = QtWidgets.QApplication(sys.argv)
     BuxarVideoUploader = MainWindow()

@@ -2,6 +2,7 @@ import traceback
 
 from PyQt5.QtWidgets import (QDialog, QPushButton, QGridLayout, QLabel, QLineEdit)
 
+from gui.widgets.ClickableLabel import ClickableLabel
 from service.LocalizationService import *
 from service.LoggingService import log_error
 from service.MailService import MailService
@@ -13,7 +14,7 @@ class EnterLicenseKeyForm(QDialog):
     def __init__(self):
         super().__init__()
         self.passed = False
-        self.setFixedSize(400, 200)
+        self.setFixedSize(500, 350)
         self.setWindowTitle(get_str('enter_license'))
         self.layout = QGridLayout()
 
@@ -34,10 +35,46 @@ class EnterLicenseKeyForm(QDialog):
         self.layout.addWidget(button, 2, 0)
         self.layout.setRowMinimumHeight(3, 75)
 
+        mail_label = QLabel()
+        mail_label.setText(get_str('email_text'))
+        self.layout.addWidget(mail_label, 3, 0)
+
+        mail = ClickableLabel(get_str('email_value'), True)
+        self.layout.addWidget(mail, 3, 1)
+
+        site_label = QLabel()
+        site_label.setText(get_str('link_text'))
+        self.layout.addWidget(site_label, 4, 0)
+
+        site = ClickableLabel(get_str('link_value'), False)
+        self.layout.addWidget(site, 4, 1)
+
+        about_label = QLabel()
+        about_label.setText(get_str('text_info_text'))
+
+        self.layout.addWidget(about_label, 5, 0)
+
+        about = QLabel()
+        about.setText(self.parse_string(get_str('text_info_value')))
+
+        self.layout.addWidget(about, 5, 1)
+
         send_successfully = QLabel()
-        self.layout.addWidget(send_successfully, 3, 0)
+        self.layout.addWidget(send_successfully, 6, 0)
 
         self.setLayout(self.layout)
+
+    def parse_string(self, string: str) -> str:
+        new_string = ""
+
+        for letter_index in range(len(string)):
+
+            if letter_index % 33 == 0 and letter_index != 0:
+                new_string += "\n"
+            else:
+                new_string += string[letter_index]
+
+        return new_string
 
     def on_send_log(self):
         try:
@@ -46,13 +83,13 @@ class EnterLicenseKeyForm(QDialog):
 
             send_successfully = QLabel()
             send_successfully.setText(get_str('send_successfully'))
-            self.layout.addWidget(send_successfully, 3, 0)
+            self.layout.addWidget(send_successfully, 6, 0)
         except:
             log_error('Ошибка при отправке лога')
             log_error(traceback.format_exc())
             send_successfully = QLabel()
             send_successfully.setText(get_str('send_failed'))
-            self.layout.addWidget(send_successfully, 3, 0)
+            self.layout.addWidget(send_successfully, 6, 0)
 
     def ok(self):
         self.license = self.license_edit.text()

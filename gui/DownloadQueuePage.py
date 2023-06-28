@@ -146,10 +146,17 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                 account=media.account,
                 hosting=media.hosting,
                 table_item=self.item(self.get_row_index(media.id), 1),
-                format=media.format,
                 download_dir=media.download_dir,
+                format=media.format,
                 video_quality=media.video_quality,
-                video_extension=media.video_extension)
+                video_extension=media.video_extension,
+                manual_settings=media.manual_settings,
+                audio_quality_str=media.audio_quality_str,
+                video_quality_str=media.video_quality_str,
+                audio_bitrate=media.audio_bitrate,
+                video_bitrate=media.video_bitrate,
+                audio_sampling_rate=media.audio_sampling_rate,
+                fps=media.fps)
 
             self.state_service.add_loaded_video_to_the_history(media.url, media.video_quality, media.video_extension)
 

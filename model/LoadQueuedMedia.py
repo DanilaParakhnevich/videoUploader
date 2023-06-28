@@ -8,7 +8,9 @@ class LoadQueuedMedia(object):
 
     def __init__(self, media_id: uuid, url: str, hosting: str, status: int, upload_after_download: bool, format: str,
                  video_quality: str, video_extension:str, remove_files_after_upload: bool, upload_date=None, upload_targets: list = None,
-                 account: Account = None, title: str = None, description: str = None, download_dir: str = None, video_size: str = None):
+                 account: Account = None, title: str = None, description: str = None, download_dir: str = None, video_size: str = None,
+                 manual_settings = True, audio_quality_str=0, video_quality_str=0, audio_bitrate=0, video_bitrate=0,
+                 audio_sampling_rate=0, fps=0):
 
         self.id = media_id
         self.url = url
@@ -28,3 +30,10 @@ class LoadQueuedMedia(object):
         self.download_dir = download_dir
         self.video_size = video_size
         self.downloaded_dir = None
+        self.manual_settings = manual_settings
+        self.audio_bitrate = audio_bitrate
+        self.video_bitrate = video_bitrate
+        self.audio_sampling_rate = audio_sampling_rate
+        self.fps = fps
+        self.audio_quality_str = audio_quality_str
+        self.video_quality_str = video_quality_str
