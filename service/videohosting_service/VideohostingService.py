@@ -216,21 +216,22 @@ class VideohostingService(ABC):
         if StateService.settings.rate_limit != 0:
             simple_download_opts['ratelimit'] = str(StateService.settings.rate_limit * 1024)
 
-        format_str = f'[height<={video_quality}]'
+        video_format_str = f'[height={video_quality}]'
+        audio_format_str = ''
         if manual_settings:
             if audio_bitrate != 0:
-                format_str += f'[abr<={audio_bitrate}]'
+                audio_format_str += f'[abr<=?{audio_bitrate}]'
             if video_bitrate != 0:
-                format_str += f'[vbr<={video_bitrate}]'
+                video_format_str += f'[vbr<=?{video_bitrate}]'
             if audio_sampling_rate != 0:
-                format_str += f'[asr<={audio_sampling_rate}]'
+                audio_format_str += f'[asr<=?{audio_sampling_rate}]'
             if fps != 0:
-                format_str += f'[fps<={fps}]'
+                video_format_str += f'[fps<=?{fps}]'
 
         if format == 'NOT_MERGE':
 
             if manual_settings:
-                video_format = f'bestvideo[ext={video_extension}][{format_str}/bestvideo[ext=?{video_extension}]{format_str}/best[ext=?{video_extension}]{format_str}/best'
+                video_format = f'bestvideo[ext={video_extension}][{video_format_str}/bestvideo[ext=?{video_extension}]{video_format_str}/best[ext=?{video_extension}]{video_format_str}/best[ext=?{video_extension}]/best'
             else:
                 if video_quality_str == 0:
                     video_format = 'bestvideo'
@@ -254,7 +255,7 @@ class VideohostingService(ABC):
             }
 
             if manual_settings:
-                audio_format = f'bestaudio[ext={video_extension}][{format_str}/bestaudio[ext=?{video_extension}]{format_str}/best[ext=?{video_extension}]{format_str}/best'
+                audio_format = f'bestaudio[{audio_format_str}/bestaudio{audio_format_str}/best{audio_format_str}/best'
             else:
                 if video_quality_str == 0:
                     audio_format = 'bestaudio'
@@ -302,7 +303,7 @@ class VideohostingService(ABC):
         else:
             if format == 'AUDIO':
                 if manual_settings:
-                    audio_format = f'bestaudio{format_str}/best'
+                    audio_format = f'bestaudio{audio_format_str}/best'
                 else:
                     if video_quality_str == 0:
                         audio_format = 'bestaudio'
@@ -311,7 +312,7 @@ class VideohostingService(ABC):
                 simple_download_opts['format'] = audio_format
             elif format == 'VIDEO':
                 if manual_settings:
-                    video_format = f'bestvideo[ext={video_extension}]{format_str}/bestvideo[ext=?{video_extension}]{format_str}/best[ext=?{video_extension}{format_str}/best'
+                    video_format = f'bestvideo[ext={video_extension}]{video_format_str}/bestvideo[ext=?{video_extension}]{video_format_str}/best[ext=?{video_extension}{video_format_str}/best[ext=?{video_extension}]/best'
                 else:
                     if video_quality_str == 0:
                         video_format = 'bestvideo'
@@ -320,7 +321,7 @@ class VideohostingService(ABC):
                 simple_download_opts['format'] = video_format
             else:
                 if manual_settings:
-                    video_format = f'bestvideo[ext={video_extension}]{format_str}+bestaudio{format_str}/bestvideo[ext=?{video_extension}]{format_str}+bestaudio/best[ext=?{video_extension}]{format_str}+bestaudio/best'
+                    video_format = f'bestvideo[ext={video_extension}]{video_format_str}+bestaudio{audio_format_str}/bestvideo[ext=?{video_extension}]{video_format_str}+bestaudio/best[ext=?{video_extension}]{video_format_str}+bestaudio/best[ext=?{video_extension}]/best'
                 else:
                     audio_format = 'bestaudio' if audio_quality_str == 0 else 'worstaudio'
                     if video_quality_str == 0:
@@ -360,7 +361,7 @@ class VideohostingService(ABC):
 
         download_opts = {
             'skip_download': True,
-            'format': f'bestvideo[height<={video_quality}][ext={video_extension}]+bestaudio/bestvideo[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[height<={video_quality}][ext=?{video_extension}]+bestaudio/best',
+            'format': f'bestvideo[height<={video_quality}][ext={video_extension}]+bestaudio/bestvideo[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[ext?={video_extension}]/best',
             'merge_output_format': video_extension
         }
 
