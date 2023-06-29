@@ -361,7 +361,7 @@ class VideohostingService(ABC):
 
         download_opts = {
             'skip_download': True,
-            'format': f'bestvideo[height<={video_quality}][ext={video_extension}]+bestaudio/bestvideo[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[ext?={video_extension}]/best',
+            'format': f'bestvideo[height<={video_quality}][ext={video_extension}]+bestaudio/bestvideo[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[ext=?{video_extension}]/best',
             'merge_output_format': video_extension
         }
 
