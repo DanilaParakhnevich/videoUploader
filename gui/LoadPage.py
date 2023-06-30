@@ -260,7 +260,14 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             form = AddDownloadQueueViaLinkForm(self, self.tab_models[self.current_table_index].format[0],
                                                self.tab_models[self.current_table_index].video_quality[1],
                                                self.tab_models[self.current_table_index].video_extension[1],
-                                               self.tab_models[self.current_table_index].remove_files_after_upload)
+                                               self.tab_models[self.current_table_index].remove_files_after_upload,
+                                               manual_settings=self.tab_models[self.current_table_index].manual_settings,
+                                               video_bitrate=self.tab_models[self.current_table_index].video_bitrate,
+                                               audio_bitrate=self.tab_models[self.current_table_index].audio_bitrate,
+                                               video_quality_str=self.tab_models[self.current_table_index].video_quality_str,
+                                               audio_quality_str=self.tab_models[self.current_table_index].audio_quality_str,
+                                               fps=self.tab_models[self.current_table_index].fps,
+                                               audio_sampling_rate=self.tab_models[self.current_table_index].audio_sampling_rate)
             form.exec_()
 
             if form.passed is True:
@@ -526,9 +533,17 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             upload_this = True
             try:
                 video_info = hosting.value[0].get_video_info(table.item(i, 1).text(),
-                                                             self.tab_models[self.currentIndex()].video_quality[1],
-                                                             self.tab_models[self.currentIndex()].video_extension[1],
-                                                             self.tab_models[self.currentIndex()].account)
+                                                             video_quality=self.tab_models[self.current_table_index].video_quality[1],
+                                                             video_extension=self.tab_models[self.current_table_index].video_extension[1],
+                                                             video_quality_str=self.tab_models[self.current_table_index].video_quality_str,
+                                                             audio_quality_str=self.tab_models[self.current_table_index].audio_quality_str,
+                                                             fps=self.tab_models[self.current_table_index].fps,
+                                                             audio_bitrate=self.tab_models[self.current_table_index].audio_bitrate,
+                                                             video_bitrate=self.tab_models[self.current_table_index].video_bitrate,
+                                                             audio_sampling_rate=self.tab_models[self.current_table_index].audio_sampling_rate,
+                                                             manual_settings=self.tab_models[self.current_table_index].manual_settings,
+                                                             account=self.tab_models[self.currentIndex()].account)
+
                 title = video_info['title']
                 if title is None:
                     title = ''

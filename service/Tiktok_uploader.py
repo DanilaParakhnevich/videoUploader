@@ -209,7 +209,7 @@ def uploadVideo(session_id, video, title, tags, schedule_time=0, verbose=True):
 	if not assertSuccess(url, r):
 		log_error(r.__str__())
 		raise Exception()
-	x_csrf_token = r.headers["X-Ware-Csrf-Token"].split(',')[1]
+	# x_csrf_token = r.headers["X-Ware-Csrf-Token"].split(',')[1]
 
 	params = {
 		"video_id":video_id,
@@ -225,7 +225,7 @@ def uploadVideo(session_id, video, title, tags, schedule_time=0, verbose=True):
 	}
 	if schedule_time:
 		params["schedule_time"] = schedule_time
-	headers = {"X-Secsdk-Csrf-Token": x_csrf_token}
+	# headers = {"X-Secsdk-Csrf-Token": x_csrf_token}
 	r = session.post(url, params=params, headers=headers)
 	if not assertSuccess(url, r):
 		log_error(r.__str__())

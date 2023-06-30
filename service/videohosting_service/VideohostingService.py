@@ -144,7 +144,15 @@ class VideohostingService(ABC):
                        account=None, table_item: QTableWidgetItem = None):
 
         from model.Hosting import Hosting
-        video_info = Hosting[hosting].value[0].get_video_info(url, video_quality, video_extension)
+        video_info = Hosting[hosting].value[0].get_video_info(url, video_quality=video_quality,
+                                                              video_extension=video_extension,
+                                                              video_quality_str=video_quality_str,
+                                                              fps=fps,
+                                                              audio_quality_str=audio_quality_str,
+                                                              audio_bitrate=audio_bitrate,
+                                                              video_bitrate=video_bitrate,
+                                                              audio_sampling_rate=audio_sampling_rate,
+                                                              manual_settings=manual_settings)
 
         if hosting == 'Facebook':
             from youtube_dl import YoutubeDL
@@ -157,7 +165,10 @@ class VideohostingService(ABC):
         if video_info['filesize'] is int and free - video_info['filesize'] < 100:
             raise NoFreeSpaceException(f'Нет свободного места: размер файла: {video_info["filesize"]}')
 
-        download_path = fr'{download_dir}/{hosting}/audio_%(title)s_{video_quality}.%(ext)s' if manual_settings \
+        download_path = fr'{download_dir}/{hosting}/%(title)s_{video_quality}.%(ext)s' if manual_settings \
+            else fr'{download_dir}/{hosting}/audio_%(title)s.%(ext)s'
+
+        download_audio_path = fr'{download_dir}/{hosting}/audio_%(title)s_{video_quality}.%(ext)s' if manual_settings \
             else fr'{download_dir}/{hosting}/audio_%(title)s.%(ext)s'
 
         def prog_hook(d, table_item):
@@ -219,19 +230,19 @@ class VideohostingService(ABC):
         video_format_str = f'[height={video_quality}]'
         audio_format_str = ''
         if manual_settings:
-            if audio_bitrate != 0:
+            if audio_bitrate != '0':
                 audio_format_str += f'[abr<=?{audio_bitrate}]'
-            if video_bitrate != 0:
+            if video_bitrate != '0':
                 video_format_str += f'[vbr<=?{video_bitrate}]'
-            if audio_sampling_rate != 0:
+            if audio_sampling_rate != '0':
                 audio_format_str += f'[asr<=?{audio_sampling_rate}]'
-            if fps != 0:
+            if fps != '0':
                 video_format_str += f'[fps<=?{fps}]'
 
         if format == 'NOT_MERGE':
 
             if manual_settings:
-                video_format = f'bestvideo[ext={video_extension}][{video_format_str}/bestvideo[ext=?{video_extension}]{video_format_str}/best[ext=?{video_extension}]{video_format_str}/best[ext=?{video_extension}]/best'
+                video_format = f'bestvideo[ext={video_extension}]{video_format_str}/bestvideo[ext=?{video_extension}]{video_format_str}/best[ext=?{video_extension}]{video_format_str}/best[ext=?{video_extension}]/best'
             else:
                 if video_quality_str == 0:
                     video_format = 'bestvideo'
@@ -255,7 +266,7 @@ class VideohostingService(ABC):
             }
 
             if manual_settings:
-                audio_format = f'bestaudio[{audio_format_str}/bestaudio{audio_format_str}/best{audio_format_str}/best'
+                audio_format = f'bestaudio{audio_format_str}/bestaudio{audio_format_str}/best{audio_format_str}/best'
             else:
                 if video_quality_str == 0:
                     audio_format = 'bestaudio'
@@ -266,7 +277,7 @@ class VideohostingService(ABC):
                 'ffmpeg_location': ffmpeg_location,
                 'format': audio_format,
                 '--list-formats ': True,
-                'outtmpl': download_path,
+                'outtmpl': download_audio_path,
                 'retries': settings.retries,
                 'nocheckcertificate': settings.no_check_certificate,
                 '--audio-quality': settings.audio_quality,
@@ -309,10 +320,12 @@ class VideohostingService(ABC):
                         audio_format = 'bestaudio'
                     else:
                         audio_format = 'worstaudio'
+
+                simple_download_opts['outtmpl'] = download_audio_path
                 simple_download_opts['format'] = audio_format
             elif format == 'VIDEO':
                 if manual_settings:
-                    video_format = f'bestvideo[ext={video_extension}]{video_format_str}/bestvideo[ext=?{video_extension}]{video_format_str}/best[ext=?{video_extension}{video_format_str}/best[ext=?{video_extension}]/best'
+                    video_format = f'bestvideo[ext={video_extension}]{video_format_str}/bestvideo[ext=?{video_extension}]{video_format_str}/best[ext=?{video_extension}]{video_format_str}/best[ext=?{video_extension}]/best'
                 else:
                     if video_quality_str == 0:
                         video_format = 'bestvideo'
@@ -352,16 +365,39 @@ class VideohostingService(ABC):
                 return f'{download_dir}/{hosting}/{title}.{ext}'
             else:
                 return f'{download_dir}/{hosting}/{title}.{ext}'
-    def get_video_info(self, url: str, video_quality, video_extension, account=None):
+
+    def get_video_info(self, url: str, manual_settings, video_quality_str, audio_quality_str, video_bitrate,
+                       audio_bitrate, audio_sampling_rate, fps, video_quality, video_extension, account=None):
 
         if url.__contains__('Facebook'):
             from youtube_dl import YoutubeDL
         else:
             from yt_dlp import YoutubeDL
 
+        if manual_settings:
+            video_format_str = f'[height={video_quality}]'
+            audio_format_str = ''
+            if manual_settings:
+                if audio_bitrate != '0':
+                    audio_format_str += f'[abr<=?{audio_bitrate}]'
+                if video_bitrate != '0':
+                    video_format_str += f'[vbr<=?{video_bitrate}]'
+                if audio_sampling_rate != '0':
+                    audio_format_str += f'[asr<=?{audio_sampling_rate}]'
+                if fps != '0':
+                    video_format_str += f'[fps<=?{fps}]'
+
+            video_format = f'bestvideo[ext={video_extension}]{video_format_str}+bestaudio{audio_format_str}/bestvideo[ext=?{video_extension}]{video_format_str}+bestaudio/best[ext=?{video_extension}]{video_format_str}+bestaudio/best[ext=?{video_extension}]/best'
+        else:
+            audio_format = 'bestaudio' if audio_quality_str == 0 else 'worstaudio'
+            if video_quality_str == 0:
+                video_format = f'bestvideo+{audio_format}'
+            else:
+                video_format = f'worstvideo+{audio_format}'
+
         download_opts = {
             'skip_download': True,
-            'format': f'bestvideo[height<={video_quality}][ext={video_extension}]+bestaudio/bestvideo[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[height<={video_quality}][ext=?{video_extension}]+bestaudio/best[ext=?{video_extension}]/best',
+            'format': video_format,
             'merge_output_format': video_extension
         }
 

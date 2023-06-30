@@ -114,7 +114,11 @@ class TelegramService(VideohostingService):
                        audio_bitrate, audio_sampling_rate, fps, video_quality, video_extension, format, download_dir,
                        account=None, table_item: QTableWidgetItem = None):
 
-        video_info = self.get_video_info(url, video_quality, [5, 'mp4'], account=account)
+        video_info = self.get_video_info(url, video_quality=video_quality, video_extension=[5, 'mp4'],
+                                         video_bitrate=video_bitrate, audio_bitrate=audio_bitrate,
+                                         audio_sampling_rate=audio_sampling_rate, manual_settings=manual_settings,
+                                         fps=fps, audio_quality_str=audio_quality_str, video_quality_str=video_quality_str,
+                                         account=account)
 
         space = os.statvfs(os.path.expanduser(download_dir))
         free = space.f_bavail * space.f_frsize / 1024000
@@ -144,7 +148,8 @@ class TelegramService(VideohostingService):
 
             return result
 
-    def get_video_info(self, url: str, video_quality, video_extension, account=None):
+    def get_video_info(self, url: str, manual_settings, video_quality_str, audio_quality_str, video_bitrate,
+                       audio_bitrate, audio_sampling_rate, fps, video_quality, video_extension, account=None):
 
         with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
                     workdir='service/videohosting_service/tmp') as app:

@@ -35,7 +35,8 @@ class AddDownloadQueueViaLinkForm(QDialog):
     video_size = None
     id = None
 
-    def __init__(self, parent, format, quality, extension, remove_files_after_upload):
+    def __init__(self, parent, format, quality, extension, remove_files_after_upload, manual_settings,
+                 video_quality_str, audio_quality_str, video_bitrate, audio_bitrate, audio_sampling_rate, fps):
 
         super().__init__(parent)
         self.setWindowTitle(get_str('adding_video_via_url'))
@@ -66,6 +67,13 @@ class AddDownloadQueueViaLinkForm(QDialog):
         self.video_quality = quality
         self.video_extension = extension
         self.remove_files_after_upload = remove_files_after_upload
+        self.video_quality_str = video_quality_str
+        self.audio_quality_str = audio_quality_str
+        self.video_bitrate = video_bitrate
+        self.audio_bitrate = audio_bitrate
+        self.audio_sampling_rate = audio_sampling_rate
+        self.fps = fps
+        self.manual_settings = manual_settings
         self.event_service = EventService()
 
     def choose(self):
@@ -101,9 +109,16 @@ class AddDownloadQueueViaLinkForm(QDialog):
         if self.format != 3:
             try:
                 video_info = self.hosting.value[0].get_video_info(self.link,
-                                                                  self.video_quality,
-                                                                  self.video_extension,
-                                                                  self.account)
+                                                                  video_quality=self.video_quality,
+                                                                  video_extension=self.video_extension,
+                                                                  fps=self.fps,
+                                                                  audio_bitrate=self.audio_bitrate,
+                                                                  video_bitrate=self.video_bitrate,
+                                                                  audio_sampling_rate=self.audio_sampling_rate,
+                                                                  audio_quality_str=self.audio_quality_str,
+                                                                  video_quality_str=self.video_quality_str,
+                                                                  manual_settings=self.manual_settings,
+                                                                  account=self.account)
                 self.title = video_info['title']
                 if self.title is None:
                     self.title = ''
