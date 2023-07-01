@@ -236,7 +236,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             dialog = QtWidgets.QFileDialog()
             folder_path = dialog.getExistingDirectory(None, get_str('choose_dir'))
             if folder_path != '':
-                self.tab_models[self.currentIndex()].download_dir = folder_path
+                self.tab_models[self.current_table_index].download_dir = folder_path
                 self.state_service.save_tabs_state(self.tab_models)
                 tab.choose_dir_button.setText(folder_path)
 
@@ -492,7 +492,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         tab.remove_files_after_upload.setChecked(tab_model.remove_files_after_upload)
 
     def on_add_media_to_query(self):
-        table = self.tables[self.currentIndex()]
+        table = self.tables[self.current_table_index]
 
         if table.rowCount() == 0:
             msg = QtWidgets.QMessageBox()
@@ -506,7 +506,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         upload_interval = None
         upload_targets = None
 
-        if self.tab_models[self.currentIndex()].format[0] != 3:
+        if self.tab_models[self.current_table_index].format[0] != 3:
             upload_after_download_form = UploadAfterDownloadForm(self)
             upload_after_download_form.exec_()
 
@@ -526,7 +526,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             if table.item(i, 3).checkState() == 0:
                 continue
 
-            channel = self.state_service.get_channel_by_url(self.tab_models[self.currentIndex()].channel)
+            channel = self.state_service.get_channel_by_url(self.tab_models[self.current_table_index].channel)
             hosting = Hosting[channel.hosting]
             title = None
             description = None
@@ -542,7 +542,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                                              video_bitrate=self.tab_models[self.current_table_index].video_bitrate,
                                                              audio_sampling_rate=self.tab_models[self.current_table_index].audio_sampling_rate,
                                                              manual_settings=self.tab_models[self.current_table_index].manual_settings,
-                                                             account=self.tab_models[self.currentIndex()].account)
+                                                             account=self.tab_models[self.current_table_index].account)
 
                 title = video_info['title']
                 if title is None:
@@ -563,8 +563,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                         approve_download = True
 
                 if self.tab_models[self.current_table_index].manual_settings and self.state_service.if_video_has_been_loaded(table.item(i, 1).text(),
-                                                               self.tab_models[self.currentIndex()].video_quality[1],
-                                                               self.tab_models[self.currentIndex()].video_extension[1]):
+                                                               self.tab_models[self.current_table_index].video_quality[1],
+                                                               self.tab_models[self.current_table_index].video_extension[1]):
                     agree_to_repeat_download_dialog = AgreeToRepeatDownloadDialog(self)
                     agree_to_repeat_download_dialog.exec_()
 
@@ -661,11 +661,11 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                           upload_after_download=upload_on and upload_this,
                                           upload_targets=upload_targets,
                                           upload_date=upload_date,
-                                          format=self.tab_models[self.currentIndex()].format[1],
+                                          format=self.tab_models[self.current_table_index].format[1],
                                           video_quality=self.tab_models[self.current_table_index].video_quality[1],
                                           video_extension=self.tab_models[self.current_table_index].video_extension[1],
                                           remove_files_after_upload=self.tab_models[
-                                              self.currentIndex()].remove_files_after_upload,
+                                              self.current_table_index].remove_files_after_upload,
                                           title=title,
                                           description=description,
                                           download_dir=self.tab_models[self.current_table_index].download_dir,
@@ -707,57 +707,68 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
     def on_channel_changed(self, item):
         if item != '':
-            self.tab_models[self.currentIndex()].channel = item
-            self.tab_models[self.currentIndex()].hosting = self.state_service.get_channel_by_url(item).hosting
-            self.state_service.save_tabs_state(self.tab_models)  # Каждый раз, когда меняются данные, они сохраняются
+            if len(self.tab_models) != 0:
+                self.tab_models[self.current_table_index].channel = item
+                self.tab_models[self.current_table_index].hosting = self.state_service.get_channel_by_url(item).hosting
+                self.state_service.save_tabs_state(self.tab_models)  # Каждый раз, когда меняются данные, они сохраняются
 
     def on_audio_bitrate_changed(self, item):
-        self.tab_models[self.currentIndex()].audio_bitrate = item
-        self.state_service.save_tabs_state(self.tab_models)
+        if len(self.tab_models) != 0:
+            self.tab_models[self.current_table_index].audio_bitrate = item
+            self.state_service.save_tabs_state(self.tab_models)
 
     def on_video_bitrate_changed(self, item):
-        self.tab_models[self.currentIndex()].video_bitrate = item
-        self.state_service.save_tabs_state(self.tab_models)
+        if len(self.tab_models) != 0:
+            self.tab_models[self.current_table_index].video_bitrate = item
+            self.state_service.save_tabs_state(self.tab_models)
 
     def on_audio_sampling_rate_changed(self, item):
-        self.tab_models[self.currentIndex()].audio_sampling_rate = item
-        self.state_service.save_tabs_state(self.tab_models)
+        if len(self.tab_models) != 0:
+            self.tab_models[self.current_table_index].audio_sampling_rate = item
+            self.state_service.save_tabs_state(self.tab_models)
 
     def on_fps_changed(self, item):
-        self.tab_models[self.currentIndex()].fps = item
-        self.state_service.save_tabs_state(self.tab_models)
+        if len(self.tab_models) != 0:
+            self.tab_models[self.current_table_index].fps = item
+            self.state_service.save_tabs_state(self.tab_models)
 
     def on_video_quality_changed(self, index):
-        self.tab_models[self.currentIndex()].video_qualty_str = index
-        self.state_service.save_tabs_state(self.tab_models)
+        if len(self.tab_models) != 0:
+            self.tab_models[self.current_table_index].video_qualty_str = index
+            self.state_service.save_tabs_state(self.tab_models)
 
     def on_audio_quality_changed(self, index):
-        self.tab_models[self.currentIndex()].audio_quality_str = index
-        self.state_service.save_tabs_state(self.tab_models)
+        if len(self.tab_models) != 0:
+            self.tab_models[self.current_table_index].audio_quality_str = index
+            self.state_service.save_tabs_state(self.tab_models)
 
     def on_video_format_changed(self, item):
         format_list = list([None, 'NOT_MERGE', 'VIDEO', 'AUDIO'])
-        self.tab_models[self.currentIndex()].format = [item, format_list[item]]
-        self.state_service.save_tabs_state(self.tab_models)  # Каждый раз, когда меняются данные, они сохраняются
+        if len(self.tab_models) != 0:
+            self.tab_models[self.current_table_index].format = [item, format_list[item]]
+            self.state_service.save_tabs_state(self.tab_models)  # Каждый раз, когда меняются данные, они сохраняются
 
     def on_video_quality_changed(self, item):
         quality_list = list(['144', '240', '360', '480', '720', '1080', '1440', '2160'])
-        self.tab_models[self.currentIndex()].video_quality = [item, quality_list[item]]
-        self.state_service.save_tabs_state(self.tab_models)
+        if len(self.tab_models) != 0:
+            self.tab_models[self.current_table_index].video_quality = [item, quality_list[item]]
+            self.state_service.save_tabs_state(self.tab_models)
 
     def on_video_extension_changed(self, item):
         quality_list = list(['3gp', 'aac', 'flv', 'm4a', 'mp3', 'mp4', 'ogg', 'wav', 'webm'])
-        self.tab_models[self.currentIndex()].video_extension = [item, quality_list[item]]
-        self.state_service.save_tabs_state(self.tab_models)
+        if len(self.tab_models) != 0:
+            self.tab_models[self.current_table_index].video_extension = [item, quality_list[item]]
+            self.state_service.save_tabs_state(self.tab_models)
 
     def on_remove_files_after_upload_changed(self, item):
-        self.tab_models[self.currentIndex()].remove_files_after_upload = item
-        self.state_service.save_tabs_state(self.tab_models)
+        if len(self.tab_models) != 0:
+            self.tab_models[self.current_table_index].remove_files_after_upload = item
+            self.state_service.save_tabs_state(self.tab_models)
 
     def create_daemon_for_getting_video_list(self, button: AnimatedButton):
         button.start_animation()
 
-        if self.tab_models[self.currentIndex()].channel == None or self.tab_models[self.currentIndex()].channel == '':
+        if self.tab_models[self.current_table_index].channel == None or self.tab_models[self.current_table_index].channel == '':
             msg = QtWidgets.QMessageBox()
             msg.setText(get_str('need_pick_some_channel'))
             msg.exec_()
@@ -766,8 +777,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         # В существующем потоке выбираем аккаунт, если требуется, тк pyqt запрещает в других потоках
         # создавать формы используя parent widget из текущего потока
-        channel = state_service.get_channel_by_url(self.tab_models[self.currentIndex()].channel)
-        hosting = Hosting[self.tab_models[self.currentIndex()].hosting]
+        channel = state_service.get_channel_by_url(self.tab_models[self.current_table_index].channel)
+        hosting = Hosting[self.tab_models[self.current_table_index].hosting]
         account = None
 
         accounts = self.state_service.get_accounts_by_hosting(hosting.name)
@@ -790,7 +801,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         elif len(accounts) != 0:
             account = accounts[0]
 
-        self.tab_models[self.currentIndex()].account = account
+        self.tab_models[self.current_table_index].account = account
 
         event_loop = None
 
@@ -809,12 +820,12 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         service = hosting.value[0]
 
-        table = self.tables[self.currentIndex()]
+        table = self.tables[self.current_table_index]
 
         while table.rowCount() > 0:
             table.removeRow(0)
 
-        self.tab_models[self.currentIndex()].video_list.clear()
+        self.tab_models[self.current_table_index].video_list.clear()
 
         index = 0
         try:
@@ -842,7 +853,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 table.setItem(index, 3, item4)
                 table.setItem(index, 4, item5)
 
-                self.tab_models[self.currentIndex()].video_list.append(video)
+                self.tab_models[self.current_table_index].video_list.append(video)
 
                 index += 1
         except:

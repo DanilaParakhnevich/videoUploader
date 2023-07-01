@@ -84,7 +84,9 @@ if __name__ == "__main__":
                 try:
                     if os.name == 'nt':
 
-                        os.system('PLAYWRIGHT_BROWSERS_PATH=0 playwright\\driver\\playwright.cmd install chromium')
+                        os.putenv('NODE_SKIP_PLATFORM_CHECK', '1')
+                        os.putenv('PLAYWRIGHT_BROWSERS_PATH', '0')
+                        os.system('call playwright\\driver\\playwright.cmd install chromium')
                         response = requests.get(
                             'https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip',
                             stream=True, timeout=3000)
