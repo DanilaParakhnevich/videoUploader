@@ -36,3 +36,6 @@ class Settings(object):
         self.fps = fps
         self.audio_quality_str = audio_quality_str
         self.video_quality_str = video_quality_str
+        self.encrypted_key = encrypted_key
+        self.user_mail = user_mail
+        self.ffmpeg = ffmpeg

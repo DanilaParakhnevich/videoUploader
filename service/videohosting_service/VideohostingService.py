@@ -166,7 +166,7 @@ class VideohostingService(ABC):
             raise NoFreeSpaceException(f'Нет свободного места: размер файла: {video_info["filesize"]}')
 
         download_path = fr'{download_dir}/{hosting}/%(title)s_{video_quality}.%(ext)s' if manual_settings \
-            else fr'{download_dir}/{hosting}/audio_%(title)s.%(ext)s'
+            else fr'{download_dir}/{hosting}/%(title)s.%(ext)s'
 
         download_audio_path = fr'{download_dir}/{hosting}/audio_%(title)s_{video_quality}.%(ext)s' if manual_settings \
             else fr'{download_dir}/{hosting}/audio_%(title)s.%(ext)s'

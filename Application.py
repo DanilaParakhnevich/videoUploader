@@ -1,5 +1,7 @@
 import hashlib
 import json
+
+from PyQt5.QtGui import QIcon
 from getmac import get_mac_address
 import sys
 import traceback
@@ -59,6 +61,7 @@ if __name__ == "__main__":
 
     app = QtWidgets.QApplication(sys.argv)
     BuxarVideoUploader = MainWindow()
+    BuxarVideoUploader.setWindowIcon(QIcon('icon.png'))
 
     from gui.MainPage import Ui_BuxarVideoUploader
 
@@ -147,6 +150,8 @@ if __name__ == "__main__":
                 hash.update(f'{settings.encrypted_key}{version}{get_mac_address()}{settings.user_mail}{result["data"]}{result["time"]}'.encode('utf-8'))
                 key = hash.hexdigest()
                 activated = key == hash.hexdigest()
+        if activated is False:
+            log_error(f'Неудачная валидация лицензии: encrypted_key: {settings.encrypted_key}, mac_id: {get_mac_address()}, mail: {settings.user_mail}, version: {current_client_version}')
 
     while activated is False:
         form = EnterLicenseKeyForm()

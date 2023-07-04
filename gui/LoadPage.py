@@ -48,7 +48,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
     tab_models = state_service.get_last_tabs()  # Используются для хранения легких и необходимых данных
     tables = list()
     tabs = list()
-    current_table_index = None
+    current_table_index = 0
 
     def __init__(self, central_widget):
 
