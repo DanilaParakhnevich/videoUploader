@@ -521,7 +521,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         new_media = list()
         upload_date = datetime.datetime.now()
         approve_download = False
-        for i in range(0, table.rowCount()):
+        for i in range(0, table.rowCount()).__reversed__():
 
             if table.item(i, 3).checkState() == 0:
                 continue

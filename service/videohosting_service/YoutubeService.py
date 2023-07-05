@@ -2,6 +2,7 @@ import time
 from datetime import datetime
 
 from PyQt5.QtWidgets import QTableWidgetItem
+from googletrans import Translator
 
 from service.LocalizationService import get_str
 from service.LoggingService import log_info
@@ -149,7 +150,12 @@ class YoutubeService(VideohostingService):
 
             page.click(selector='#done-button', timeout=0)
 
-            time.sleep(10)
+            translator = Translator()
+
+            page.wait_for_selector('[id="dialog-title"][class="style-scope ytcp-uploads-still-processing-dialog"]', timeout=0)
+
+            while translator.translate(page.query_selector('[id="dialog-title"][class="style-scope ytcp-uploads-still-processing-dialog"]').text_content().strip()).text != 'Video processing':
+                time.sleep(2)
 
     def need_to_be_uploaded_to_special_source(self) -> bool:
         return True

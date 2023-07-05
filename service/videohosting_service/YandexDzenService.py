@@ -60,7 +60,7 @@ class YandexDzenService(VideohostingService):
         with sync_playwright() as p:
             if table_item is not None:
                 table_item.setText(get_str('preparing'))
-            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+            context = self.new_context(p=p, headless=False, use_user_agent_arg=True)
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto('https://dzen.ru/profile/editor/create#video-editor', timeout=0)
@@ -91,7 +91,7 @@ class YandexDzenService(VideohostingService):
                 '.form-actions__action-15.base-button__rootElement-75.base-button__l-3Z.base-button__accentPrimary-B4',
                 timeout=0)
 
-            time.sleep(5)
+            time.sleep(15)
 
             if page.query_selector('.prepublish-popup-publisher-data__content') is not None:
                 raise NeedCreateSomeActionOnVideohostingException(get_str('need_make_some_action_on_videohosting'))

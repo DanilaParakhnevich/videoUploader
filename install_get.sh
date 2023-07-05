@@ -16,7 +16,7 @@ mkdir debpack/opt/BuxarVideoUploader
 sudo mv build debpack/opt/BuxarVideoUploader
 sudo mv dist debpack/opt/BuxarVideoUploader
 
-echo "Package: BuxarVideoUploader\nVersion:1.0.0\nArchitecture: all\nDescription:Application for video downloading/uploading" > debpack/control
+echo "Package: BuxarVideoUploader\nVersion:1.0.0\nIcon: /home/dendil/Documents/Projects/Own/BuxarVideoUploader/icon.png\nArchitecture: all\nDescription:Application for video downloading/uploading" > debpack/control
 cd debpack
 
 tar czf data.tar.gz opt
@@ -28,3 +28,18 @@ cd ../
 sudo rm -r myenv/
 sudo rm -r debpack
 sudo rm Application.spec
+
+#sudo touch /usr/share/applications/BuxarVideoUploader.desktop
+#
+#echo "[Desktop Entry]
+#Version=1.0
+#Name=BuxarVideoUploader
+#Comment=BuxarVideoUploader
+#Exec=/opt/BuxarVideoUploader/dist/Application/Application %U
+#Icon=/home/dendil/Documents/Projects/Own/BuxarVideoUploader/icon.png
+#Terminal=false
+#StartupWMClass=BuxarVideoUploader
+#Type=Application
+#Categories=VideoUploader>" > /usr/share/applications/BuxarVideoUploader.desktop
+#
+#sudo cp /usr/share/applications/BuxarVideoUploader.desktop /home/dendil/Desktop/
