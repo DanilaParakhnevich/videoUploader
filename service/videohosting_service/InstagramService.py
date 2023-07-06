@@ -1,16 +1,14 @@
-import os
-import uuid
+from datetime import datetime, time
 
 from PyQt5.QtWidgets import QTableWidgetItem
-from ffmpeg import FFmpeg
 from googletrans import Translator
 
 from service.LocalizationService import get_str
+from service.StateService import StateService
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
 from playwright.sync_api import sync_playwright
-from instagrapi import Client
 import re
 
 
@@ -18,7 +16,7 @@ class InstagramService(VideohostingService):
 
     def __init__(self):
         self.video_regex = 'https:\/\/www.instagram.com\/p\/.*\/'
-        self.channel_regex = 'https:\/\/www.instagram.com\/.*/'
+        self.channel_regex = 'https:\/\/www.instagram.com\/.*'
         self.upload_video_formats = list(['mp4', 'mov'])
         self.duration_restriction = 1
         self.size_restriction = 100
@@ -29,8 +27,7 @@ class InstagramService(VideohostingService):
         result = list()
 
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True, args=self.CHROMIUM_ARGS)
-            context = browser.new_context()
+            context = self.new_context(p, True, True)
 
             if account is not None:
                 context.add_cookies(account.auth)
@@ -74,7 +71,7 @@ class InstagramService(VideohostingService):
 
     def login(self, login, password):
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=False)
+            context = self.new_context(p, False, True)
             page = context.new_page()
             page.goto('https://www.instagram.com/')
             page.type('input[name="username"]', login)
@@ -88,43 +85,67 @@ class InstagramService(VideohostingService):
         return False
 
     def check_auth(self, account) -> bool:
-        try:
-            cl = Client()
-            cl.login(account.login, account.password)
-        except:
-            return False
-        return True
+        for auth in account.auth:
+            if auth['name'] == 'sessionid':
+                if datetime.utcfromtimestamp(auth['expires']) > datetime.now():
+                    return True
+                else:
+                    return False
+        return False
 
     def upload_video(self, account, file_path, name, description, destination=None,
                      table_item: QTableWidgetItem = None):
+
         if table_item is not None:
             table_item.setText(get_str('preparing'))
-        cl = Client()
-        cl.login(account.login, account.password)
-        key = uuid.uuid4()
-        final_path = f'{os.path.dirname(file_path)}/{key}.mp4'
-        try:
-            ffmpeg = (FFmpeg(
-                executable=f'{self.state_service.settings.ffmpeg}/bin/ffmpeg')
-                      .input(file_path)
-                      .option('y')
-                      .output(final_path)
-                  )
-            ffmpeg.execute()
+
+        with sync_playwright() as p:
+            context = self.new_context(p, StateService.settings.debug_browser is False, True)
+
+            if account is not None:
+                context.add_cookies(account.auth)
+
+            page = context.new_page()
+            page.goto('https://www.instagram.com/')
+
+            try:
+                page.wait_for_selector('._a9-v', timeout=20_000)
+                page.click('._a9--._a9_1')
+            except:
+                pass
+
+            page.wait_for_selector('.x9f619.x3nfvp2.xr9ek0c.xjpr12u.xo237n4.x6pnmvc.x7nr27j.x12dmmrz.xz9dl7a.xn6708d.xsag5q8.x1ye3gou.x80pfx3.x159b3zp.x1dn74xm.xif99yt.x172qv1o.x10djquj.x1lhsz42.xzauu7c.xdoji71.x1dejxi8.x9k3k5o.xs3sg5q.x11hdxyr.x12ldp4w.x1wj20lx.x1lq5wgf.xgqcy7u.x30kzoy.x9jhf4c')
+
+            page.query_selector_all('.x9f619.x3nfvp2.xr9ek0c.xjpr12u.xo237n4.x6pnmvc.x7nr27j.x12dmmrz.xz9dl7a.xn6708d.xsag5q8.x1ye3gou.x80pfx3.x159b3zp.x1dn74xm.xif99yt.x172qv1o.x10djquj.x1lhsz42.xzauu7c.xdoji71.x1dejxi8.x9k3k5o.xs3sg5q.x11hdxyr.x12ldp4w.x1wj20lx.x1lq5wgf.xgqcy7u.x30kzoy.x9jhf4c')[6].click()
+
+            page.wait_for_selector('._acan._acap._acas._aj1-')
+
+            with page.expect_file_chooser() as fc_info:
+                page.click(
+                    selector='._acan._acap._acas._aj1-',
+                    timeout=0)
             if table_item is not None:
                 table_item.setText(get_str('uploading'))
-            cl.video_upload(final_path, caption=name)
-        finally:
-            if ffmpeg._executed:
-                ffmpeg.terminate()
-            if os.path.exists(final_path):
-                os.remove(final_path)
-            else:
-                raise Exception
-            if os.path.exists(f'{os.path.dirname(file_path)}/{key}.mp4.jpg'):
-                os.remove(f'{os.path.dirname(file_path)}/{key}.mp4.jpg')
-            else:
-                raise Exception
+            file_chooser = fc_info.value
+            file_chooser.set_files(file_path, timeout=0)
 
-        # pillow
-        # moviepy
+            table_item.setText(get_str('ending'))
+
+            page.wait_for_selector('._ac7b._ac7d')
+
+            try:
+                page.wait_for_selector('._ag4f', timeout=20_000)
+                page.click('._acan._acap._acaq._acas._acav._aj1-')
+            except:
+                pass
+
+            page.click('._ac7b._ac7d')
+            page.wait_for_selector('._ac7b._ac7d')
+            page.click('._ac7b._ac7d')
+
+            page.click('.x6s0dn4.x78zum5.x1n2onr6.xh8yej3')
+            page.keyboard.type(name)
+
+            page.click('._ac7b._ac7d')
+
+            page.wait_for_selector('.x1lliihq.x1plvlek.xryxfnj.x1n2onr6.x193iq5w.xeuugli.x1fj9vlw.x13faqbe.x1vvkbs.x1s928wv.xhkezso.x1gmr53x.x1cpjm7i.x1fgarty.x1943h6x.x1i0vuye.x1ms8i2q.xo1l8bm.x5n08af.x2b8uid.x4zkp8e.xw06pyt.x10wh9bi.x1wdrske.x8viiok.x18hxmgj', timeout=0)

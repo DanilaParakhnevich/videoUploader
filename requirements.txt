@@ -1,4 +1,3 @@
-instagrapi
 moviepy
 pillow
 PyQt5
@@ -17,5 +16,4 @@ python-dateutil
 googletrans==3.1.0a0
 youtube-dl
 pyinstaller
-python-ffmpeg
 getmac

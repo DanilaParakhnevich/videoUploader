@@ -285,26 +285,31 @@ class SettingsPage(QtWidgets.QDialog):
         self.gridLayout.addWidget(self.events_label, 27, 0)
         self.gridLayout.addWidget(self.events_page_button, 27, 1)
 
+        self.debug_browser = QtWidgets.QCheckBox()
+        self.debug_browser.setObjectName("send_crash_notifications")
+        self.debug_browser.setChecked(self.old_settings.debug_browser)
+        self.gridLayout.addWidget(self.debug_browser, 28, 0)
+
         self.send_crash_notifications = QtWidgets.QCheckBox()
         self.send_crash_notifications.setObjectName("send_crash_notifications")
         self.send_crash_notifications.setChecked(self.old_settings.send_crash_notifications)
-        self.gridLayout.addWidget(self.send_crash_notifications, 28, 0)
+        self.gridLayout.addWidget(self.send_crash_notifications, 29, 0)
 
         self.save_password = QtWidgets.QCheckBox()
         self.save_password.setObjectName("save_password")
         self.save_password.setChecked(self.old_settings.save_password)
-        self.gridLayout.addWidget(self.save_password, 29, 0)
+        self.gridLayout.addWidget(self.save_password, 30, 0)
 
         self.save_button = QtWidgets.QPushButton()
         self.save_button.setObjectName("save_button")
         self.save_button.setMaximumWidth(80)
         self.save_button.clicked.connect(self.on_save)
-        self.gridLayout.addWidget(self.save_button, 30, 0)
+        self.gridLayout.addWidget(self.save_button, 31, 0)
 
         self.autostart = QtWidgets.QCheckBox()
         self.autostart.setObjectName("autostart")
         self.autostart.setChecked(self.old_settings.autostart)
-        self.gridLayout.addWidget(self.autostart, 30, 1)
+        self.gridLayout.addWidget(self.autostart, 3, 1)
 
         if self.old_settings.manual_settings is False:
             self.audio_quality_number_label.hide()
@@ -355,6 +360,7 @@ class SettingsPage(QtWidgets.QDialog):
         self.events_label.setText(get_str('events'))
         self.choose_dir_label.setText(get_str('choose_the_download_path'))
         self.send_crash_notifications.setText(get_str('send_crash_notifications'))
+        self.debug_browser.setText(get_str('debug_browser'))
         self.add_localization_label.setText(get_str('add_localization'))
         self.choose_dir_button.setText(self.old_settings.download_dir)
         self.save_button.setText(get_str('save'))
@@ -534,4 +540,5 @@ class SettingsPage(QtWidgets.QDialog):
                 video_quality_str=self.video_quality.currentIndex(),
                 ffmpeg=self.old_settings.ffmpeg,
                 encrypted_key=self.old_settings.encrypted_key,
-                user_mail=self.old_settings.user_mail))
+                user_mail=self.old_settings.user_mail,
+                debug_browser=self.debug_browser.checkState() != 0))

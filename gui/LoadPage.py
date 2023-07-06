@@ -85,10 +85,9 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         self.event_service = EventService()
 
     def remove_tab(self, index):
-        self.tab_models.pop(index - 1)
-        self.tables.pop(index - 1)
-        self.tabs.pop(index - 1)
-        self.widget(index)
+        self.tab_models.pop(index)
+        self.tables.pop(index)
+        self.tabs.pop(index)
         self.removeTab(index)
 
         self.state_service.save_tabs_state(self.tab_models)
@@ -100,12 +99,12 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             return self.create_tab(None, None, settings.format, settings.video_quality, settings.video_extension,
                                    settings.remove_files_after_upload, settings.download_dir, settings.manual_settings,
                                    settings.video_quality_str, settings.audio_quality_str, settings.audio_bitrate,
-                                   settings.video_bitrate, settings.audio_sampling_rate, settings.fps)
+                                   settings.video_bitrate, settings.audio_sampling_rate, settings.fps, list())
         else:
             return self.create_tab(None, channels.__getitem__(0), settings.format, settings.video_quality,
                                    settings.video_extension, settings.remove_files_after_upload, settings.download_dir,
                                    settings.manual_settings, settings.video_quality_str, settings.audio_quality_str,
-                                   settings.audio_bitrate, settings.video_bitrate, settings.audio_sampling_rate, settings.fps)
+                                   settings.audio_bitrate, settings.video_bitrate, settings.audio_sampling_rate, settings.fps, list())
 
     # Этот метод добавляет новую вкладку, либо вкладку по известным данным из tab_models
     def create_tab(self, name, selected_channel, format_index, video_quality_index, video_extension,
@@ -396,7 +395,9 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         tab.add_media_to_query_button.clicked.connect(self.on_add_media_to_query)
         tab.channel_box.currentTextChanged.connect(self.on_channel_changed)
+        tab.video_list = video_list
         self.tabs.append(tab)
+        self.resizeEvent(None)
 
     def on_clicked(self, tab_index, item):
         if item.column() == 3:
@@ -713,55 +714,55 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 self.state_service.save_tabs_state(self.tab_models)  # Каждый раз, когда меняются данные, они сохраняются
 
     def on_audio_bitrate_changed(self, item):
-        if len(self.tab_models) != 0:
+        if len(self.tab_models) != 0 and len(self.tab_models) > self.current_table_index:
             self.tab_models[self.current_table_index].audio_bitrate = item
             self.state_service.save_tabs_state(self.tab_models)
 
     def on_video_bitrate_changed(self, item):
-        if len(self.tab_models) != 0:
+        if len(self.tab_models) != 0 and len(self.tab_models) > self.current_table_index:
             self.tab_models[self.current_table_index].video_bitrate = item
             self.state_service.save_tabs_state(self.tab_models)
 
     def on_audio_sampling_rate_changed(self, item):
-        if len(self.tab_models) != 0:
+        if len(self.tab_models) != 0 and len(self.tab_models) > self.current_table_index:
             self.tab_models[self.current_table_index].audio_sampling_rate = item
             self.state_service.save_tabs_state(self.tab_models)
 
     def on_fps_changed(self, item):
-        if len(self.tab_models) != 0:
+        if len(self.tab_models) != 0 and len(self.tab_models) > self.current_table_index:
             self.tab_models[self.current_table_index].fps = item
             self.state_service.save_tabs_state(self.tab_models)
 
     def on_video_quality_changed(self, index):
-        if len(self.tab_models) != 0:
+        if len(self.tab_models) != 0 and len(self.tab_models) > self.current_table_index:
             self.tab_models[self.current_table_index].video_qualty_str = index
             self.state_service.save_tabs_state(self.tab_models)
 
     def on_audio_quality_changed(self, index):
-        if len(self.tab_models) != 0:
+        if len(self.tab_models) != 0 and len(self.tab_models) > self.current_table_index:
             self.tab_models[self.current_table_index].audio_quality_str = index
             self.state_service.save_tabs_state(self.tab_models)
 
     def on_video_format_changed(self, item):
         format_list = list([None, 'NOT_MERGE', 'VIDEO', 'AUDIO'])
-        if len(self.tab_models) != 0:
+        if len(self.tab_models) != 0 and len(self.tab_models) > self.current_table_index:
             self.tab_models[self.current_table_index].format = [item, format_list[item]]
             self.state_service.save_tabs_state(self.tab_models)  # Каждый раз, когда меняются данные, они сохраняются
 
     def on_video_quality_changed(self, item):
         quality_list = list(['144', '240', '360', '480', '720', '1080', '1440', '2160'])
-        if len(self.tab_models) != 0:
+        if len(self.tab_models) != 0 and len(self.tab_models) > self.current_table_index:
             self.tab_models[self.current_table_index].video_quality = [item, quality_list[item]]
             self.state_service.save_tabs_state(self.tab_models)
 
     def on_video_extension_changed(self, item):
         quality_list = list(['3gp', 'aac', 'flv', 'm4a', 'mp3', 'mp4', 'ogg', 'wav', 'webm'])
-        if len(self.tab_models) != 0:
+        if len(self.tab_models) != 0 and len(self.tab_models) > self.current_table_index:
             self.tab_models[self.current_table_index].video_extension = [item, quality_list[item]]
             self.state_service.save_tabs_state(self.tab_models)
 
     def on_remove_files_after_upload_changed(self, item):
-        if len(self.tab_models) != 0:
+        if len(self.tab_models) != 0 and len(self.tab_models) > self.current_table_index:
             self.tab_models[self.current_table_index].remove_files_after_upload = item
             self.state_service.save_tabs_state(self.tab_models)
 
@@ -808,10 +809,10 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         if hosting.value[0].is_async():
             event_loop = asyncio.new_event_loop()
 
-        thread = Thread(target=self.get_video_list, daemon=True, args=[button, hosting, channel, account, event_loop])
+        thread = Thread(target=self.get_video_list, daemon=True, args=[button, hosting, channel, account, event_loop, self.current_table_index])
         thread.start()
 
-    def get_video_list(self, button: AnimatedButton, hosting, channel, account, event_loop):
+    def get_video_list(self, button: AnimatedButton, hosting, channel, account, event_loop, table_index):
         if channel is None:
             print()
 
@@ -820,12 +821,12 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         service = hosting.value[0]
 
-        table = self.tables[self.current_table_index]
+        table = self.tables[table_index]
 
         while table.rowCount() > 0:
             table.removeRow(0)
 
-        self.tab_models[self.current_table_index].video_list.clear()
+        self.tab_models[table_index].video_list.clear()
 
         index = 0
         try:
@@ -853,11 +854,12 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 table.setItem(index, 3, item4)
                 table.setItem(index, 4, item5)
 
-                self.tab_models[self.current_table_index].video_list.append(video)
+                self.tab_models[table_index].video_list.append(video)
 
                 index += 1
         except:
             msg = QtWidgets.QMessageBox()
+            msg.setMinimumSize(400, 300)
             msg.setText(get_str('happened_error'))
             msg.exec_()
             log_error(traceback.format_exc())

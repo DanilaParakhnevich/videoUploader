@@ -4,6 +4,7 @@ from datetime import datetime
 from PyQt5.QtWidgets import QTableWidgetItem
 
 from service.LocalizationService import get_str
+from service.StateService import StateService
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
@@ -19,7 +20,7 @@ class YandexDzenService(VideohostingService):
 
     def __init__(self):
         self.video_regex = 'https:\/\/dzen.ru\/video\/watch\/.*'
-        self.channel_regex = '(https:\/\/dzen.ru\/id\/.*)|(https:\/\/dzen.ru\/.*\/)'
+        self.channel_regex = '(https:\/\/dzen.ru\/id\/.*)|(https:\/\/dzen.ru\/.*)'
         self.title_size_restriction = 200
         self.min_title_size = 0
         self.size_restriction = 30 * 1024
@@ -27,10 +28,13 @@ class YandexDzenService(VideohostingService):
         self.upload_video_formats = list(['3gpp', 'x-fvl', 'mp4', 'webm', 'x-ms-wmv', 'x-ms-asf', 'ogg', 'mpeg',
                                           'quicktime', 'x-m4v', 'x-msvideo', 'mkv'])
 
-    def get_videos_by_url(self, url, account=None):
+    def get_videos_by_url(self, url: str, account=None):
         result = list()
 
         with YoutubeDL(self.extract_info_opts) as ydl:
+            if url.endswith('/') is False:
+                url = url.strip() + '/'
+
             info = ydl.extract_info(url)
             for item in info['entries']:
                 result.append(VideoModel(item['url'], get_str('no_info'), get_str('no_info')))
@@ -60,7 +64,7 @@ class YandexDzenService(VideohostingService):
         with sync_playwright() as p:
             if table_item is not None:
                 table_item.setText(get_str('preparing'))
-            context = self.new_context(p=p, headless=False, use_user_agent_arg=True)
+            context = self.new_context(p=p, headless=StateService.settings.debug_browser is False, use_user_agent_arg=True)
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto('https://dzen.ru/profile/editor/create#video-editor', timeout=0)
@@ -81,17 +85,24 @@ class YandexDzenService(VideohostingService):
             if table_item is not None:
                 table_item.setText(get_str('ending'))
             try:
+                page.wait_for_selector('.ql-editor', timeout=0)
                 page.click('.ql-editor', click_count=3)
             except:
                 raise VideoInTooLowResolutionException('Видео в слишком низком разрешении')
 
+            page.wait_for_selector('.Textarea-Control.Texteditor-Control.Texteditor-Control_withSizing.Texteditor-Control_withMargin', timeout=0)
+            page.click('.Textarea-Control.Texteditor-Control.Texteditor-Control_withSizing.Texteditor-Control_withMargin', click_count=3)
+            page.keyboard.press('Backspace')
             page.keyboard.type(text=name)
+
+            page.click('.quill-text-field__editorContainer-mB.ql-container')
+            page.keyboard.type(description)
 
             page.click(
                 '.form-actions__action-15.base-button__rootElement-75.base-button__l-3Z.base-button__accentPrimary-B4',
                 timeout=0)
 
-            time.sleep(15)
+            time.sleep(1)
 
             if page.query_selector('.prepublish-popup-publisher-data__content') is not None:
                 raise NeedCreateSomeActionOnVideohostingException(get_str('need_make_some_action_on_videohosting'))

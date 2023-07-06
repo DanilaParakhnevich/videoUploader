@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QTableWidgetItem
 
 from service.LocalizationService import get_str
 from service.LoggingService import log_error, log_info
+from service.StateService import StateService
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
@@ -16,7 +17,7 @@ class RutubeService(VideohostingService):
 
     def __init__(self):
         self.video_regex = 'https:/\/rutube.ru\/video\/.*'
-        self.channel_regex = 'https:\/\/rutube.ru\/channel\/.*\/'
+        self.channel_regex = 'https:\/\/rutube.ru\/channel\/.*'
         self.upload_video_formats = list(['mp4', 'flv', 'avi', 'mov', 'mpg', 'wmv', 'm4v', 'mp3',
                                           'wma', '3gp', 'mkv', 'webm'])
         self.duration_restriction = 300
@@ -80,7 +81,7 @@ class RutubeService(VideohostingService):
         if table_item is not None:
             table_item.setText(get_str('preparing'))
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+            context = self.new_context(p=p, headless=StateService.settings.debug_browser is False, use_user_agent_arg=True)
             context.add_cookies(account.auth)
 
             page = context.new_page()

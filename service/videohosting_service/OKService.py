@@ -4,6 +4,7 @@ from datetime import datetime
 from PyQt5.QtWidgets import QTableWidgetItem
 
 from service.LocalizationService import get_str
+from service.StateService import StateService
 from service.videohosting_service.VideohostingService import VideohostingService
 from playwright.sync_api import sync_playwright
 from gui.widgets.LoginForm import LoginForm
@@ -41,7 +42,10 @@ class OKService(VideohostingService):
             else:
                 page.click('a[data-l="outlandermenu,userFriendVideoNew"]', timeout=60_000)
 
-            page.wait_for_selector('.ugrid.ugrid__video', timeout=0)
+            try:
+                page.wait_for_selector('.ugrid.ugrid__video', timeout=60_000)
+            except:
+                return list()
 
             self.scroll_page_to_the_bottom(page=page)
 
@@ -94,7 +98,7 @@ class OKService(VideohostingService):
         with sync_playwright() as p:
             if table_item is not None:
                 table_item.setText(get_str('preparing'))
-            context = self.new_context(p=p, headless=True)
+            context = self.new_context(p=p, headless=StateService.settings.debug_browser is False)
             context.add_cookies(account.auth)
             page = context.new_page()
 

@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QTableWidgetItem
 
 from service.LocalizationService import get_str
 from service.LoggingService import log_info
+from service.StateService import StateService
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
@@ -124,7 +125,7 @@ class FacebookService(VideohostingService):
     def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
         with sync_playwright() as p:
             table_item.setText(get_str('preparing'))
-            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+            context = self.new_context(p=p, headless=StateService.settings.debug_browser is False, use_user_agent_arg=True)
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto(destination, wait_until='domcontentloaded')

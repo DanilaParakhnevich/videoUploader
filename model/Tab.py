@@ -9,4 +9,4 @@ class TabModel(object):
         self.video_extension = video_extension
         self.remove_files_after_upload = remove_files_after_upload
         self.download_dir = download_dir
-        video_list = list()
+        self.video_list = list()

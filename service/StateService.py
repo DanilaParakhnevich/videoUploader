@@ -1,6 +1,6 @@
 import uuid
 
-from PyQt5.QtCore import QSettings, QSize
+from PyQt5.QtCore import QSettings, QSize, QTextCodec
 from model.Settings import Settings
 import os
 
@@ -17,6 +17,7 @@ class StateService(object):
 
     def __init__(self):
         self.q_settings = QSettings('BuxarVideoUploaderSettings')
+        QTextCodec.setCodecForLocale(QTextCodec.codecForName("UTF-8"))
 
     def is_first_launch(self) -> bool:
         return self.q_settings.value('first_launch')
@@ -246,6 +247,8 @@ class StateService(object):
                     StateService.settings.audio_sampling_rate = 0
                 if hasattr(StateService.settings, 'fps') is False:
                     StateService.settings.fps = 0
+                if hasattr(StateService.settings, 'debug_browser') is False:
+                    StateService.settings.debug_browser = False
         return StateService.settings
 
     # GUI
