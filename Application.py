@@ -136,9 +136,11 @@ if __name__ == "__main__":
 
     activated = False
 
-    if hasattr(settings, 'encrypted_key') and hasattr(settings, 'user_mail'):
+    license_model = state_service.get_license_model()
+
+    if license_model.encrypted_key is not None and license_model.user_mail is not None:
         hash = hashlib.sha256()
-        result = requests.post('http://bvu.buxarnet.ru/lc/chek.php', data={'version': current_client_version, 'encrypted_key': settings.encrypted_key, 'mac_id': get_mac_address(), 'mail': settings.user_mail})
+        result = requests.post('http://bvu.buxarnet.ru/lc/chek.php', data={'version': current_client_version, 'encrypted_key': "".join(license_model.encrypted_key), 'mac_id': get_mac_address(), 'mail': "".join(license_model.user_mail)})
 
         if result.status_code == 200:
             result = json.loads(('{' + result.content.__str__().split('{')[1]).replace('\'', ''))
@@ -147,11 +149,11 @@ if __name__ == "__main__":
                 arr.pop(3)
                 version = ".".join(arr)
 
-                hash.update(f'{settings.encrypted_key}{version}{get_mac_address()}{settings.user_mail}{result["data"]}{result["time"]}'.encode('utf-8'))
+                hash.update(f'{"".join(license_model.encrypted_key)}{version}{get_mac_address()}{"".join(license_model.user_mail)}{result["data"]}{result["time"]}'.encode('utf-8'))
                 key = hash.hexdigest()
-                activated = key == hash.hexdigest()
+                activated = key == result['chek']
         if activated is False:
-            log_error(f'Неудачная валидация лицензии: encrypted_key: {settings.encrypted_key}, mac_id: {get_mac_address()}, mail: {settings.user_mail}, version: {current_client_version}')
+            log_error(f'Неудачная валидация лицензии: encrypted_key: {"".join(license_model.encrypted_key)}, mac_id: {get_mac_address()}, mail: {license_model.user_mail[0]}, version: {"".join(current_client_version)}')
 
     while activated is False:
         form = EnterLicenseKeyForm()
@@ -167,9 +169,9 @@ if __name__ == "__main__":
         if result.status_code == 200:
             result = json.loads(('{' + result.content.__str__().split('{')[1]).replace('\'', ''))
             if result['activated'] is True:
-                settings.user_mail = form.mail
-                settings.encrypted_key = result['encrypted_key']
-                state_service.save_settings(settings)
+                license_model.user_mail = list(form.mail)
+                license_model.encrypted_key = list(result['encrypted_key'])
+                state_service.save_license_model(license_model)
                 activated = True
 
         if activated is False:

@@ -1,6 +1,8 @@
 import uuid
 
-from PyQt5.QtCore import QSettings, QSize, QTextCodec
+from PyQt5.QtCore import QSettings, QSize
+
+from model.LicenseModel import LicenseModel
 from model.Settings import Settings
 import os
 
@@ -17,13 +19,6 @@ class StateService(object):
 
     def __init__(self):
         self.q_settings = QSettings('BuxarVideoUploaderSettings')
-        QTextCodec.setCodecForLocale(QTextCodec.codecForName("UTF-8"))
-
-    def is_first_launch(self) -> bool:
-        return self.q_settings.value('first_launch')
-
-    def set_first_launch(self, first_launch: bool):
-        self.q_settings.setValue('first_launch', first_launch)
 
     # Channels
     def save_channels(self, channels):
@@ -250,6 +245,22 @@ class StateService(object):
                 if hasattr(StateService.settings, 'debug_browser') is False:
                     StateService.settings.debug_browser = False
         return StateService.settings
+
+    def get_license_model(self):
+        value = self.q_settings.value('license_model')
+
+        if value is None:
+            value = LicenseModel()
+
+        if value.user_mail is None and self.get_settings().user_mail is not None:
+            value.encrypted_key = list(self.get_settings().encrypted_key)
+            value.user_mail = list(self.get_settings().user_mail)
+            self.save_license_model(value)
+
+        return value
+
+    def save_license_model(self, license_model):
+        self.q_settings.setValue('license_model', license_model)
 
     # GUI
 
