@@ -195,6 +195,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             self.set_media_status(media.id, 3, status_name=f'{get_str("technical_error")}: {er.args}')
             if self.settings.send_crash_notifications is True:
                 MailService().send_log()
+            return
         except Exception:
             log_error(traceback.format_exc())
             self.set_media_status(media.id, 3)

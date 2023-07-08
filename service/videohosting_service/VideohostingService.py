@@ -205,6 +205,7 @@ class VideohostingService(ABC):
             'keepvideo': settings.keep_fragments,
             'buffersize': settings.buffer_size,
             'writesubtitles': settings.write_sub,
+            'ignoreerrors': True,
             'overwrites': True
         }
 
@@ -338,9 +339,9 @@ class VideohostingService(ABC):
                 else:
                     audio_format = 'bestaudio' if audio_quality_str == 0 else 'worstaudio'
                     if video_quality_str == 0:
-                        video_format = f'bestvideo+{audio_format}'
+                        video_format = f'best/bestvideo+{audio_format}'
                     else:
-                        video_format = f'worstvideo+{audio_format}'
+                        video_format = f'worst/worstvideo+{audio_format}'
                 simple_download_opts['format'] = video_format
                 simple_download_opts['merge_output_format'] = video_extension
 
@@ -391,14 +392,14 @@ class VideohostingService(ABC):
         else:
             audio_format = 'bestaudio' if audio_quality_str == 0 else 'worstaudio'
             if video_quality_str == 0:
-                video_format = f'bestvideo+{audio_format}'
+                video_format = f'best/bestvideo+{audio_format}'
             else:
-                video_format = f'worstvideo+{audio_format}'
+                video_format = f'worst/worstvideo+{audio_format}'
 
         download_opts = {
             'skip_download': True,
             'format': video_format,
-            'merge_output_format': video_extension
+            'merge_output_format': video_extension,
         }
 
         # Чтобы нормально добавить куки в обычном json, приходится использовать http_headers
@@ -413,7 +414,7 @@ class VideohostingService(ABC):
         filesize = get_str('no_info')
         if 'filesize' in info and info['filesize'] is not None:
             filesize = int(info['filesize'] / 1024 ** 2)
-        elif 'filesize_approx' in info:
+        elif 'filesize_approx' in info and info['filesize_approx'] is not None:
             filesize = int(info['filesize_approx'] / 1024 ** 2)
 
         is_exists_format = None
@@ -447,7 +448,7 @@ class VideohostingService(ABC):
         return {
             'title': info['title'],
             'description': info['description'] if hasattr(info, 'description') else '',
-            'duration': info['duration'],
+            'duration': info['duration'] if 'duration' in info else None,
             'filesize': filesize,
             'ext': info['ext'] if info['ext'] else info['video_ext'],
             'is_exists_format': is_exists_format

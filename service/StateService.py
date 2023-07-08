@@ -114,6 +114,8 @@ class StateService(object):
                     tab.audio_sampling_rate = self.get_settings().audio_sampling_rate
                 if hasattr(tab, 'fps') is False:
                     tab.fps = self.get_settings().fps
+                if hasattr(tab, 'current_channel') is False:
+                    tab.current_channel = tab.channel
 
         return StateService.tabs
 

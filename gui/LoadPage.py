@@ -527,7 +527,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             if table.item(i, 3).checkState() == 0:
                 continue
 
-            channel = self.state_service.get_channel_by_url(self.tab_models[self.current_table_index].channel)
+            channel = self.state_service.get_channel_by_url(self.tab_models[self.current_table_index].current_channel)
             hosting = Hosting[channel.hosting]
             title = None
             description = None
@@ -680,7 +680,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             upload_targets = list()
 
             # Если необходима выгрузка, учитывается интервал выгрузки, исходя из типа интервала. 1 видео выгружается сразу
-            if upload_on:
+            if upload_on and upload_this:
                 if upload_time_type == 0:
                     upload_date = upload_date + relativedelta(minutes=upload_interval)
                 elif upload_time_type == 1:
@@ -864,6 +864,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             msg.exec_()
             log_error(traceback.format_exc())
 
+        self.tab_models[table_index].current_channel = channel.url
         self.state_service.save_tabs_state(self.tab_models)
 
         table.update()
