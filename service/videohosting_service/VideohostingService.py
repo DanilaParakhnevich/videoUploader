@@ -339,9 +339,9 @@ class VideohostingService(ABC):
                 else:
                     audio_format = 'bestaudio' if audio_quality_str == 0 else 'worstaudio'
                     if video_quality_str == 0:
-                        video_format = f'best/bestvideo+{audio_format}'
+                        video_format = f'bestvideo+{audio_format}/best'
                     else:
-                        video_format = f'worst/worstvideo+{audio_format}'
+                        video_format = f'worstvideo+{audio_format}/worst'
                 simple_download_opts['format'] = video_format
                 simple_download_opts['merge_output_format'] = video_extension
 
@@ -370,7 +370,7 @@ class VideohostingService(ABC):
     def get_video_info(self, url: str, manual_settings, video_quality_str, audio_quality_str, video_bitrate,
                        audio_bitrate, audio_sampling_rate, fps, video_quality, video_extension, account=None):
 
-        if url.__contains__('Facebook'):
+        if url.lower().__contains__('facebook'):
             from youtube_dl import YoutubeDL
         else:
             from yt_dlp import YoutubeDL
@@ -392,14 +392,15 @@ class VideohostingService(ABC):
         else:
             audio_format = 'bestaudio' if audio_quality_str == 0 else 'worstaudio'
             if video_quality_str == 0:
-                video_format = f'best/bestvideo+{audio_format}'
+                video_format = f'bestvideo+{audio_format}/best'
             else:
-                video_format = f'worst/worstvideo+{audio_format}'
+                video_format = f'worstvideo+{audio_format}/worst'
 
         download_opts = {
             'skip_download': True,
             'format': video_format,
-            'merge_output_format': video_extension,
+            'noplaylist': True,
+            'merge_output_format': video_extension
         }
 
         # Чтобы нормально добавить куки в обычном json, приходится использовать http_headers
@@ -411,6 +412,10 @@ class VideohostingService(ABC):
 
         with YoutubeDL(download_opts) as ydl:
             info = ydl.extract_info(url)
+
+        if 'formats' not in info and info['entries'][0] is not None:
+            info = info['entries'][0]
+
         filesize = get_str('no_info')
         if 'filesize' in info and info['filesize'] is not None:
             filesize = int(info['filesize'] / 1024 ** 2)

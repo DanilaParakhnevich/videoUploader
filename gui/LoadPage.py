@@ -191,7 +191,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         tab.choose_video_quality_form = ChooseVideoQualityComboBox(tab)
         tab.choose_video_quality_form.setObjectName('choose_video_quality_form')
         tab.choose_video_quality_form.setCurrentIndex(video_quality_index)
-        tab.choose_video_quality_form.currentIndexChanged.connect(self.on_video_quality_changed)
+        tab.choose_video_quality_form.currentIndexChanged.connect(self.on_video_resolution_changed)
         tab.extension_chooser_combo_box = ExtensionChooserComboBox(tab)
         tab.extension_chooser_combo_box.setObjectName('choose_video_quality_form')
         tab.extension_chooser_combo_box.setCurrentIndex(video_extension)
@@ -735,7 +735,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
     def on_video_quality_changed(self, index):
         if len(self.tab_models) != 0 and len(self.tab_models) > self.current_table_index:
-            self.tab_models[self.current_table_index].video_qualty_str = index
+            self.tab_models[self.current_table_index].video_quality_str = index
             self.state_service.save_tabs_state(self.tab_models)
 
     def on_audio_quality_changed(self, index):
@@ -749,7 +749,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             self.tab_models[self.current_table_index].format = [item, format_list[item]]
             self.state_service.save_tabs_state(self.tab_models)  # Каждый раз, когда меняются данные, они сохраняются
 
-    def on_video_quality_changed(self, item):
+    def on_video_resolution_changed(self, item):
         quality_list = list(['144', '240', '360', '480', '720', '1080', '1440', '2160'])
         if len(self.tab_models) != 0 and len(self.tab_models) > self.current_table_index:
             self.tab_models[self.current_table_index].video_quality = [item, quality_list[item]]
