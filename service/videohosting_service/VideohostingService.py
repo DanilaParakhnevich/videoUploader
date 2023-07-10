@@ -2,6 +2,8 @@ import re
 import traceback
 from abc import ABC
 import abc
+from http.cookiejar import Cookie
+
 from playwright.sync_api import BrowserContext
 from playwright.sync_api import Playwright
 from playwright.sync_api import Page
@@ -152,7 +154,8 @@ class VideohostingService(ABC):
                                                               audio_bitrate=audio_bitrate,
                                                               video_bitrate=video_bitrate,
                                                               audio_sampling_rate=audio_sampling_rate,
-                                                              manual_settings=manual_settings)
+                                                              manual_settings=manual_settings,
+                                                              account=account)
 
         if hosting == 'Facebook':
             from youtube_dl import YoutubeDL
@@ -165,11 +168,23 @@ class VideohostingService(ABC):
         if video_info['filesize'] is int and free - video_info['filesize'] < 100:
             raise NoFreeSpaceException(f'Нет свободного места: размер файла: {video_info["filesize"]}')
 
-        download_path = fr'{download_dir}/{hosting}/%(title)s_{video_quality}.%(ext)s' if manual_settings \
-            else fr'{download_dir}/{hosting}/%(title)s.%(ext)s'
+        title = None
 
-        download_audio_path = fr'{download_dir}/{hosting}/audio_%(title)s_{video_quality}.%(ext)s' if manual_settings \
-            else fr'{download_dir}/{hosting}/audio_%(title)s.%(ext)s'
+        if 'title' in video_info:
+            title = video_info['title']
+            title = title.replace('/', '|')
+
+            download_path = fr'{download_dir}/{hosting}/{title}_{video_quality}.%(ext)s' if manual_settings \
+                else fr'{download_dir}/{hosting}/{title}.%(ext)s'
+
+            download_audio_path = fr'{download_dir}/{hosting}/audio_{title}_{video_quality}.%(ext)s' if manual_settings \
+                else fr'{download_dir}/{hosting}/audio_{title}.%(ext)s'
+        else:
+            download_path = fr'{download_dir}/{hosting}/%(title)s_{video_quality}.%(ext)s' if manual_settings \
+                else fr'{download_dir}/{hosting}/%(title)s.%(ext)s'
+
+            download_audio_path = fr'{download_dir}/{hosting}/audio_%(title)s_{video_quality}.%(ext)s' if manual_settings \
+                else fr'{download_dir}/{hosting}/audio_%(title)s.%(ext)s'
 
         def prog_hook(d, table_item):
             try:
@@ -228,7 +243,7 @@ class VideohostingService(ABC):
         if StateService.settings.rate_limit != 0:
             simple_download_opts['ratelimit'] = str(StateService.settings.rate_limit * 1024)
 
-        video_format_str = f'[height={video_quality}]'
+        video_format_str = f'[height<={video_quality}]'
         audio_format_str = ''
         if manual_settings:
             if audio_bitrate != '0':
@@ -307,9 +322,23 @@ class VideohostingService(ABC):
                 download_video_opts['ratelimit'] = simple_download_opts['ratelimit']
 
             with YoutubeDL(download_video_opts) as ydl:
+                if account is not None and isinstance(account.auth, list):
+                    for auth in account.auth:
+                        ydl.cookiejar.set_cookie(Cookie(
+                            name=auth['name'], value=auth['value'], domain=auth['domain'],
+                            version=0, port=None, path=auth['path'], secure=True, expires=None, discard=False,
+                            comment=None, comment_url=None, rest={'HttpOnly': None},
+                            domain_initial_dot=True, port_specified=False, domain_specified=True, path_specified=False))
                 info = ydl.extract_info(url)
 
             with YoutubeDL(download_audio_opts) as ydl:
+                if account is not None and isinstance(account.auth, list):
+                    for auth in account.auth:
+                        ydl.cookiejar.set_cookie(Cookie(
+                            name=auth['name'], value=auth['value'], domain=auth['domain'],
+                            version=0, port=None, path=auth['path'], secure=True, expires=None, discard=False,
+                            comment=None, comment_url=None, rest={'HttpOnly': None},
+                            domain_initial_dot=True, port_specified=False, domain_specified=True, path_specified=False))
                 ydl.extract_info(url)
 
         else:
@@ -346,16 +375,26 @@ class VideohostingService(ABC):
                 simple_download_opts['merge_output_format'] = video_extension
 
             with YoutubeDL(simple_download_opts) as ydl:
+                if account is not None and isinstance(account.auth, list):
+                    for auth in account.auth:
+                        ydl.cookiejar.set_cookie(Cookie(
+                            name=auth['name'], value=auth['value'], domain=auth['domain'],
+                            version=0, port=None, path=auth['path'], secure=True, expires=None, discard=False,
+                            comment=None, comment_url=None, rest={'HttpOnly': None},
+                            domain_initial_dot=True, port_specified=False, domain_specified=True, path_specified=False))
                 info = ydl.extract_info(url)
 
         if 'title' in info:
-            title = info['title']
+            if title is None:
+                title = info['title']
             ext = info['ext'] if 'ext' in info and info['ext'] is not None else info['video_ext']
         else:
-            title = info['entries'][0]['title']
+            if title is None:
+                title = info['entries'][0]['title']
             ext = info['entries'][0]['ext']
 
         title = title.replace('/', '|')
+
         if manual_settings:
             if 'video_ext' in info:
                 return f'{download_dir}/{hosting}/{title}_{video_quality}.{ext}'
@@ -376,7 +415,7 @@ class VideohostingService(ABC):
             from yt_dlp import YoutubeDL
 
         if manual_settings:
-            video_format_str = f'[height={video_quality}]'
+            video_format_str = f'[height<={video_quality}]'
             audio_format_str = ''
             if manual_settings:
                 if audio_bitrate != '0':
@@ -411,6 +450,13 @@ class VideohostingService(ABC):
             download_opts["http_headers"] = {"Set-Cookie": cookie_str}
 
         with YoutubeDL(download_opts) as ydl:
+            if account is not None and isinstance(account.auth, list):
+                for auth in account.auth:
+                    ydl.cookiejar.set_cookie(Cookie(
+                        name=auth['name'], value=auth['value'], domain=auth['domain'],
+                        version=0, port=None, path=auth['path'], secure=True, expires=None, discard=False,
+                        comment=None, comment_url=None, rest={'HttpOnly': None},
+                        domain_initial_dot=True, port_specified=False, domain_specified=True, path_specified=False))
             info = ydl.extract_info(url)
 
         if 'formats' not in info and info['entries'][0] is not None:

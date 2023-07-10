@@ -85,7 +85,7 @@ class YandexDzenService(VideohostingService):
             if table_item is not None:
                 table_item.setText(get_str('ending'))
             try:
-                page.wait_for_selector('.ql-editor', timeout=0)
+                page.wait_for_selector('.ql-editor', timeout=60_000)
                 page.click('.ql-editor', click_count=3)
             except:
                 raise VideoInTooLowResolutionException('Видео в слишком низком разрешении')

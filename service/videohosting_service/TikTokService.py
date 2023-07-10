@@ -30,14 +30,14 @@ class TikTokService(VideohostingService):
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto(url)
-            page.wait_for_selector('.tiktok-833rgq-DivShareLayoutMain', timeout=0)
+            page.wait_for_selector('[data-e2e="user-post-item-list"]', timeout=0)
 
             self.scroll_page_to_the_bottom(page=page)
 
-            stream_boxes = page.locator("//div[contains(@class, 'tiktok-x6y88p-DivItemContainerV2')]")
-            for box in stream_boxes.element_handles():
-                result.append(VideoModel(url=box.query_selector('.tiktok-yz6ijl-DivWrapper').query_selector('a').get_attribute('href'),
-                                         name=box.query_selector('.tiktok-1wrhn5c-AMetaCaptionLine').get_attribute('title'),
+            elements = page.query_selector_all('[data-e2e="user-post-item-desc"]')
+            for box in elements:
+                result.append(VideoModel(url=box.query_selector('a').get_attribute('href'),
+                                         name=box.query_selector('a').get_attribute('title'),
                                          date=get_str('no_info')))
 
         return result

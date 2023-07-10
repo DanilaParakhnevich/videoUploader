@@ -26,7 +26,7 @@ class FacebookService(VideohostingService):
         self.title_size_restriction = 9_999_999_999
         self.min_title_size = 0
 
-    def get_videos_by_url(self, url, account=None):
+    def get_videos_by_url(self, url: str, account=None):
         result = list()
 
         with sync_playwright() as p:
@@ -36,19 +36,26 @@ class FacebookService(VideohostingService):
                 context.add_cookies(account.auth)
 
             page = context.new_page()
+            if url.endswith('/'):
+                url = url[0:len(url) - 1]
+
             if url.__contains__('groups'):
                 page.goto(f'{url}/media/videos', timeout=0)
             else:
-                page.goto(f'{url}&sk=videos', timeout=0)
+                page.goto(f'{url}/videos', timeout=0)
+
             page.wait_for_selector('.x6s0dn4.x9f619.x78zum5.x2lah0s.x1hshjfz.x1n2onr6.xng8ra.x1pi30zi.x1swvt13')
+
             time.sleep(1)
             self.scroll_page_to_the_bottom(page=page, timeout=3)
-            stream_boxes = page.locator("//div[contains(@class,'xrvj5dj x5yr21d xh8yej3')]")
-            for box in stream_boxes.element_handles():
-                result.append(
-                    VideoModel(url=str(box.query_selector('a').get_property('href')),
-                               name=str(box.query_selector('img').get_property('alt')),
-                               date=get_str('no_info')))
+            stream_boxes = page.query_selector_all('.x9f619.x1r8uery.x1iyjqo2.x6ikm8r.x10wlt62.x1n2onr6')
+            for box in stream_boxes:
+                if box.query_selector('a') is not None:
+
+                    result.append(
+                        VideoModel(url=str(box.query_selector('a').get_property('href')),
+                                   name=get_str('no_info'),
+                                   date=get_str('no_info')))
 
         return result
 
