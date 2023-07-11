@@ -35,9 +35,7 @@ class TelegramService(VideohostingService):
         with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
                     workdir='service/videohosting_service/tmp') as app:
             history = app.get_chat_history(chat_id=url.replace('https://t.me/', ''))
-            count = 0
             for message in history:
-                count += 1
                 if message.video is not None:
                     message_url = f'https://t.me/c/me/{message.id}' if url == 'me' else message.link
                     result.append(VideoModel(url=message_url, name=message.caption, date=str(message.date)))

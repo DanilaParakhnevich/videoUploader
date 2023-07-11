@@ -3,7 +3,7 @@ import time
 from PyQt5.QtWidgets import QTableWidgetItem
 
 from service.LocalizationService import get_str
-from service.LoggingService import log_error, log_info
+from service.LoggingService import log_error
 from service.StateService import StateService
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
@@ -95,7 +95,6 @@ class RutubeService(VideohostingService):
             file_chooser = fc_info.value
             file_chooser.set_files(file_path, timeout=0)
 
-            log_info('1 rutube')
             if table_item is not None:
                 table_item.setText(get_str('ending'))
             page.wait_for_selector('[name=title]', timeout=0)
@@ -111,10 +110,8 @@ class RutubeService(VideohostingService):
             page.click('[name="categories"]')
             page.click('.freyja_char-dropdown-layout__dropdownItem__x8JCK')
 
-            log_info('2 rutube')
-
             page.wait_for_selector(
-                '.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__regular__ksZLL.freyja_char-base-button__pointerCursor__JNA7y')
+                '.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__regular__ksZLL.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
 
             page.click(
                 selector='.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__regular__ksZLL.freyja_char-base-button__pointerCursor__JNA7y',

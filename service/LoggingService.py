@@ -12,7 +12,6 @@ def log_error(msg: str):
 def log_info(msg: str):
     logger.log(_Logger__level='INFO', _Logger__message=msg)
 
-import smtplib
 import smtpd
 import asyncore
 

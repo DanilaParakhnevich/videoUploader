@@ -165,7 +165,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
-                        self.add_error_upload_item(get_str('upload_yet'), upload_target, f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
+                        self.add_error_upload_item('upload_yet', upload_target, f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}')
                         upload_target['error'] = True
                     except FileSizeException:
@@ -173,7 +173,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
-                        self.add_error_upload_item(get_str('upload_yet'), upload_target, f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
+                        self.add_error_upload_item('upload_yet', upload_target, f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}')
                         upload_target['error'] = True
                     except FileFormatException:
@@ -181,7 +181,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
-                        self.add_error_upload_item(get_str('upload_yet'), upload_target, f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
+                        self.add_error_upload_item('upload_yet', upload_target, f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}')
                         upload_target['error'] = True
                     except NameIsTooLongException:
@@ -216,7 +216,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
                         account = self.state_service.get_account_by_hosting_and_login(target['hosting'], target['login'])
                         self.queue_media_service.add_to_the_upload_queue(
                             UploadQueueMedia(media_id=str(uuid.uuid4()),
-                                             video_dir=get_str('upload_yet'),
+                                             video_dir='upload_yet',
                                              hosting=target['hosting'],
                                              status=5,
                                              account=account,

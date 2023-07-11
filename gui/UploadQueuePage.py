@@ -139,7 +139,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             self.set_media_status(queue_media.id, 1)
             result = Hosting[queue_media.hosting].value[0].check_auth(queue_media.account)
             if result is False:
-                self.set_media_status(queue_media.id, 3, get_str('check_fail'))
+                self.set_media_status(queue_media.id, 3, 'check_fail')
             Hosting[queue_media.hosting].value[0].upload_video(
                 file_path=queue_media.video_dir,
                 account=queue_media.account,
@@ -164,17 +164,14 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             self.set_media_status(queue_media.id, 4)
             self.upload_thread_dict.pop(queue_media.id)
             return
-        except NeedCreateSomeActionOnVideohostingException:
+        except Exception as e:
             log_error(traceback.format_exc())
-            self.set_media_status(queue_media.id, 3, get_str('need_make_some_action_on_videohosting'))
-            return
-        except VideoInTooLowResolutionException:
-            log_error(traceback.format_exc())
-            self.set_media_status(queue_media.id, 3, get_str('video_in_low_resolution'))
-            return
-        except Exception:
-            log_error(traceback.format_exc())
-            self.set_media_status(queue_media.id, 3, get_str('technical_error'))
+            if e.args[0].__contains__('Видео в слишком низком разрешении'):
+                self.set_media_status(queue_media.id, 3, 'video_in_low_resolution')
+            elif e.args[0].__contains__('Необходимо активировать аккаунт'):
+                self.set_media_status(queue_media.id, 3, 'need_make_some_action_on_videohosting')
+            else:
+                self.set_media_status(queue_media.id, 3, 'technical_error')
             if state_service.get_settings().send_crash_notifications:
                 MailService().send_log()
             return
@@ -192,20 +189,20 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             self.insert_queue_media(queue_media)
 
         for queue_media in last_added_temp_queue_media:
-            if queue_media.status == 3:
+            if queue_media.status == 6:
                 i = self.find_row_number_by_login_and_hosting(queue_media.account.login, queue_media.hosting,
-                                                              queue_media.destination, 3)
+                                                              queue_media.destination, 6)
                 if i is not None:
                     queue_media.error_name = self.queue_media_list[i].error_name
                     self.queue_media_list[i] = queue_media
+                    self.insert_queue_media(queue_media, i)
             else:
                 i = self.find_row_number_by_login_and_hosting(queue_media.account.login, queue_media.hosting,
                                                               queue_media.destination)
+
                 if i is not None:
                     self.queue_media_list[i] = queue_media
-
-            if i is not None:
-                self.insert_queue_media(queue_media, i)
+                    self.insert_queue_media(queue_media, i)
 
         self.state_service.save_upload_queue_media(self.queue_media_list)
 
@@ -213,7 +210,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         i = 0
         for queue_media in self.queue_media_list:
             if (queue_media.account.login == login or queue_media.destination == target) and queue_media.hosting == hosting \
-                    and queue_media.status == status and queue_media.video_dir == get_str('upload_yet'):
+                    and queue_media.status == status and get_str(queue_media.video_dir) == get_str('upload_yet'):
                 return i
             i += 1
         return None
@@ -226,7 +223,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         else:
             input_position = index
 
-        item1 = QtWidgets.QTableWidgetItem(queue_media.video_dir)
+        item1 = QtWidgets.QTableWidgetItem(get_str(queue_media.video_dir))
         item1.setData(11, queue_media.id)
 
         item3 = QtWidgets.QTableWidgetItem(queue_media.hosting)
@@ -264,14 +261,14 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             item4 = QtWidgets.QPushButton(get_str('end'))
             item4.clicked.connect(self.do_nothing)
             action_button.setText('-')
-        elif queue_media.status == 3:
+        elif queue_media.status == 3 or queue_media.status == 6:
             item4 = QtWidgets.QPushButton(get_str('error'))
-            if queue_media.error_name is None or queue_media.error_name == get_str('technical_error'):
-                item4.clicked.connect(self.do_nothing)
+            if queue_media.error_name is None or get_str(queue_media.error_name) == get_str('technical_error'):
+                item4.clicked.connect(partial(self.show_error, get_str('technical_error')))
                 action_button.setText(get_str('retry'))
                 action_button.clicked.connect(self.on_start_upload)
             else:
-                item4.clicked.connect(partial(self.show_error, queue_media.error_name))
+                item4.clicked.connect(partial(self.show_error, get_str(queue_media.error_name)))
                 action_button.setText('-')
                 action_button.clicked.connect(self.do_nothing)
 
@@ -333,7 +330,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                     elif status == 3:
                         if error_name is not None:
                             self.cellWidget(i, 3).clicked.disconnect()
-                            self.cellWidget(i, 3).clicked.connect(partial(self.show_error, error_name))
+                            self.cellWidget(i, 3).clicked.connect(partial(self.show_error, get_str(error_name)))
                             self.cellWidget(i, 3).setText(get_str('error'))
                             self.queue_media_list[i].error_name = error_name
                             self.state_service.save_upload_queue_media(self.queue_media_list)

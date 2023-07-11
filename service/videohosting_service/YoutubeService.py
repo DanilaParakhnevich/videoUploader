@@ -5,7 +5,6 @@ from PyQt5.QtWidgets import QTableWidgetItem
 from googletrans import Translator
 
 from service.LocalizationService import get_str
-from service.LoggingService import log_info
 from service.StateService import StateService
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
@@ -107,8 +106,6 @@ class YoutubeService(VideohostingService):
 
             page.goto('https://www.youtube.com/', timeout=0)
 
-            log_info('1 youtube')
-
             page.wait_for_selector('.yt-simple-endpoint.style-scope.ytd-topbar-menu-button-renderer',
                                    timeout=0).click()
             page.query_selector_all('.yt-simple-endpoint.style-scope.ytd-compact-link-renderer')[0].click(timeout=0)
@@ -116,8 +113,6 @@ class YoutubeService(VideohostingService):
             page.wait_for_selector('#select-files-button', timeout=0)
             with page.expect_file_chooser() as fc_info:
                 page.query_selector(selector='#select-files-button').click()
-
-            log_info('2 youtube')
 
             if table_item is not None:
                 table_item.setText(get_str('uploading'))
@@ -127,8 +122,6 @@ class YoutubeService(VideohostingService):
 
             if table_item is not None:
                 table_item.setText(get_str('ending'))
-
-            log_info('3 youtube')
 
             page.wait_for_selector('#input', timeout=0)
 

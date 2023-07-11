@@ -10,7 +10,7 @@ class LoadQueuedMedia(object):
                  video_quality: str, video_extension:str, remove_files_after_upload: bool, upload_date=None, upload_targets: list = None,
                  account: Account = None, title: str = None, description: str = None, download_dir: str = None, video_size: str = None,
                  manual_settings = True, audio_quality_str=0, video_quality_str=0, audio_bitrate=0, video_bitrate=0,
-                 audio_sampling_rate=0, fps=0):
+                 audio_sampling_rate=0, fps=0, status_name = None):
 
         self.id = media_id
         self.url = url
@@ -37,3 +37,4 @@ class LoadQueuedMedia(object):
         self.fps = fps
         self.audio_quality_str = audio_quality_str
         self.video_quality_str = video_quality_str
+        self.status_name = status_name

@@ -4,7 +4,6 @@ from PyQt5.QtWidgets import QTableWidgetItem
 from googletrans import Translator
 
 from service.LocalizationService import get_str
-from service.StateService import StateService
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
@@ -33,11 +32,10 @@ class InstagramService(VideohostingService):
                 context.add_cookies(account.auth)
 
             page = context.new_page()
-            page.goto(url)
-            page.wait_for_selector('.x1iyjqo2', timeout=20_000)
+            page.goto(url, timeout=0)
+            page.wait_for_selector('._aao_', timeout=40_000)
             self.scroll_page_to_the_bottom(page=page)
-            stream_boxes = page.locator(
-                "//a[contains(@class,'x1i10hfl xjbqb8w x6umtig x1b1mbwd xaqea5y xav7gou x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz _a6hd')]")
+            stream_boxes = page.locator("//a[contains(@class,'x1i10hfl xjbqb8w x6umtig x1b1mbwd xaqea5y xav7gou x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz _a6hd')]")
             translator = Translator()
 
             for box in stream_boxes.element_handles():
@@ -106,7 +104,7 @@ class InstagramService(VideohostingService):
                 context.add_cookies(account.auth)
 
             page = context.new_page()
-            page.goto('https://www.instagram.com/')
+            page.goto('https://www.instagram.com/', timeout=0)
 
             try:
                 page.wait_for_selector('._a9-v', timeout=20_000)
@@ -114,11 +112,10 @@ class InstagramService(VideohostingService):
             except:
                 pass
 
-            page.wait_for_selector('.x9f619.x3nfvp2.xr9ek0c.xjpr12u.xo237n4.x6pnmvc.x7nr27j.x12dmmrz.xz9dl7a.xn6708d.xsag5q8.x1ye3gou.x80pfx3.x159b3zp.x1dn74xm.xif99yt.x172qv1o.x10djquj.x1lhsz42.xzauu7c.xdoji71.x1dejxi8.x9k3k5o.xs3sg5q.x11hdxyr.x12ldp4w.x1wj20lx.x1lq5wgf.xgqcy7u.x30kzoy.x9jhf4c')
-
+            page.wait_for_selector('.x9f619.x3nfvp2.xr9ek0c.xjpr12u.xo237n4.x6pnmvc.x7nr27j.x12dmmrz.xz9dl7a.xn6708d.xsag5q8.x1ye3gou.x80pfx3.x159b3zp.x1dn74xm.xif99yt.x172qv1o.x10djquj.x1lhsz42.xzauu7c.xdoji71.x1dejxi8.x9k3k5o.xs3sg5q.x11hdxyr.x12ldp4w.x1wj20lx.x1lq5wgf.xgqcy7u.x30kzoy.x9jhf4c', timeout=0)
             page.query_selector_all('.x9f619.x3nfvp2.xr9ek0c.xjpr12u.xo237n4.x6pnmvc.x7nr27j.x12dmmrz.xz9dl7a.xn6708d.xsag5q8.x1ye3gou.x80pfx3.x159b3zp.x1dn74xm.xif99yt.x172qv1o.x10djquj.x1lhsz42.xzauu7c.xdoji71.x1dejxi8.x9k3k5o.xs3sg5q.x11hdxyr.x12ldp4w.x1wj20lx.x1lq5wgf.xgqcy7u.x30kzoy.x9jhf4c')[6].click()
 
-            page.wait_for_selector('._acan._acap._acas._aj1-')
+            page.wait_for_selector('._acan._acap._acas._aj1-', timeout=0)
 
             with page.expect_file_chooser() as fc_info:
                 page.click(
@@ -131,7 +128,7 @@ class InstagramService(VideohostingService):
 
             table_item.setText(get_str('ending'))
 
-            page.wait_for_selector('._ac7b._ac7d')
+            page.wait_for_selector('._ac7b._ac7d', timeout=0)
 
             try:
                 page.wait_for_selector('._ag4f', timeout=20_000)

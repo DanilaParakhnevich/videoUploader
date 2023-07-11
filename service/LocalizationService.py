@@ -7,7 +7,10 @@ state_service = StateService()
 locale_json = json.load(open(os.path.abspath(f'service/locale/{state_service.get_settings().language}.json'), encoding='utf8'))
 
 def get_str(key: str) -> str:
-    return locale_json[key]
+    try:
+        return locale_json[key]
+    except:
+        return key
 
 def add_new_locale(file_dir: str):
     new_locale_json = json.load(open(file_dir))

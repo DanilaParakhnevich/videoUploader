@@ -15,6 +15,7 @@ from gui.widgets.AudioQualityComboBox import AudioQualityComboBox
 from gui.widgets.ChooseVideoQualityComboBox import ChooseVideoQualityComboBox
 from gui.widgets.ExstensionChooserComboBox import ExtensionChooserComboBox
 from gui.widgets.FormatChooserComboBox import FormatChooserComboBox
+from gui.widgets.ShowErrorDialog import ShowErrorDialog
 from gui.widgets.TypeStrForm import TypeStrForm
 from gui.widgets.VideoQualityComboBox import VideoQualityComboBox
 from model.Event import Event
@@ -165,7 +166,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 tab.video_quality.show()
                 tab.video_quality_label.show()
             self.resizeEvent(None)
-            if self.current_table_index is not None:
+            if self.current_table_index is not None and tab in self.tabs:
                 self.tab_models[self.current_table_index].manual_settings = tab.manual_settings.checkState() != 0
                 self.state_service.save_tabs_state(self.tab_models)
 
@@ -492,58 +493,32 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             self.state_service.save_tabs_state(self.tab_models)
         tab.remove_files_after_upload.setChecked(tab_model.remove_files_after_upload)
 
-    def on_add_media_to_query(self):
-        table = self.tables[self.current_table_index]
+    def process(self, upload_after_download_form, upload_on, upload_time_type, upload_interval, upload_targets, new_media, upload_date, approve_download, current_table_index):
+        table = self.tables[current_table_index]
 
-        if table.rowCount() == 0:
-            msg = QtWidgets.QMessageBox()
-            msg.setText(get_str('need_load_video_list'))
-            msg.exec_()
-            return
-
-        upload_after_download_form = None
-        upload_on = False
-        upload_time_type = None
-        upload_interval = None
-        upload_targets = None
-
-        if self.tab_models[self.current_table_index].format[0] != 3:
-            upload_after_download_form = UploadAfterDownloadForm(self)
-            upload_after_download_form.exec_()
-
-            if upload_after_download_form.passed == False:
-                return
-
-            upload_on = upload_after_download_form.upload_flag  # нужна ли выгрузка на хостинги после загрузки
-            upload_time_type = upload_after_download_form.upload_interval_type  # тип интервала выгрузки после загрузки (мин, часы, дни, мес)
-            upload_interval = upload_after_download_form.upload_interval  # сам интервал выгрузки после загрузки
-            upload_targets = list()  # выбранные канали для выгрузки
-
-        new_media = list()
-        upload_date = datetime.datetime.now()
-        approve_download = False
         for i in range(0, table.rowCount()).__reversed__():
 
             if table.item(i, 3).checkState() == 0:
                 continue
 
-            channel = self.state_service.get_channel_by_url(self.tab_models[self.current_table_index].current_channel)
+            upload_targets = list()
+            channel = self.state_service.get_channel_by_url(self.tab_models[current_table_index].current_channel)
             hosting = Hosting[channel.hosting]
             title = None
             description = None
             upload_this = True
             try:
                 video_info = hosting.value[0].get_video_info(table.item(i, 1).text(),
-                                                             video_quality=self.tab_models[self.current_table_index].video_quality[1],
-                                                             video_extension=self.tab_models[self.current_table_index].video_extension[1],
-                                                             video_quality_str=self.tab_models[self.current_table_index].video_quality_str,
-                                                             audio_quality_str=self.tab_models[self.current_table_index].audio_quality_str,
-                                                             fps=self.tab_models[self.current_table_index].fps,
-                                                             audio_bitrate=self.tab_models[self.current_table_index].audio_bitrate,
-                                                             video_bitrate=self.tab_models[self.current_table_index].video_bitrate,
-                                                             audio_sampling_rate=self.tab_models[self.current_table_index].audio_sampling_rate,
-                                                             manual_settings=self.tab_models[self.current_table_index].manual_settings,
-                                                             account=self.tab_models[self.current_table_index].account)
+                                                             video_quality=self.tab_models[current_table_index].video_quality[1],
+                                                             video_extension=self.tab_models[current_table_index].video_extension[1],
+                                                             video_quality_str=self.tab_models[current_table_index].video_quality_str,
+                                                             audio_quality_str=self.tab_models[current_table_index].audio_quality_str,
+                                                             fps=self.tab_models[current_table_index].fps,
+                                                             audio_bitrate=self.tab_models[current_table_index].audio_bitrate,
+                                                             video_bitrate=self.tab_models[current_table_index].video_bitrate,
+                                                             audio_sampling_rate=self.tab_models[current_table_index].audio_sampling_rate,
+                                                             manual_settings=self.tab_models[current_table_index].manual_settings,
+                                                             account=self.tab_models[current_table_index].account)
 
                 title = video_info['title']
                 if title is None:
@@ -553,9 +528,9 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                     if description is None:
                         description = ''
 
-                if self.tab_models[self.current_table_index].manual_settings and video_info['is_exists_format'][0] is False\
+                if self.tab_models[current_table_index].manual_settings and video_info['is_exists_format'][0] is False\
                         and approve_download is False:
-                    agree_to_download_dialog = AgreeToDownloadDialog(self, video_info['is_exists_format'][1])
+                    agree_to_download_dialog = AgreeToDownloadDialog(None, video_info['is_exists_format'][1])
                     agree_to_download_dialog.exec_()
 
                     if agree_to_download_dialog.is_agree is False:
@@ -563,10 +538,10 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                     else:
                         approve_download = True
 
-                if self.tab_models[self.current_table_index].manual_settings and self.state_service.if_video_has_been_loaded(table.item(i, 1).text(),
-                                                               self.tab_models[self.current_table_index].video_quality[1],
-                                                               self.tab_models[self.current_table_index].video_extension[1]):
-                    agree_to_repeat_download_dialog = AgreeToRepeatDownloadDialog(self)
+                if self.tab_models[current_table_index].manual_settings and self.state_service.if_video_has_been_loaded(table.item(i, 1).text(),
+                                                               self.tab_models[current_table_index].video_quality[1],
+                                                               self.tab_models[current_table_index].video_extension[1]):
+                    agree_to_repeat_download_dialog = AgreeToRepeatDownloadDialog(None)
                     agree_to_repeat_download_dialog.exec_()
 
                     if agree_to_repeat_download_dialog.is_agree is False:
@@ -583,8 +558,9 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 # Если необходимо выгружать видео после загрузки, проводим валидацию
                 for upload_target in upload_after_download_form.upload_targets:
                     upload_hosting = Hosting[upload_target['hosting']]
+                    upload_target_copy = upload_target.copy()
                     try:
-                        upload_target['error'] = False
+                        upload_target_copy['error'] = False
                         upload_hosting.value[0].validate_video_info_for_uploading(title=title,
                                                                                   description=description,
                                                                                   duration=video_info[
@@ -598,31 +574,31 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
-                        self.add_error_upload_item(get_str('upload_yet'),
+                        self.add_error_upload_item('upload_yet',
                                                    upload_target,
                                                    f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
                                                    f'{upload_hosting.name}, {upload_target["login"]}')
-                        upload_target['error'] = True
+                        upload_target_copy['error'] = True
                     except FileSizeException:
                         log_error(traceback.format_exc())
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
-                        self.add_error_upload_item(get_str('upload_yet'),
+                        self.add_error_upload_item('upload_yet',
                                                    upload_target,
                                                    f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
                                                    f'{upload_hosting.name}, {upload_target["login"]}')
-                        upload_target['error'] = True
+                        upload_target_copy['error'] = True
                     except FileFormatException:
                         log_error(traceback.format_exc())
                         self.event_service.add_event(
                             Event(f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
-                        self.add_error_upload_item(get_str('upload_yet'),
+                        self.add_error_upload_item('upload_yet',
                                                    upload_target,
                                                    f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
                                                    f'{upload_hosting.name}, {upload_target["login"]}')
-                        upload_target['error'] = True
+                        upload_target_copy['error'] = True
                     except NameIsTooLongException:
                         while (upload_hosting.value[0].title_size_restriction is not None and
                                len(title) > upload_hosting.value[0].title_size_restriction) or \
@@ -633,7 +609,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                 label = f'{get_str("bad_title")} ({str(upload_hosting.value[0].min_title_size)} <= {get_str("name")} > {str(upload_hosting.value[0].title_size_restriction)})'
                             else:
                                 label = f'{get_str("bad_title")} ({str(upload_hosting.value[0].min_title_size)} <= {get_str("name")})'
-                            form = TypeStrForm(parent=self,
+                            form = TypeStrForm(parent=None,
                                                label=label,
                                                current_text=title)
                             form.exec_()
@@ -641,7 +617,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                     except DescriptionIsTooLongException:
                         while len(description) > upload_hosting.value[0].description_size_restriction:
                             log_error(traceback.format_exc())
-                            form = TypeStrForm(parent=self,
+                            form = TypeStrForm(parent=None,
                                                label=f'{get_str("too_long_description")}{str(upload_hosting.value[0].description_size_restriction)}',
                                                current_text=description)
                             form.exec_()
@@ -651,32 +627,31 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                         if StateService().get_settings().send_crash_notifications is True:
                             MailService().send_log()
 
-                    upload_targets.append(upload_target)
+                    upload_targets.append(upload_target_copy)
 
             queue_media = LoadQueuedMedia(media_id=str(uuid.uuid4()),
                                           url=table.item(i, 1).text(),
-                                          account=self.tab_models[self.current_table_index].account,
+                                          account=self.tab_models[current_table_index].account,
                                           hosting=hosting.name,
                                           status=0,
                                           video_size=video_size,
                                           upload_after_download=upload_on and upload_this,
                                           upload_targets=upload_targets,
                                           upload_date=upload_date,
-                                          format=self.tab_models[self.current_table_index].format[1],
-                                          video_quality=self.tab_models[self.current_table_index].video_quality[1],
-                                          video_extension=self.tab_models[self.current_table_index].video_extension[1],
-                                          remove_files_after_upload=self.tab_models[
-                                              self.current_table_index].remove_files_after_upload,
+                                          format=self.tab_models[current_table_index].format[1],
+                                          video_quality=self.tab_models[current_table_index].video_quality[1],
+                                          video_extension=self.tab_models[current_table_index].video_extension[1],
+                                          remove_files_after_upload=self.tab_models[current_table_index].remove_files_after_upload,
                                           title=title,
                                           description=description,
-                                          download_dir=self.tab_models[self.current_table_index].download_dir,
-                                          manual_settings=self.tab_models[self.current_table_index].manual_settings,
-                                          video_quality_str=self.tab_models[self.current_table_index].video_quality_str,
-                                          audio_quality_str=self.tab_models[self.current_table_index].audio_quality_str,
-                                          audio_bitrate=self.tab_models[self.current_table_index].audio_bitrate,
-                                          video_bitrate=self.tab_models[self.current_table_index].video_bitrate,
-                                          fps=self.tab_models[self.current_table_index].fps,
-                                          audio_sampling_rate=self.tab_models[self.current_table_index].audio_sampling_rate)
+                                          download_dir=self.tab_models[current_table_index].download_dir,
+                                          manual_settings=self.tab_models[current_table_index].manual_settings,
+                                          video_quality_str=self.tab_models[current_table_index].video_quality_str,
+                                          audio_quality_str=self.tab_models[current_table_index].audio_quality_str,
+                                          audio_bitrate=self.tab_models[current_table_index].audio_bitrate,
+                                          video_bitrate=self.tab_models[current_table_index].video_bitrate,
+                                          fps=self.tab_models[current_table_index].fps,
+                                          audio_sampling_rate=self.tab_models[current_table_index].audio_sampling_rate)
             upload_targets = list()
 
             # Если необходима выгрузка, учитывается интервал выгрузки, исходя из типа интервала. 1 видео выгружается сразу
@@ -694,7 +669,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                     if target['error'] is False:
                         account = self.state_service.get_account_by_hosting_and_login(target['hosting'], target['login'])
                         self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(uuid.uuid4()),
-                                                                                          video_dir=get_str('upload_yet'),
+                                                                                          video_dir='upload_yet',
                                                                                           hosting=target['hosting'],
                                                                                           destination=target[
                                                                                               'upload_target'],
@@ -705,6 +680,40 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             new_media.append(queue_media)
 
         self.queue_media_service.add_to_the_download_queue(new_media)
+
+    def on_add_media_to_query(self):
+
+        table = self.tables[self.current_table_index]
+
+        if table.rowCount() == 0:
+            msg = QtWidgets.QMessageBox()
+            msg.setText(get_str('need_load_video_list'))
+            msg.exec_()
+            return
+
+        upload_after_download_form = None
+        upload_on = False
+        upload_time_type = None
+        upload_interval = None
+        upload_targets = None
+
+        if self.tab_models[self.current_table_index].format[0] != 3:
+            upload_after_download_form = UploadAfterDownloadForm(None)
+            upload_after_download_form.exec_()
+
+            if upload_after_download_form.passed == False:
+                return
+
+            upload_on = upload_after_download_form.upload_flag  # нужна ли выгрузка на хостинги после загрузки
+            upload_time_type = upload_after_download_form.upload_interval_type  # тип интервала выгрузки после загрузки (мин, часы, дни, мес)
+            upload_interval = upload_after_download_form.upload_interval  # сам интервал выгрузки после загрузки
+
+        new_media = list()
+        upload_date = datetime.datetime.now()
+        approve_download = False
+
+        thread = Thread(target=self.process, daemon=True, args=[upload_after_download_form, upload_on, upload_time_type, upload_interval, upload_targets, new_media, upload_date, approve_download, self.current_table_index])
+        thread.start()
 
     def on_channel_changed(self, item):
         if item != '':
@@ -858,10 +867,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
                 index += 1
         except:
-            msg = QtWidgets.QMessageBox()
-            msg.setMinimumSize(400, 300)
-            msg.setText(get_str('happened_error'))
-            msg.exec_()
+            dialog = ShowErrorDialog(None, get_str('happened_error'), get_str('error'))
+            dialog.exec_()
             log_error(traceback.format_exc())
 
         self.tab_models[table_index].current_channel = channel.url
@@ -962,7 +969,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(uuid.uuid4()),
                                                                           video_dir=video_link,
                                                                           hosting=target['hosting'],
-                                                                          status=3,
+                                                                          status=6,
                                                                           account=self.state_service.get_account_by_hosting_and_login(
                                                                               target['hosting'],
                                                                               target['login']),

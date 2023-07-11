@@ -1,11 +1,13 @@
 import asyncio
 import uuid
+from functools import partial
 from threading import Lock
 
 from youtube_dl import DownloadError
 from yt_dlp import DownloadError
 from PyQt5 import QtCore, QtWidgets
 from gui.widgets.AddUploadQueueByUploadedMediaForm import AddUploadQueueByUploadedMediaForm
+from gui.widgets.ShowErrorDialog import ShowErrorDialog
 from model.Event import Event
 from service.EventService import EventService
 from service.MailService import MailService
@@ -145,7 +147,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                 url=media.url,
                 account=media.account,
                 hosting=media.hosting,
-                table_item=self.item(self.get_row_index(media.id), 1),
+                table_item=self.cellWidget(self.get_row_index(media.id), 1),
                 download_dir=media.download_dir,
                 format=media.format,
                 video_quality=media.video_quality,
@@ -166,7 +168,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                     if upload_target['error'] is False:
                         status = 0
                     else:
-                        status = 3
+                        status = 6
 
                     self.queue_media_service.replace_to_the_upload_queue(UploadQueueMedia(media_id=uuid.uuid4(),
                                                                                           video_dir=video_dir,
@@ -188,11 +190,14 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             return
         except NoFreeSpaceException:
             log_error(traceback.format_exc())
-            self.set_media_status(media.id, 3, status_name=get_str('no_free_space'))
+            self.set_media_status(media.id, 3, status_name='no_free_space')
             return
         except DownloadError as er:
             log_error(traceback.format_exc())
-            self.set_media_status(media.id, 3, status_name=f'{get_str("technical_error")}: {er.args}')
+            if er.args[0].__contains__('Unable to download video JSON'):
+                self.set_media_status(media.id, 3, status_name='bad_internet_connection')
+            else:
+                self.set_media_status(media.id, 3, status_name='technical_error')
             if self.settings.send_crash_notifications is True:
                 MailService().send_log()
             return
@@ -221,11 +226,13 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
         action_button = QtWidgets.QPushButton(self)
         if queue_media.status == 0:
-            item2 = QtWidgets.QTableWidgetItem(get_str('stopped'))
+            item2 = QtWidgets.QPushButton(get_str('stopped'))
+            item2.clicked.connect(self.do_nothing)
             action_button.setText(get_str('start'))
             action_button.clicked.connect(self.on_start_download)
         elif queue_media.status == 1:
-            item2 = QtWidgets.QTableWidgetItem(get_str('process'))
+            item2 = QtWidgets.QPushButton(get_str('process'))
+            item2.clicked.connect(self.do_nothing)
             action_button.setText(get_str('stop'))
             action_button.clicked.connect(self.on_stop_download)
 
@@ -243,11 +250,13 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                 download_video_thread.start()
 
         elif queue_media.status == 2:
-            item2 = QtWidgets.QTableWidgetItem(get_str('end'))
+            item2 = QtWidgets.QPushButton(get_str('end'))
+            item2.clicked.connect(self.do_nothing)
             action_button.setText(get_str('add_video_for_uploading'))
             action_button.clicked.connect(self.on_add)
         else:
-            item2 = QtWidgets.QTableWidgetItem(get_str('error'))
+            item2 = QtWidgets.QPushButton(get_str('error'))
+            item2.clicked.connect(partial(self.show_error, get_str(queue_media.status_name)))
             action_button.setText(get_str('retry'))
             action_button.clicked.connect(self.on_start_download)
 
@@ -261,7 +270,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
         delete_button.clicked.connect(self.on_delete_row)
 
         self.setItem(input_position, 0, item1)
-        self.setItem(input_position, 1, item2)
+        self.setCellWidget(input_position, 1, item2)
 
     def set_media_status(self, media_id, status, status_name=None):
         i = 0
@@ -272,31 +281,49 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                 self.state_service.save_download_queue_media(self.queue_media_list)
 
                 if status == 0:
-                    self.item(i, 1).setText(get_str('stopped'))
+                    self.cellWidget(i, 1).setText(get_str('stopped'))
+                    self.cellWidget(i, 1).clicked.disconnect()
+                    self.cellWidget(i, 1).clicked.connect(self.do_nothing)
+
                     self.cellWidget(i, 2).setText(get_str('start'))
                     self.cellWidget(i, 2).clicked.disconnect()
                     self.cellWidget(i, 2).clicked.connect(self.on_start_download)
                 elif status == 1:
-                    self.item(i, 1).setText(get_str('process'))
+                    self.cellWidget(i, 1).setText(get_str('process'))
+                    self.cellWidget(i, 1).clicked.disconnect()
+                    self.cellWidget(i, 1).clicked.connect(self.do_nothing)
+
                     self.cellWidget(i, 2).setText(get_str('stop'))
                     self.cellWidget(i, 2).clicked.disconnect()
                     self.cellWidget(i, 2).clicked.connect(self.on_stop_download)
                 elif status == 2:
-                    self.item(i, 1).setText(get_str('end'))
+                    self.cellWidget(i, 1).setText(get_str('end'))
+                    self.cellWidget(i, 1).clicked.disconnect()
+                    self.cellWidget(i, 1).clicked.connect(self.do_nothing)
+
                     self.cellWidget(i, 2).setText(get_str('add_video_for_uploading'))
                     self.cellWidget(i, 2).clicked.disconnect()
                     self.cellWidget(i, 2).clicked.connect(self.on_add)
                 elif status == 3:
+                    self.cellWidget(i, 1).setText(get_str('error'))
+                    self.cellWidget(i, 1).clicked.disconnect()
+
                     if status_name is None:
-                        self.item(i, 1).setText(get_str('error'))
+                        self.cellWidget(i, 1).setText(get_str('error'))
+                        media.status_name = 'technical_error'
+                        self.cellWidget(i, 1).clicked.connect(partial(self.show_error, get_str('technical_error')))
                     else:
-                        self.item(i, 1).setText(status_name)
+                        self.cellWidget(i, 1).setText(get_str('error'))
+                        media.status_name = status_name
+                        self.cellWidget(i, 1).clicked.connect(partial(self.show_error, get_str(status_name)))
 
                     self.cellWidget(i, 2).setText(get_str('retry'))
                     self.cellWidget(i, 2).clicked.disconnect()
                     self.cellWidget(i, 2).clicked.connect(self.on_start_download)
                 break
             i += 1
+
+        self.state_service.save_download_queue_media(self.queue_media_list)
         self.lock.release()
 
     def do_nothing(self):
@@ -337,6 +364,10 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                 if self.download_thread_dict[media_id] is not None and self.download_thread_dict[media_id].is_alive():
                     self.download_thread_dict[media_id].terminate()
                 self.download_thread_dict[media_id] = None
+
+    def show_error(self, status_name):
+        dialog = ShowErrorDialog(self, status_name)
+        dialog.exec_()
 
     def on_start_download(self):
         button = self.sender()

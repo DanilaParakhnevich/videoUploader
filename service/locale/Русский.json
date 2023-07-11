@@ -189,5 +189,7 @@
   "audio_bitrate": "Битрейт аудио",
   "audio_sampling_rate": "Частота дискретизации звука",
   "fps": "Количество кадров в секунду",
-  "debug_browser": "Отображать окно браузера"
+  "debug_browser": "Отображать окно браузера",
+  "check_internet_connection": "Проверьте подключение к интернету",
+  "bad_internet_connection": "Плохое соединение с интернетом"
 }

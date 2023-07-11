@@ -6,6 +6,7 @@ from model.LicenseModel import LicenseModel
 from model.Settings import Settings
 import os
 
+
 # Этот класс предназначен для сохранения данных, необходимых для дальнейшей работы приложения
 class StateService(object):
 
@@ -134,6 +135,8 @@ class StateService(object):
             for queue_media in StateService.download_queue_media:
                 if hasattr(queue_media, 'id') is False:
                     queue_media.id = str(uuid.uuid4())
+                if queue_media.status == 3 and hasattr(queue_media, 'status_name') is False:
+                    queue_media.status_name = 'technical_error'
 
         return StateService.download_queue_media
 

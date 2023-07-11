@@ -309,7 +309,7 @@ class SettingsPage(QtWidgets.QDialog):
         self.autostart = QtWidgets.QCheckBox()
         self.autostart.setObjectName("autostart")
         self.autostart.setChecked(self.old_settings.autostart)
-        self.gridLayout.addWidget(self.autostart, 3, 1)
+        self.gridLayout.addWidget(self.autostart, 31, 1)
 
         if self.old_settings.manual_settings is False:
             self.audio_quality_number_label.hide()
