@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QTableWidgetItem
 from googletrans import Translator
 
 from service.LocalizationService import get_str
+from service.StateService import StateService
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
@@ -98,7 +99,7 @@ class InstagramService(VideohostingService):
             table_item.setText(get_str('preparing'))
 
         with sync_playwright() as p:
-            context = self.new_context(p, False)
+            context = self.new_context(p=p, headless=StateService.settings.debug_browser is False)
 
             if account is not None:
                 context.add_cookies(account.auth)
