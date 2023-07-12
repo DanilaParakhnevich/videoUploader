@@ -190,15 +190,13 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
         for queue_media in last_added_temp_queue_media:
             if queue_media.status == 6:
-                i = self.find_row_number_by_login_and_hosting(queue_media.account.login, queue_media.hosting,
-                                                              queue_media.destination, 6)
+                i = self.find_row_number_by_id(queue_media.id)
                 if i is not None:
                     queue_media.error_name = self.queue_media_list[i].error_name
                     self.queue_media_list[i] = queue_media
                     self.insert_queue_media(queue_media, i)
             else:
-                i = self.find_row_number_by_login_and_hosting(queue_media.account.login, queue_media.hosting,
-                                                              queue_media.destination)
+                i = self.find_row_number_by_id(queue_media.id)
 
                 if i is not None:
                     self.queue_media_list[i] = queue_media
@@ -206,11 +204,10 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
         self.state_service.save_upload_queue_media(self.queue_media_list)
 
-    def find_row_number_by_login_and_hosting(self, login, hosting, target, status=5):
+    def find_row_number_by_id(self, id):
         i = 0
         for queue_media in self.queue_media_list:
-            if (queue_media.account.login == login or queue_media.destination == target) and queue_media.hosting == hosting \
-                    and queue_media.status == status and get_str(queue_media.video_dir) == get_str('upload_yet'):
+            if queue_media.id == id:
                 return i
             i += 1
         return None

@@ -170,7 +170,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                     else:
                         status = 6
 
-                    self.queue_media_service.replace_to_the_upload_queue(UploadQueueMedia(media_id=uuid.uuid4(),
+                    self.queue_media_service.replace_to_the_upload_queue(UploadQueueMedia(media_id=str(upload_target['id']),
                                                                                           video_dir=video_dir,
                                                                                           hosting=upload_target[
                                                                                               'hosting'],

@@ -192,7 +192,7 @@ if __name__ == "__main__":
 
     try:
         ui = Ui_BuxarVideoUploader()
-        ui.setupUi(BuxarVideoUploader, current_version)
+        ui.setupUi(BuxarVideoUploader, current_client_version)
         BuxarVideoUploader.show()
         sys.exit(app.exec_())
     except SystemExit:

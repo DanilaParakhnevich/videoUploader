@@ -150,6 +150,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
             if self.upload_on:
                 # Если необходимо выгружать видео после загрузки, проводим валидацию
                 for upload_target in form.upload_targets:
+                    upload_target['id'] = uuid.uuid4()
                     upload_hosting = Hosting[upload_target['hosting']]
                     try:
                         upload_target['error'] = False
@@ -215,7 +216,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
                     if 'error' not in target or target['error'] is False:
                         account = self.state_service.get_account_by_hosting_and_login(target['hosting'], target['login'])
                         self.queue_media_service.add_to_the_upload_queue(
-                            UploadQueueMedia(media_id=str(uuid.uuid4()),
+                            UploadQueueMedia(media_id=str(target['id']),
                                              video_dir='upload_yet',
                                              hosting=target['hosting'],
                                              status=5,
@@ -227,7 +228,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
         self.close()
 
     def add_error_upload_item(self, link, target, error: str):
-        self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(uuid.uuid4()),
+        self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(target['id']),
                                                                           video_dir=link,
                                                                           hosting=target['hosting'],
                                                                           status=3,

@@ -559,6 +559,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 for upload_target in upload_after_download_form.upload_targets:
                     upload_hosting = Hosting[upload_target['hosting']]
                     upload_target_copy = upload_target.copy()
+                    upload_target_copy['id'] = uuid.uuid4()
                     try:
                         upload_target_copy['error'] = False
                         upload_hosting.value[0].validate_video_info_for_uploading(title=title,
@@ -575,7 +576,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                             Event(f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
                         self.add_error_upload_item('upload_yet',
-                                                   upload_target,
+                                                   upload_target_copy,
                                                    f'{get_str("bad_file_duration")}{video_info["title"]} {get_str("for_account")}'
                                                    f'{upload_hosting.name}, {upload_target["login"]}')
                         upload_target_copy['error'] = True
@@ -585,7 +586,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                             Event(f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
                         self.add_error_upload_item('upload_yet',
-                                                   upload_target,
+                                                   upload_target_copy,
                                                    f'{get_str("bad_file_size")}{video_info["title"]} {get_str("for_account")}'
                                                    f'{upload_hosting.name}, {upload_target["login"]}')
                         upload_target_copy['error'] = True
@@ -595,7 +596,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                             Event(f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
                                   f'{upload_hosting.name}, {upload_target["login"]}'))
                         self.add_error_upload_item('upload_yet',
-                                                   upload_target,
+                                                   upload_target_copy,
                                                    f'{get_str("bad_file_format")}{video_info["title"]} {get_str("for_account")}'
                                                    f'{upload_hosting.name}, {upload_target["login"]}')
                         upload_target_copy['error'] = True
@@ -626,7 +627,6 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                         log_error(traceback.format_exc())
                         if StateService().get_settings().send_crash_notifications is True:
                             MailService().send_log()
-
                     upload_targets.append(upload_target_copy)
 
             queue_media = LoadQueuedMedia(media_id=str(uuid.uuid4()),
@@ -668,7 +668,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 for target in queue_media.upload_targets:
                     if target['error'] is False:
                         account = self.state_service.get_account_by_hosting_and_login(target['hosting'], target['login'])
-                        self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(uuid.uuid4()),
+                        self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(target['id']),
                                                                                           video_dir='upload_yet',
                                                                                           hosting=target['hosting'],
                                                                                           destination=target[
@@ -966,7 +966,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         return super(LoadPageWidget, self).resizeEvent(event)
 
     def add_error_upload_item(self, video_link, target, error: str):
-        self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(uuid.uuid4()),
+        self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(target['id']),
                                                                           video_dir=video_link,
                                                                           hosting=target['hosting'],
                                                                           status=6,
