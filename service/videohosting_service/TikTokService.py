@@ -60,10 +60,13 @@ class TikTokService(VideohostingService):
 
     # Пришлось использовать готовое чужое решение для выгрузки видео для TikTok, тк на сайте хорошая защита от ботов
     def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
-        table_item.setText(get_str('preparing'))
+        if table_item is not None:
+            table_item.setText(get_str('preparing'))
+
         for cookie in account.auth:
             if cookie['name'] == 'sessionid':
-                table_item.setText(get_str('uploading'))
+                if table_item is not None:
+                    table_item.setText(get_str('uploading'))
                 uploadVideo(session_id=cookie['value'], video=file_path, title=name, tags=list())
                 return
 

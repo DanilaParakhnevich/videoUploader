@@ -94,7 +94,6 @@ class InstagramService(VideohostingService):
 
     def upload_video(self, account, file_path, name, description, destination=None,
                      table_item: QTableWidgetItem = None):
-
         if table_item is not None:
             table_item.setText(get_str('preparing'))
 
@@ -127,7 +126,8 @@ class InstagramService(VideohostingService):
             file_chooser = fc_info.value
             file_chooser.set_files(file_path, timeout=0)
 
-            table_item.setText(get_str('ending'))
+            if table_item is not None:
+                table_item.setText(get_str('ending'))
 
             page.wait_for_selector('._ac7b._ac7d', timeout=0)
 

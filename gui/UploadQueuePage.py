@@ -336,7 +336,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                             self.cellWidget(i, 3).clicked.connect(self.do_nothing)
                             self.cellWidget(i, 3).setText(get_str('error'))
 
-                        if error_name is None or error_name == get_str('technical_error'):
+                        if error_name is None or get_str(error_name) == get_str('technical_error'):
                             self.cellWidget(i, 4).setText(get_str('retry'))
                             self.cellWidget(i, 4).clicked.disconnect()
                             self.cellWidget(i, 4).clicked.connect(self.on_start_upload)

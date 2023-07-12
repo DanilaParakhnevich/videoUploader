@@ -130,7 +130,8 @@ class FacebookService(VideohostingService):
 
     def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
         with sync_playwright() as p:
-            table_item.setText(get_str('preparing'))
+            if table_item is not None:
+                table_item.setText(get_str('preparing'))
             context = self.new_context(p=p, headless=StateService.settings.debug_browser is False, use_user_agent_arg=True)
             context.add_cookies(account.auth)
             page = context.new_page()
@@ -157,12 +158,14 @@ class FacebookService(VideohostingService):
 
                     if done_btn is not None:
                         page.click('[aria-label="Done"]')
+            if table_item is not None:
+                table_item.setText(get_str('uploading'))
 
-            table_item.setText(get_str('uploading'))
             file_chooser = fc_info.value
             file_chooser.set_files(file_path, timeout=0)
 
-            table_item.setText(get_str('ending'))
+            if table_item is not None:
+                table_item.setText(get_str('ending'))
 
             if is_group is False:
                 page.click('.xzsf02u.x1a2a7pz.x1n2onr6.x14wi4xw.x9f619.x1lliihq.x5yr21d.xh8yej3.notranslate')

@@ -150,7 +150,8 @@ class VKService(VideohostingService):
             return response.result["object_id"] == user_id
 
     def upload_video(self, account, file_path, name, description, destination=None, table_item: QTableWidgetItem = None):
-        table_item.setText(get_str('preparing'))
+        if table_item is not None:
+            table_item.setText(get_str('preparing'))
         vk_session = vk_api.VkApi(token=account.auth['access_token'])
 
         with vk_api.VkRequestsPool(vk_session) as pool:
@@ -163,7 +164,9 @@ class VKService(VideohostingService):
         else:
             object_id = None
 
-        table_item.setText(get_str('uploading'))
+        if table_item is not None:
+            table_item.setText(get_str('uploading'))
+
         vk_upload = vk_api.VkUpload(vk_session)
         vk_upload.video(video_file=file_path, name=name, group_id=object_id,
                         description=description if description is not None else '')
