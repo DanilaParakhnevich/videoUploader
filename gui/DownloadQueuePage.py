@@ -185,14 +185,17 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                                                                                           title=media.title,
                                                                                           description=media.description))
         except SystemExit:
+            self.download_thread_dict.pop(media.id)
             self.set_media_status(media.id, 0)
             self.download_thread_dict.pop(media.id)
             return
         except NoFreeSpaceException:
+            self.download_thread_dict.pop(media.id)
             log_error(traceback.format_exc())
             self.set_media_status(media.id, 3, status_name='no_free_space')
             return
         except DownloadError as er:
+            self.download_thread_dict.pop(media.id)
             log_error(traceback.format_exc())
             if er.args[0].__contains__('Unable to download video JSON'):
                 self.set_media_status(media.id, 3, status_name='bad_internet_connection')
@@ -202,6 +205,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                 MailService().send_log()
             return
         except Exception:
+            self.download_thread_dict.pop(media.id)
             log_error(traceback.format_exc())
             self.set_media_status(media.id, 3)
             if self.settings.send_crash_notifications is True:

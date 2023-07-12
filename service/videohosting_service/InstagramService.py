@@ -33,8 +33,8 @@ class InstagramService(VideohostingService):
                 context.add_cookies(account.auth)
 
             page = context.new_page()
-            page.goto(url, timeout=0)
-            page.wait_for_selector('._aarf', timeout=40_000)
+            page.goto(url, wait_until='networkidle', timeout=0)
+            page.wait_for_selector('[role="tablist"]', timeout=40_000)
             self.scroll_page_to_the_bottom(page=page)
             stream_boxes = page.locator("//a[contains(@class,'x1i10hfl xjbqb8w x6umtig x1b1mbwd xaqea5y xav7gou x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz _a6hd')]")
             translator = Translator()
