@@ -55,7 +55,7 @@ if __name__ == "__main__":
                 form = ConfirmExitForm()
                 form.exec_()
 
-                if form.passed and form.confirmed is False:
+                if form.passed is False or form.confirmed is False:
                     return
 
             event.accept()

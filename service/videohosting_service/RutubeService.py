@@ -53,8 +53,8 @@ class RutubeService(VideohostingService):
             try:
                 page.wait_for_selector('.freyja_char-base-button__pointerCursor__JNA7y', timeout=10_000)
                 page.click('.freyja_char-base-button__pointerCursor__JNA7y', timeout=10_000)
-                page.wait_for_selector('.wdp-header-right-module__login', timeout=10_000)
-                page.click('.wdp-header-right-module__login', timeout=10_000)
+                page.wait_for_selector('.wdp-header-right-module__wrapper', timeout=10_000)
+                page.query_selector('.wdp-header-right-module__wrapper').query_selector_all('button')[3].click(timeout=10_000)
             except:
                 page.reload(timeout=0, wait_until='commit')
                 try:
@@ -64,13 +64,12 @@ class RutubeService(VideohostingService):
                 except:
                     log_error('Не нашлось кнопки для подтверждения куки (rutube)')
                 try:
-                    page.wait_for_selector('.wdp-header-right-module__login', timeout=0)
-                    if page.query_selector('.wdp-header-right-module__login') is not None:
-                        page.click('.wdp-header-right-module__login', timeout=0)
+                    page.wait_for_selector('.wdp-header-right-module__wrapper', timeout=0)
+                    page.query_selector('.wdp-header-right-module__wrapper').query_selector_all('button')[3].click(timeout=10_000)
                 except:
                     log_error('Не нашлось кнопки логина (rutube)')
 
-            page.wait_for_selector('.wdp-header-right-module__userWrapper', timeout=0)
+            page.wait_for_selector('[alt="user_avatar"]', timeout=0)
 
             return page.context.cookies()
 
