@@ -81,7 +81,7 @@ class YandexDzenService(VideohostingService):
             if table_item is not None:
                 table_item.setText(get_str('ending'))
             try:
-                page.wait_for_selector('.ql-editor', timeout=5_000)
+                page.wait_for_selector('.ql-editor', timeout=50_000)
                 page.click('.ql-editor', click_count=3)
             except:
                 raise Exception('Видео в слишком низком разрешении')
@@ -91,6 +91,8 @@ class YandexDzenService(VideohostingService):
                 page.click('.Textarea-Control.Texteditor-Control.Texteditor-Control_withSizing.Texteditor-Control_withMargin', click_count=3)
                 page.keyboard.press('Backspace')
                 page.keyboard.type(text=name)
+
+                time.sleep(1)
 
                 page.click('.quill-text-field__editorContainer-mB.ql-container')
                 page.keyboard.type(description)
