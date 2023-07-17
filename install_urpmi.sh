@@ -10,14 +10,16 @@ if ! hash python3.8; then
     sudo make install
     cd ../
     rm -r Python-3.8.14/ Python-3.8.14.tar.xz
+    echo "Launch script again"
 else
-    echo "Python3.6 installed"
+    echo "Python3.8 installed"
 
 python3.8 -m venv myenv
 source myenv/bin/activate
 python3.8 -m pip install --upgrade pip
 python3.8 -m pip install -r requirements.txt
-export QT_PLUGIN_PATH=$PWD/venv/lib64/python3.8/site-packages/PyQt5/Qt/plugins/
+sudo chmod -R 777 myenv
+export QT_PLUGIN_PATH=$PWD/myenv/lib64/python3.8/site-packages/PyQt5/Qt/plugins/
 pyinstaller --add-data "service/locale/*.json:./service/locale/" --add-data "gui/widgets/button_icons/*.gif:./gui/widgets/button_icons/" --add-data "service/videohosting_service/tmp:./service/videohosting_service/tmp" --add-data "version.txt:." --add-data "icon.png:." Application.py
 
 mkdir BuxarVideoUploader
@@ -25,12 +27,12 @@ mkdir BuxarVideoUploader
 mv dist/ BuxarVideoUploader/
 mv build/ BuxarVideoUploader/
 
-tar -cvfz BuxarVideoUploader.tar.gz BuxarVideoUploader/
+tar -czf BuxarVideoUploader.tar.gz BuxarVideoUploader/
 mv BuxarVideoUploader.tar.gz rpmbuild/SOURCES
 
 cd rpmbuild
 
-rpmbuild --define "_topdir pwd" -bb SPECS/BuxarVideoUploader.spec
+rpmbuild --define "_topdir $PWD" -bb SPECS/BuxarVideoUploader.spec
 
 cd ../
 sudo rm -r myenv/

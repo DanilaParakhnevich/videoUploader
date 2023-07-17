@@ -1,20 +1,17 @@
 import os
 import smtplib
 from email import encoders
-from email.mime.application import MIMEApplication
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from email.utils import formatdate
-from pathlib import Path
 
 
 class MailService(object):
 
     def __init__(self):
-        self.mail = 'buxarvideouploader.info@gmail.com'
-        self.password = 'sdczswgxhthwzhml'
-        self.receiver_mail = 'buxarvideouploader.info@gmail.com'
+        self.mail = 'buxarnet@gmail.com'
+        self.password = 'qvznovxklvhktlsy'
+        self.receiver_mail = 'buxarnet@yandex.com'
 
     def send_mail(self, msg):
         smtpObj = smtplib.SMTP('smtp.gmail.com', 587)

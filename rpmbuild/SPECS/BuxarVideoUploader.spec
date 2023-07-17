@@ -29,12 +29,10 @@ Terminal=false
 StartupWMClass=Application
 Type=Application' > /usr/share/applications/BuxarVideoUploader.desktop"
 
-sudo chmod -r 777 /usr/share/BuxarVideoUploader
+sudo chmod -R 777 /usr/share/BuxarVideoUploader
 
 %clean
 rm -rf $RPM_BUILD_ROOT/usr/share
 
 %postun
 sudo rm /usr/share/applications/BuxarVideoUploader.desktop
-
-
