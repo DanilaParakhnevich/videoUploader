@@ -233,7 +233,11 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             tab.choose_dir_button.setText(download_dir)
 
         def pick_new():
+            sorter = QtCore.QSortFilterProxyModel()
+            sorter.setDynamicSortFilter(True)
+
             dialog = QtWidgets.QFileDialog()
+            dialog.setProxyModel(sorter)
             folder_path = dialog.getExistingDirectory(None, get_str('choose_dir'))
             if folder_path != '':
                 self.tab_models[self.current_table_index].download_dir = folder_path
@@ -286,7 +290,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                               upload_targets=form.upload_targets,
                                               title=form.title,
                                               description=form.description,
-                                              download_dir=tab.choose_dir_button.text(),
+                                              download_dir=tab.choose_dir_button.text() if tab.choose_dir_button.text() != get_str('choose_the_dir') else os.path.abspath(os.path.curdir),
                                               manual_settings=self.tab_models[self.current_table_index].manual_settings,
                                               video_quality_str=self.tab_models[
                                                   self.current_table_index].video_quality_str,

@@ -1,3 +1,4 @@
+from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QWidget, QDialog, QPushButton, QLabel, QGridLayout, QFileDialog, QMessageBox)
 
 from service.LocalizationService import *
@@ -44,6 +45,13 @@ class ChooseDirForm(QDialog):
 
     def pick_new(self):
         dialog = QFileDialog()
+
+        sorter = QtCore.QSortFilterProxyModel()
+        sorter.setDynamicSortFilter(True)
+        dialog.setViewMode(QFileDialog.ViewMode.Detail)
+
+        dialog.setProxyModel(sorter)
+
         if self.file_need:
             folder_path = dialog.getOpenFileName(None, get_str('choose_file'))
         else:

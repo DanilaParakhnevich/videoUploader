@@ -473,7 +473,7 @@ class SettingsPage(QtWidgets.QDialog):
             if self.old_settings.autostart != (self.autostart.checkState() != 0):
                 import os
 
-                if os.name.__contains__('Windows'):
+                if os.name == 'nt':
                     if self.autostart.checkState() != 0:
                         import winreg
 

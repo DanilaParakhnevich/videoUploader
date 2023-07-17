@@ -135,9 +135,12 @@ class FacebookService(VideohostingService):
             context = self.new_context(p=p, headless=StateService.settings.debug_browser is False, use_user_agent_arg=True)
             context.add_cookies(account.auth)
             page = context.new_page()
-            page.goto(destination, wait_until='domcontentloaded')
+            page.goto(destination, wait_until='domcontentloaded', timeout=0)
 
             is_group = False
+            page.wait_for_selector('[role="main"]')
+
+            switch_but = None
 
             if destination.__contains__('groups'):
                 with page.expect_file_chooser() as fc_info:
@@ -148,16 +151,16 @@ class FacebookService(VideohostingService):
                 switch_but = page.query_selector('.x9f619.x1n2onr6.x1ja2u2z.x78zum5.xdt5ytf.x2lah0s.x193iq5w.xeuugli.xamitd3.x1sxyh0.xurb0ha.x10b6aqq.x1yrsyyn')
 
                 if switch_but is not None:
-                    page.click(selector='.x9f619.x1n2onr6.x1ja2u2z.x78zum5.xdt5ytf.x2lah0s.x193iq5w.xeuugli.xamitd3.x1sxyh0.xurb0ha.x10b6aqq.x1yrsyyn')
+                    page.click(selector='.x9f619.x1n2onr6.x1ja2u2z.x78zum5.xdt5ytf.x2lah0s.x193iq5w.xeuugli.xamitd3.x1sxyh0.xurb0ha.x10b6aqq.x1yrsyyn', timeout=0)
 
-                page.wait_for_selector('.x3nfvp2.x1c4vz4f.x2lah0s.x1emribx')
-                page.query_selector_all('.x3nfvp2.x1c4vz4f.x2lah0s.x1emribx')[1].click()
+                page.wait_for_selector('[data-pagelet="ProfileComposer"]', timeout=0)
+                page.wait_for_selector('.x6s0dn4.x78zum5.xl56j7k.x1rfph6h.x6ikm8r.x10wlt62', timeout=0)
+                time.sleep(5)
+                page.query_selector_all('.x6s0dn4.x78zum5.xl56j7k.x1rfph6h.x6ikm8r.x10wlt62')[1].click(timeout=0)
+
                 with page.expect_file_chooser() as fc_info:
-                    done_btn = page.query_selector('[aria-label="Done"]')
-                    page.click(selector='.x1n2onr6.x1ja2u2z.x9f619.x78zum5.xdt5ytf.x2lah0s.x193iq5w.x5yr21d')
-
-                    if done_btn is not None:
-                        page.click('[aria-label="Done"]')
+                    page.wait_for_selector('.x1n2onr6.x1ja2u2z.x9f619.x78zum5.xdt5ytf.x2lah0s.x193iq5w.x5yr21d', timeout=0)
+                    page.click(selector='.x1n2onr6.x1ja2u2z.x9f619.x78zum5.xdt5ytf.x2lah0s.x193iq5w.x5yr21d', timeout=0)
             if table_item is not None:
                 table_item.setText(get_str('uploading'))
 
@@ -169,17 +172,29 @@ class FacebookService(VideohostingService):
 
             if is_group is False:
                 page.click('.xzsf02u.x1a2a7pz.x1n2onr6.x14wi4xw.x9f619.x1lliihq.x5yr21d.xh8yej3.notranslate')
-                page.wait_for_selector('.x6s0dn4.x9f619.x78zum5.x1qughib.x1pi30zi.x1swvt13.xyamay9.xh8yej3', timeout=0)
-                but1 = page.query_selector('.x6s0dn4.x9f619.x78zum5.x1qughib.x1pi30zi.x1swvt13.xyamay9.xh8yej3')
+                if switch_but is not None:
+                    page.wait_for_selector('.x6s0dn4.x9f619.x78zum5.x1qughib.x1pi30zi.x1swvt13.xyamay9.xh8yej3', timeout=0)
+                    but1 = page.query_selector('.x6s0dn4.x9f619.x78zum5.x1qughib.x1pi30zi.x1swvt13.xyamay9.xh8yej3')
+                else:
+                    page.query_selector('.x1l90r2v.xyamay9.x1n2onr6').wait_for_selector('.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.xl56j7k.x6s0dn4.xozqiw3.x1q0g3np.xi112ho.x17zwfj4.x585lrc.x1403ito.x972fbf.xcfux6l.x1qhh985.xm0m39n.x9f619.xn6708d.x1ye3gou.xtvsq51.x1r1pt67')
+                    but1 = page.query_selector_all('.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.xl56j7k.x6s0dn4.xozqiw3.x1q0g3np.xi112ho.x17zwfj4.x585lrc.x1403ito.x972fbf.xcfux6l.x1qhh985.xm0m39n.x9f619.xn6708d.x1ye3gou.xtvsq51.x1r1pt67')[1]
+
             else:
                 page.wait_for_selector('.x9f619.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.x1qughib.x1qjc9v5.xozqiw3.x1q0g3np.x1pi30zi.x1swvt13.xyamay9.xykv574.xbmpl8g.x4cne27.xifccgj', timeout=0)
                 but1 = page.query_selector_all('.x9f619.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.x1qughib.x1qjc9v5.xozqiw3.x1q0g3np.x1pi30zi.x1swvt13.xyamay9.xykv574.xbmpl8g.x4cne27.xifccgj')[1]
 
             page.keyboard.type(name)
 
+            if switch_but is not None:
+                page.wait_for_selector('.x117nqv4.x1sln4lm.xexx8yu.x10l6tqk.xh8yej3.x14ctfv', timeout=0)
+
+                while page.query_selector('.x117nqv4.x1sln4lm.xexx8yu.x10l6tqk.xh8yej3.x14ctfv').text_content().strip() != '100%':
+                    time.sleep(2)
+
             but1.click()
 
-            time.sleep(30)
+            page.wait_for_selector('.x9f619.x1n2onr6.x1ja2u2z.__fb-light-mode.x6s0dn4.x1wkzo03.x1192kqh.xjfsc2c.xg8fqjl.x1kdh5me.xi1c1fh.x78zum5.x2lah0s.x1cs6qxi.x1hqenl9.xuv3zuj.xd3owfx.x192rfv7.x13jxccy.xh8yej3', timeout=0)
+            time.sleep(3)
 
     def check_auth(self, account) -> bool:
         for auth in account.auth:

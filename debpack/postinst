@@ -1,0 +1,13 @@
+#!/bin/bash
+# file name postinst
+# Post-install script
+
+sudo bash -c "echo '[Desktop Entry]
+Version=1.0.0
+Name=BuxarVideoUploader
+Comment=BuxarVideoUploader
+Icon=/usr/share/BuxarVideoUploader/dist/Application/icon.png
+Exec=sh -c \"cd /usr/share/BuxarVideoUploader/dist/Application && ./Application\"
+Terminal=false
+StartupWMClass=Application
+Type=Application' > /usr/share/applications/BuxarVideoUploader.desktop"

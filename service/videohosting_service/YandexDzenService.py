@@ -105,7 +105,7 @@ class YandexDzenService(VideohostingService):
                 '.form-actions__action-15.base-button__rootElement-75.base-button__l-3Z.base-button__accentPrimary-B4',
                 timeout=0)
 
-            time.sleep(1)
+            time.sleep(5)
 
             if page.query_selector('.prepublish-popup-publisher-data__content') is not None:
                 raise Exception('Необходимо активировать аккаунт')

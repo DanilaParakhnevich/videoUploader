@@ -249,6 +249,10 @@ class StateService(object):
                     StateService.settings.fps = 0
                 if hasattr(StateService.settings, 'debug_browser') is False:
                     StateService.settings.debug_browser = False
+                if hasattr(StateService.settings, 'user_mail') is False:
+                    StateService.settings.user_mail = None
+                if hasattr(StateService.settings, 'encrypted_key') is False:
+                    StateService.settings.encrypted_key = None
         return StateService.settings
 
     def get_license_model(self):

@@ -1,4 +1,5 @@
 import re
+import shutil
 import traceback
 from abc import ABC
 import abc
@@ -162,8 +163,8 @@ class VideohostingService(ABC):
         else:
             from yt_dlp import YoutubeDL
 
-        space = os.statvfs(os.path.expanduser(download_dir))
-        free = space.f_bavail * space.f_frsize / 1024000
+        space = shutil.disk_usage(download_dir).free
+        free = space / 1000000
 
         if video_info['filesize'] is int and free - video_info['filesize'] < 100:
             raise NoFreeSpaceException(f'Нет свободного места: размер файла: {video_info["filesize"]}')
@@ -207,6 +208,9 @@ class VideohostingService(ABC):
         settings = self.state_service.get_settings()
 
         ffmpeg_location = f'{settings.ffmpeg}/bin/ffmpeg'
+
+        if os.name == 'nt':
+            ffmpeg_location += '.exe'
 
         simple_download_opts = {
             'progress_hooks': [lambda d: prog_hook(d, table_item)],
