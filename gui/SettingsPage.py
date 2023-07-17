@@ -486,15 +486,16 @@ class SettingsPage(QtWidgets.QDialog):
 
                         winreg.DeleteValue("BuxarVideoUploader")
                 else:
+                    import subprocess
+
                     if self.autostart.checkState() != 0:
-                        import subprocess
 
                         service = f'''
                         [Unit]
                         Description=BuxarVideoUploader
     
                         [Service]
-                        ExecStart=.{os.path.abspath("Application")}
+                        ExecStart=bash -c "cd {os.path.dirname("Application")} && ./Application"
                         Restart=always
     
                         [Install]
@@ -507,6 +508,9 @@ class SettingsPage(QtWidgets.QDialog):
                         subprocess.run(['sudo', 'systemctl', 'daemon-reload'])
                         subprocess.run(['sudo', 'systemctl', 'enable', 'BuxarVideoUploader.service'])
                         subprocess.run(['sudo', 'systemctl', 'start', 'BuxarVideoUploader.service'])
+                    else:
+                        subprocess.run(['sudo', 'systemctl', 'disable', 'BuxarVideoUploader.service'])
+
         except:
             log_error(traceback.format_exc())
 

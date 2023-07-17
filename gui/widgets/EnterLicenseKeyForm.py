@@ -14,7 +14,7 @@ class EnterLicenseKeyForm(QDialog):
     def __init__(self):
         super().__init__()
         self.passed = False
-        self.setFixedSize(500, 350)
+        self.setFixedSize(500, 400)
         self.setWindowTitle(get_str('enter_license'))
         self.layout = QGridLayout()
 
@@ -55,7 +55,7 @@ class EnterLicenseKeyForm(QDialog):
         self.layout.addWidget(about_label, 5, 0)
 
         about = QLabel()
-        about.setText(self.parse_string(get_str('text_info_value')))
+        about.setText(get_str('text_info_value'))
 
         self.layout.addWidget(about, 5, 1)
 
@@ -67,12 +67,21 @@ class EnterLicenseKeyForm(QDialog):
     def parse_string(self, string: str) -> str:
         new_string = ""
 
+        index = 0
+
         for letter_index in range(len(string)):
 
-            if letter_index % 33 == 0 and letter_index != 0:
-                new_string += "\n"
+            if index % 33 == 0 and index != 0:
+                if string[letter_index] != ' ':
+                    new_string += f"\n{string[letter_index]}"
+                    index += 1
             else:
                 new_string += string[letter_index]
+
+            index += 1
+
+            if index > 33:
+                index = 0
 
         return new_string
 

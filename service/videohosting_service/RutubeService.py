@@ -117,11 +117,13 @@ class RutubeService(VideohostingService):
                 timeout=0)
 
     def check_auth(self, account) -> bool:
-        for auth in account.auth:
-            if auth['name'] == 'csrftoken':
-                if datetime.utcfromtimestamp(auth['expires']) > datetime.now():
-                    return True
-                else:
-                    return False
-
-        return False
+        with sync_playwright() as p:
+            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+            context.add_cookies(account.auth)
+            page = context.new_page()
+            page.goto('https://rutube.ru/', wait_until='domcontentloaded', timeout=0)
+            try:
+                page.wait_for_selector('.freyja_char-base-button__pointerCursor__JNA7y', timeout=10_000)
+                return False
+            except:
+                return True

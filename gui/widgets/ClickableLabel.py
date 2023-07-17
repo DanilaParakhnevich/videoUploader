@@ -1,8 +1,7 @@
 import os
 
 from PyQt5.QtWidgets import QLabel
-from playwright.sync_api import sync_playwright
-
+import webbrowser
 
 class ClickableLabel(QLabel):
     label = None
@@ -13,23 +12,18 @@ class ClickableLabel(QLabel):
         self.mail = mail
 
     def mousePressEvent(self, QMouseEvent):
-        with sync_playwright() as p:
-            context = p.chromium.launch(headless=False).new_context()
-            page = context.new_page()
-            if self.mail:
-                if os.name == 'nt':
-                    import pyperclip
-                    pyperclip.copy(self.text())
-                else:
-                    try:
-                        page.goto(f'mailto:{self.text()}', wait_until='commit')
-                    except:
-                        return
+        if self.mail:
+            if os.name == 'nt':
+                import pyperclip
+                pyperclip.copy(self.text())
             else:
                 try:
-                    page.goto(self.text(), timeout=0)
-                    page.wait_for_selector('#abcsaddsa', timeout=0)
+                    webbrowser.open_new_tab(f'mailto:{self.text()}')
                 except:
                     return
-
+        else:
+            try:
+                webbrowser.open_new(self.text())
+            except:
+                return
 

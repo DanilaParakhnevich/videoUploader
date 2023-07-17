@@ -142,14 +142,13 @@ class OKService(VideohostingService):
             time.sleep(0.5)
 
     def check_auth(self, account) -> bool:
-        for auth in account.auth:
-            if auth['name'] == 'AUTHCODE':
-                if datetime.utcfromtimestamp(auth['expires']) > datetime.now():
-                    return True
-                else:
-                    return False
+        with sync_playwright() as p:
+            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+            context.add_cookies(account.auth)
+            page = context.new_page()
+            page.goto('https://ok.ru/', wait_until='domcontentloaded', timeout=0)
 
-        return False
+            return page.query_selector('.anonym_login_design21') is None
 
     def need_to_be_uploaded_to_special_source(self) -> bool:
         return True

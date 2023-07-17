@@ -1,5 +1,5 @@
 # Обновляем информацию о доступных пакетах и устанавливаем Python 3.6 и пакеты для виртуального окружения
-sudo urpmi build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev wget
+sudo urpmi rpmdev build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev wget
 
 if ! hash python3.8; then
     echo "Installing python3.8"
@@ -20,6 +20,18 @@ python3.8 -m pip install -r requirements.txt
 export QT_PLUGIN_PATH=$PWD/venv/lib64/python3.8/site-packages/PyQt5/Qt/plugins/
 pyinstaller --add-data "service/locale/*.json:./service/locale/" --add-data "gui/widgets/button_icons/*.gif:./gui/widgets/button_icons/" --add-data "service/videohosting_service/tmp:./service/videohosting_service/tmp" --add-data "version.txt:." --add-data "icon.png:." Application.py
 
-#tar -cvf BuxarVideoUploader.tar dist/ build/
+mkdir BuxarVideoUploader
 
+mv dist/ BuxarVideoUploader/
+mv build/ BuxarVideoUploader/
+
+tar -cvfz BuxarVideoUploader.tar.gz BuxarVideoUploader/
+mv BuxarVideoUploader.tar.gz rpmbuild/SOURCES
+
+cd rpmbuild
+
+rpmbuild --define "_topdir pwd" -bb SPECS/BuxarVideoUploader.spec
+
+cd ../
 sudo rm -r myenv/
+fi

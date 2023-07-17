@@ -1,3 +1,4 @@
+import json
 import re
 import shutil
 import traceback
@@ -5,7 +6,7 @@ from abc import ABC
 import abc
 from http.cookiejar import Cookie
 
-from playwright.sync_api import BrowserContext
+from playwright.sync_api import BrowserContext, sync_playwright
 from playwright.sync_api import Playwright
 from playwright.sync_api import Page
 from PyQt5.QtWidgets import QTableWidgetItem
@@ -172,8 +173,19 @@ class VideohostingService(ABC):
         title = None
 
         if 'title' in video_info:
-            title = video_info['title']
-            title = title.replace('/', '|')
+            if hosting == 'Facebook':
+                with sync_playwright() as p:
+                    if table_item is not None:
+                        table_item.setText(get_str('preparing'))
+                    context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+                    context.add_cookies(account.auth)
+                    page = context.new_page()
+                    page.goto(url, wait_until='domcontentloaded', timeout=0)
+                    page.wait_for_selector('[style="text-align: start;"]', timeout=0)
+                    title = page.query_selector('[style="text-align: start;"]').text_content()
+            else:
+                title = video_info['title']
+                title = title.replace('/', '|')
 
             download_path = fr'{download_dir}/{hosting}/{title}_{video_quality}.%(ext)s' if manual_settings \
                 else fr'{download_dir}/{hosting}/{title}.%(ext)s'
@@ -398,6 +410,21 @@ class VideohostingService(ABC):
             ext = info['entries'][0]['ext']
 
         title = title.replace('/', '|')
+
+        if title is not None:
+            try:
+                f = open(os.path.splitext(download_path)[0] + '.info.json')
+                data = json.load(f)
+
+                data['title'] = title
+                f.close()
+
+                w = open(os.path.splitext(download_path)[0] + '.info.json', 'w')
+
+                json.dump(data, w)
+                w.close()
+            except:
+                log_error(f'{os.path.splitext(download_path)[0]} - .info.json не найден')
 
         if manual_settings:
             if 'video_ext' in info:

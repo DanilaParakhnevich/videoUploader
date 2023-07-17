@@ -171,11 +171,18 @@ class FacebookService(VideohostingService):
                 table_item.setText(get_str('ending'))
 
             if is_group is False:
-                page.click('.xzsf02u.x1a2a7pz.x1n2onr6.x14wi4xw.x9f619.x1lliihq.x5yr21d.xh8yej3.notranslate')
                 if switch_but is not None:
+                    try:
+                        page.wait_for_selector('.x6s0dn4.x1n51wo8.x78zum5.xdt5ytf.x5yr21d.xl56j7k.x1n2onr6', timeout=20_000)
+                        page.query_selector_all('.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.xl56j7k.x6s0dn4.xozqiw3.x1q0g3np.xi112ho.x17zwfj4.x585lrc.x1403ito.x972fbf.xcfux6l.x1qhh985.xm0m39n.x9f619.xn6708d.x1ye3gou.x1qhmfi1.x1fq8qgq')[0].click()
+                    except:
+                        pass
+
+                    page.click('.xzsf02u.x1a2a7pz.x1n2onr6.x14wi4xw.x9f619.x1lliihq.x5yr21d.xh8yej3.notranslate')
                     page.wait_for_selector('.x6s0dn4.x9f619.x78zum5.x1qughib.x1pi30zi.x1swvt13.xyamay9.xh8yej3', timeout=0)
                     but1 = page.query_selector('.x6s0dn4.x9f619.x78zum5.x1qughib.x1pi30zi.x1swvt13.xyamay9.xh8yej3')
                 else:
+                    page.click('.xzsf02u.x1a2a7pz.x1n2onr6.x14wi4xw.x9f619.x1lliihq.x5yr21d.xh8yej3.notranslate')
                     page.query_selector('.x1l90r2v.xyamay9.x1n2onr6').wait_for_selector('.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.xl56j7k.x6s0dn4.xozqiw3.x1q0g3np.xi112ho.x17zwfj4.x585lrc.x1403ito.x972fbf.xcfux6l.x1qhh985.xm0m39n.x9f619.xn6708d.x1ye3gou.xtvsq51.x1r1pt67')
                     but1 = page.query_selector_all('.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.xl56j7k.x6s0dn4.xozqiw3.x1q0g3np.xi112ho.x17zwfj4.x585lrc.x1403ito.x972fbf.xcfux6l.x1qhh985.xm0m39n.x9f619.xn6708d.x1ye3gou.xtvsq51.x1r1pt67')[1]
 
@@ -197,14 +204,13 @@ class FacebookService(VideohostingService):
             time.sleep(3)
 
     def check_auth(self, account) -> bool:
-        for auth in account.auth:
-            if auth['name'] == 'c_user':
-                if datetime.utcfromtimestamp(auth['expires']) > datetime.now():
-                    return True
-                else:
-                    return False
+        with sync_playwright() as p:
+            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+            context.add_cookies(account.auth)
+            page = context.new_page()
+            page.goto('https://www.facebook.com/', wait_until='domcontentloaded', timeout=0)
 
-        return False
+            return page.query_selector('[data-testid="royal_login_form"]') is None
 
     def need_to_be_uploaded_to_special_source(self) -> bool:
         return True
