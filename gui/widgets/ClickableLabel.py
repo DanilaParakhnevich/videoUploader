@@ -1,3 +1,5 @@
+import os
+
 from PyQt5.QtWidgets import QLabel
 from playwright.sync_api import sync_playwright
 
@@ -15,10 +17,14 @@ class ClickableLabel(QLabel):
             context = p.chromium.launch(headless=False).new_context()
             page = context.new_page()
             if self.mail:
-                try:
-                    page.goto(f'mailto:{self.text()}', wait_until='commit')
-                except:
-                    return
+                if os.name == 'nt':
+                    import pyperclip
+                    pyperclip.copy(self.text())
+                else:
+                    try:
+                        page.goto(f'mailto:{self.text()}', wait_until='commit')
+                    except:
+                        return
             else:
                 try:
                     page.goto(self.text(), timeout=0)

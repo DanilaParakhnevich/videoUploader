@@ -1,10 +1,16 @@
-# Обновляем информацию о пакетах и устанавливаем необходимые пакеты
-sudo apt-get update
-sudo apt-get install -y python3.6 python3.6-venv
+version=$(python3.6 -V 2>&1 | grep -Po '(?<=Python )(.+)')
+
+
+if ! hash python3.6; then
+    echo "Installing python3.6"
+    sudo apt-get update
+    sudo apt-get install -y python3.6 python3.6-venv
+else
+    echo "Python3.6 installed"
 
 # Создаем виртуальное окружение и активируем его
 python3.6 -m venv myenv
-source venv/bin/activate
+source myenv/bin/activate
 
 # Выполняем необходимые команды внутри виртуального окружения с использованием Python 3.6
 pip install -r requirements.txt
@@ -31,3 +37,5 @@ rm control.tar.gz
 cd ../
 rm -r myenv/
 rm Application.spec
+
+fi
