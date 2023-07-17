@@ -12,7 +12,7 @@ class AboutPage(QtWidgets.QDialog):
     def __init__(self, central_widget):
 
         super(AboutPage, self).__init__(central_widget)
-        self.setFixedSize(500, 200)
+        self.setFixedSize(500, 400)
         self.setObjectName("AboutPage")
 
         self.gridLayout = QtWidgets.QGridLayout(self)
@@ -23,14 +23,14 @@ class AboutPage(QtWidgets.QDialog):
 
         self.about_link_label = QLabel()
         self.about_link_label.setText(get_str('link_text'))
-        self.link_label = ClickableLabel(self.parse_string(get_str('link_value')), False)
+        self.link_label = ClickableLabel(get_str('link_value'), False)
 
         self.gridLayout.addWidget(self.about_link_label, 0, 0)
         self.gridLayout.addWidget(self.link_label, 0, 1)
 
         self.about_email_label = QLabel()
         self.about_email_label.setText(get_str('email_text'))
-        self.email_label = ClickableLabel(self.parse_string(get_str('email_value')), True)
+        self.email_label = ClickableLabel(get_str('email_value'), True)
 
         self.gridLayout.addWidget(self.about_email_label, 1, 0)
         self.gridLayout.addWidget(self.email_label, 1, 1)
@@ -38,7 +38,7 @@ class AboutPage(QtWidgets.QDialog):
         self.text_info_label = QLabel()
         self.text_info_label.setText(get_str('text_info_text'))
         self.text_label = QLabel()
-        self.text_label.setText(self.parse_string(get_str('text_info_value')))
+        self.text_label.setText(get_str('text_info_value'))
 
         self.gridLayout.addWidget(self.text_info_label, 2, 0)
         self.gridLayout.addWidget(self.text_label, 2, 1)
