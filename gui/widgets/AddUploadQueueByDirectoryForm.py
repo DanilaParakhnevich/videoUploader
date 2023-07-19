@@ -137,7 +137,7 @@ class AddUploadQueueByDirectoryForm(QDialog):
         upload_targets = list()
 
         try:
-            f = open(os.path.splitext(file_dir)[0] + '.info.json')
+            f = open(os.path.splitext(file_dir)[0] + '.info.json', 'r', encoding='utf-8')
             data = json.load(f)
 
             title = data['title']

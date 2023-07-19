@@ -191,5 +191,10 @@
   "fps": "Frames per second",
   "debug_browser": "Show browser window",
   "check_internet_connection": "Check internet connection",
-  "bad_internet_connection": "Bad internet connection"
+  "bad_internet_connection": "Bad internet connection",
+  "check_fail_for": "Authorization failed for",
+  "enter_pas": "Enter password",
+  "enter_login": "Enter login",
+  "enter_code": "Enter code",
+  "video_not_exists": "Video not exists"
 }

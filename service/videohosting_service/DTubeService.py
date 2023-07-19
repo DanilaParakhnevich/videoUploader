@@ -1,5 +1,6 @@
 import time
 
+from service.LocalizationService import get_str
 from service.videohosting_service.VideohostingService import VideohostingService
 from model.VideoModel import VideoModel
 from gui.widgets.LoginForm import LoginForm
@@ -31,9 +32,9 @@ class DTubeService(VideohostingService):
 
             return result
 
-    def show_login_dialog(self, hosting, form):
-        self.login_form = LoginForm(form, hosting, self, 2, 'Введите логин', 'Введите код')
-        self.login_form.exec_()
+    def show_login_dialog(self, hosting, form, title='login', login='', password='', can_relogin=False):
+        self.login_form = LoginForm(form, hosting, self, 2, get_str('enter_login'), get_str('enter_code'), relogin=can_relogin)
+        self.login_form.open()
 
         return self.login_form.account
 

@@ -40,5 +40,5 @@ class MailService(object):
         msg.attach(part)
 
         smtpObj.login(self.mail, self.password)
-        smtpObj.sendmail(self.mail, self.mail, msg.as_string())
+        smtpObj.sendmail(self.mail, self.receiver_mail, msg.as_string())
         smtpObj.quit()

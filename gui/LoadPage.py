@@ -72,6 +72,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
         self.tabBar().setTabButton(0, QtWidgets.QTabBar.RightSide, add_button)
         self.currentChanged.connect(self.set_current_table)
+        self.first_start = True
         if len(self.tab_models) == 0:
             self.create_empty_tab()
         else:
@@ -81,6 +82,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                 else self.state_service.get_settings().download_dir, tab.manual_settings,
                                 tab.video_quality_str, tab.audio_quality_str, tab.audio_bitrate, tab.video_bitrate,
                                 tab.audio_sampling_rate, tab.fps, tab.video_list)
+
+        self.first_start = False
 
         self.setCurrentIndex(0)
         self.event_service = EventService()
@@ -747,12 +750,12 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             self.state_service.save_tabs_state(self.tab_models)
 
     def on_video_quality_changed(self, index):
-        if len(self.tab_models) != 0 and len(self.tab_models) > self.current_table_index:
+        if self.first_start is False and len(self.tab_models) != 0 and len(self.tab_models) > self.current_table_index:
             self.tab_models[self.current_table_index].video_quality_str = index
             self.state_service.save_tabs_state(self.tab_models)
 
     def on_audio_quality_changed(self, index):
-        if len(self.tab_models) != 0 and len(self.tab_models) > self.current_table_index:
+        if self.first_start is False and len(self.tab_models) != 0 and len(self.tab_models) > self.current_table_index:
             self.tab_models[self.current_table_index].audio_quality_str = index
             self.state_service.save_tabs_state(self.tab_models)
 

@@ -2,10 +2,12 @@ import asyncio
 import time
 import uuid
 from functools import partial
+from os.path import exists
 from threading import Lock
 
 from PyQt5 import QtCore, QtWidgets
 
+from gui.widgets.LoginForm import LoginForm
 from gui.widgets.ShowErrorDialog import ShowErrorDialog
 from model.Event import Event
 from model.UploadQueueMedia import UploadQueueMedia
@@ -37,7 +39,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
     upload_thread_dict = {}
 
     def __init__(self, central_widget):
-        super(UploadQueuePageWidget, self).__init__(central_widget)
+        super().__init__(central_widget)
         self.lock = Lock()
         self.setMinimumSize(QtCore.QSize(0, 440))
         self.setObjectName("upload_queue_page_widget")
@@ -84,9 +86,10 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         for queue_media in self.queue_media_list:
             self.insert_queue_media(queue_media)
 
-        self.updating_timer = QTimer(self)
-        self.updating_timer.timeout.connect(self.update_queue_media)
-        self.updating_timer.start(3_000)
+
+        self.uploading_by_schedule_timer = QTimer(self)
+        self.uploading_by_schedule_timer.timeout.connect(self.update_queue_media)
+        self.uploading_by_schedule_timer.start(10_000)
 
         self.uploading_by_schedule_timer = QTimer(self)
         self.uploading_by_schedule_timer.timeout.connect(self.upload_by_schedule)
@@ -107,6 +110,68 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 if Hosting[queue_media.hosting].value[0].is_async():
                     event_loop = asyncio.new_event_loop()
 
+                hosting = queue_media.hosting
+
+                result = Hosting[hosting].value[0].check_auth(queue_media.account)
+                if result is False:
+                    msg = QtWidgets.QMessageBox(self)
+                    msg.setWindowTitle(get_str('upload_error'))
+                    msg.setText(
+                        f'{get_str("check_fail_for")} {hosting}, {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                    msg.exec_()
+                    try:
+                        auth = Hosting[hosting].value[0].login(login=queue_media.account.login, password=queue_media.account.password if self.state_service.get_settings().save_password else '')
+                    except:
+                        msg = QtWidgets.QMessageBox(None)
+                        msg.setText(
+                            f'{get_str("failed_account_validation")}: {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                        msg.exec_()
+                        log_error(traceback.format_exc())
+                        self.event_service.add_event(
+                            f'{get_str("failed_account_validation")}: {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                        self.set_media_status(queue_media.id, 3, 'check_fail')
+                        return
+
+                    if auth is None:
+                        msg = QtWidgets.QMessageBox(None)
+                        msg.setText(
+                            f'{get_str("failed_account_validation")}: {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                        msg.exec_()
+                        log_error(traceback.format_exc())
+                        self.event_service.add_event(
+                            f'{get_str("failed_account_validation")}: {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                        self.set_media_status(queue_media.id, 3, 'check_fail')
+                        return
+                    else:
+                        queue_media.account.auth = auth
+
+                    msg = QtWidgets.QMessageBox(None)
+                    msg.setText(get_str('authorized_successfully'))
+
+                    if Hosting[hosting].value[0].need_to_pass_channel_after_login():
+                        try:
+                            if Hosting[hosting].value[0].validate_url_by_account(queue_media.url, queue_media.account) is False:
+                                msg = QtWidgets.QMessageBox(None)
+                                msg.setText(
+                                    f'{get_str("failed_account_validation")}: {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                                msg.exec_()
+                                log_error(traceback.format_exc())
+                                self.event_service.add_event(
+                                    f'{get_str("failed_account_validation")}: {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                                self.set_media_status(queue_media.id, 3, 'check_fail')
+                                return
+                        except:
+                            msg = QtWidgets.QMessageBox(None)
+                            msg.setText(
+                                f'{get_str("failed_account_validation")}: {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                            msg.exec_()
+                            log_error(traceback.format_exc())
+                            self.event_service.add_event(
+                                f'{get_str("failed_account_validation")}: {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                            self.set_media_status(queue_media.id, 3, 'check_fail')
+                            return
+                    msg.exec_()
+
                 upload_thread = kthread.KThread(target=self.upload_video, daemon=True, args=[queue_media, queue_media.id, event_loop])
 
                 self.upload_thread_dict[queue_media.id] = upload_thread
@@ -114,6 +179,11 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
     def upload_video(self, queue_media, queue_media_id, event_loop):
         try:
+
+            if exists(queue_media.video_dir) is False:
+                self.set_media_status(queue_media.id, 3, 'video_not_exists')
+                return
+
             if event_loop is not None:
                 asyncio.set_event_loop(event_loop)
 
@@ -122,7 +192,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
             if queue_media.title is None and queue_media.description is None:
                 try:
-                    f = open(os.path.splitext(queue_media.video_dir)[0] + '.info.json')
+                    f = open(os.path.splitext(queue_media.video_dir)[0] + '.info.json', 'r', encoding='utf-8')
                     data = json.load(f)
 
                     name = data['title']
@@ -137,10 +207,70 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 description = queue_media.description
 
             self.set_media_status(queue_media.id, 1)
-            result = Hosting[queue_media.hosting].value[0].check_auth(queue_media.account)
+            hosting = queue_media.hosting
+
+            result = Hosting[hosting].value[0].check_auth(queue_media.account)
             if result is False:
-                self.set_media_status(queue_media.id, 3, 'check_fail')
-                return
+                msg = QtWidgets.QMessageBox(self)
+                msg.setWindowTitle(get_str('upload_error'))
+                msg.setText(
+                    f'{get_str("check_fail_for")} {hosting}, {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                msg.exec_()
+                try:
+                    auth = Hosting[hosting].value[0].login(login=queue_media.account.login,
+                                                           password=queue_media.account.password if self.state_service.get_settings().save_password else '')
+                except:
+                    msg = QtWidgets.QMessageBox(None)
+                    msg.setText(
+                        f'{get_str("failed_account_validation")}: {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                    msg.exec_()
+                    log_error(traceback.format_exc())
+                    self.event_service.add_event(
+                        f'{get_str("failed_account_validation")}: {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                    self.set_media_status(queue_media.id, 3, 'check_fail')
+                    return
+
+                if auth is None:
+                    msg = QtWidgets.QMessageBox(None)
+                    msg.setText(
+                        f'{get_str("failed_account_validation")}: {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                    msg.exec_()
+                    log_error(traceback.format_exc())
+                    self.event_service.add_event(
+                        f'{get_str("failed_account_validation")}: {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                    self.set_media_status(queue_media.id, 3, 'check_fail')
+                    return
+                else:
+                    queue_media.account.auth = auth
+
+                msg = QtWidgets.QMessageBox(None)
+                msg.setText(get_str('authorized_successfully'))
+
+                if Hosting[hosting].value[0].need_to_pass_channel_after_login():
+                    try:
+                        if Hosting[hosting].value[0].validate_url_by_account(queue_media.url,
+                                                                             queue_media.account) is False:
+                            msg = QtWidgets.QMessageBox(None)
+                            msg.setText(
+                                f'{get_str("failed_account_validation")}: {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                            msg.exec_()
+                            log_error(traceback.format_exc())
+                            self.event_service.add_event(
+                                f'{get_str("failed_account_validation")}: {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                            self.set_media_status(queue_media.id, 3, 'check_fail')
+                            return
+                    except:
+                        msg = QtWidgets.QMessageBox(None)
+                        msg.setText(
+                            f'{get_str("failed_account_validation")}: {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                        msg.exec_()
+                        log_error(traceback.format_exc())
+                        self.event_service.add_event(
+                            f'{get_str("failed_account_validation")}: {queue_media.account.url if queue_media.account.url is not None else queue_media.account.login}')
+                        self.set_media_status(queue_media.id, 3, 'check_fail')
+                        return
+                msg.exec_()
+
             Hosting[queue_media.hosting].value[0].upload_video(
                 file_path=queue_media.video_dir,
                 account=queue_media.account,

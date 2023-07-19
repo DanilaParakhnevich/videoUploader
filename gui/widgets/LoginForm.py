@@ -13,9 +13,9 @@ class LoginForm(QDialog):
     passed = False
 
     def __init__(self, parent: QWidget, hosting, service: VideohostingService, count: int,
-                 username: str = get_str('username'), password:str = get_str('password'), username_val=''):
+                 username: str = get_str('username'), password:str = get_str('password'), username_val='', password_val='', title='login', relogin=False):
         super().__init__(parent)
-        self.setWindowTitle('Login Form')
+        self.setWindowTitle(get_str(title))
         self.resize(500, 120)
 
         layout = QGridLayout()
@@ -32,6 +32,7 @@ class LoginForm(QDialog):
             self.lineEdit_password = QLineEdit()
             layout.addWidget(label_password, 1, 0)
             layout.addWidget(self.lineEdit_password, 1, 1)
+            self.lineEdit_password.setText(password_val)
         else:
             label_name = QLabel(f'<font size="4"> {username} </font>')
             self.lineEdit_username = QLineEdit()
@@ -49,6 +50,7 @@ class LoginForm(QDialog):
         self.setLayout(layout)
         self.hosting = hosting
         self.service = service
+        self.relogin = relogin
         self.state_service = StateService()
 
     def check_password(self):
@@ -56,7 +58,7 @@ class LoginForm(QDialog):
 
         if self.hosting.value[0].need_to_pass_channel_after_login() is False:
             for account in self.state_service.get_accounts_by_hosting(self.hosting.name):
-                if account.login == self.lineEdit_username.text():
+                if self.relogin is False and account.login == self.lineEdit_username.text():
                     msg.setText(get_str('account_already_exists'))
                     msg.exec_()
                     return

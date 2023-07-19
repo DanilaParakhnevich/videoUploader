@@ -59,8 +59,8 @@ class OKService(VideohostingService):
 
         return result
 
-    def show_login_dialog(self, hosting, form):
-        self.login_form = LoginForm(form, hosting, self, 2, 'Введите логин', 'Введите пароль')
+    def show_login_dialog(self, hosting, form, title='login', login='', password='', can_relogin=False):
+        self.login_form = LoginForm(form, hosting, self, 2, get_str('enter_login'), get_str('enter_pas'), title=title, username_val=login, password_val=password, relogin=can_relogin)
         self.login_form.exec_()
 
         return self.login_form.account
@@ -124,7 +124,8 @@ class OKService(VideohostingService):
 
             if table_item is not None:
                 table_item.setText(get_str('ending'))
-            page.click('.__small.video-uploader_ac.__go-to-editor-btn.js-uploader-editor-link', timeout=60_000)
+            page.wait_for_selector('.__small.video-uploader_ac.__go-to-editor-btn.js-uploader-editor-link', timeout=0)
+            page.click('.__small.video-uploader_ac.__go-to-editor-btn.js-uploader-editor-link', timeout=0)
 
             page.wait_for_selector('#movie-title', timeout=0)
 

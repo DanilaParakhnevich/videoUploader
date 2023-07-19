@@ -38,10 +38,12 @@ class YoutubeService(VideohostingService):
             result.append(VideoModel(url, title, video['publishedTimeText']['simpleText']))
         return result
 
-    def show_login_dialog(self, hosting, form):
-        self.login_form = LoginForm(form, hosting, self, 1, 'Введите телефон или адрес эл. почты')
+    def show_login_dialog(self, hosting, form, title='login', login='', password='', can_relogin=False):
+        self.login_form = LoginForm(form, hosting, self, 1, get_str('enter_login'), title=title, username_val=login, password_val=password, relogin=can_relogin)
         self.login_form.exec_()
+
         return self.login_form.account
+
     def login(self, login, password):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=False, use_user_agent_arg=True)

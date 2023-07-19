@@ -5,6 +5,7 @@ import traceback
 from abc import ABC
 import abc
 from http.cookiejar import Cookie
+from os.path import exists
 
 from playwright.sync_api import BrowserContext, sync_playwright
 from playwright.sync_api import Playwright
@@ -66,7 +67,7 @@ class VideohostingService(ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def show_login_dialog(self, hosting, form):
+    def show_login_dialog(self, hosting, form, title='login', login='', password='', can_relogin=False):
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -400,6 +401,9 @@ class VideohostingService(ABC):
                             domain_initial_dot=True, port_specified=False, domain_specified=True, path_specified=False))
                 info = ydl.extract_info(url)
 
+        if exists(download_path) is False:
+            raise Exception('Невозможно найти скачанный файл')
+
         if 'title' in info:
             if title is None:
                 title = info['title']
@@ -413,7 +417,7 @@ class VideohostingService(ABC):
 
         if title is not None:
             try:
-                f = open(os.path.splitext(download_path)[0] + '.info.json')
+                f = open(os.path.splitext(download_path)[0] + '.info.json', 'r', encoding='utf-8')
                 data = json.load(f)
 
                 data['title'] = title

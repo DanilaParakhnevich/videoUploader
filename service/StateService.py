@@ -96,7 +96,7 @@ class StateService(object):
 
             for tab in StateService.tabs:
                 if hasattr(tab, 'video_extension') is False:
-                    tab.video_extension = [5, 'mp4']
+                    tab.video_extension = 5
                 if hasattr(tab, 'download_dir') is False:
                     tab.download_dir = StateService.settings.download_dir
                 if hasattr(tab, 'video_list') is False:
@@ -230,6 +230,8 @@ class StateService(object):
                 if hasattr(StateService.settings, 'embed_subs') is False:
                     StateService.settings.embed_subs = False
                 if hasattr(StateService.settings, 'video_extension') is False:
+                    StateService.settings.video_extension = 5
+                elif type(StateService.settings.video_extension) is list:
                     StateService.settings.video_extension = 5
                 if hasattr(StateService.settings, 'save_password') is False:
                     StateService.settings.save_password = True

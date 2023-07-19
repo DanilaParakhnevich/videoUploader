@@ -1,6 +1,8 @@
 import traceback
+from os import path
 
 from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import QSettings
 from PyQt5.QtGui import QIntValidator
 
 from gui.widgets.AudioQualityComboBox import AudioQualityComboBox
@@ -474,42 +476,49 @@ class SettingsPage(QtWidgets.QDialog):
                 import os
 
                 if os.name == 'nt':
+
+                    from pyshortcuts import make_shortcut
+                    import os
                     if self.autostart.checkState() != 0:
-                        import winreg
-
-                        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", 0,
-                                             winreg.KEY_ALL_ACCESS)
-                        winreg.SetValueEx(key, "BuxarVideoUploader", 0, winreg.REG_SZ, f'{os.path.abspath("Application")}.exe')
-                        key.Close()
+                        make_shortcut(f'{os.path.sys.path[0]}\\Application.exe',
+                                      name='BuxarVideoUploader',
+                                      icon=f'{os.path.sys.path[0]}\\icon.png',
+                                      working_dir=f'{os.path.sys.path[0]}',
+                                      folder='C:\\Users\\dendil\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup')
                     else:
-                        import winreg
+                        os.remove(
+                            'C:\\Users\\dendil\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\BuxarVideoUploader.lnk')
 
-                        winreg.DeleteValue("BuxarVideoUploader")
                 else:
                     import subprocess
 
                     if self.autostart.checkState() != 0:
 
                         service = f'''
-                        [Unit]
-                        Description=BuxarVideoUploader
-    
-                        [Service]
-                        ExecStart=bash -c "cd {os.path.dirname("Application")} && ./Application"
-                        Restart=always
-    
-                        [Install]
-                        WantedBy=multi-user.target
+[Unit]
+[Desktop Entry]
+Version=1.0.0.0
+GenericName=BuxarVideoUploader
+Name=BuxarVideoUploader
+Comment=BuxarVideoUploader
+Icon=/usr/share/BuxarVideoUploader/dist/Application/icon.png
+Exec=sh -c "cd /usr/share/BuxarVideoUploader/dist/Application && ./Application"
+Terminal=false
+StartupWMClass=Application
+Categories=Network;FileTransfer;
+Type=Application
+StartupNotify=false
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=5
                         '''
 
-                        with open('/etc/systemd/system/BuxarVideoUploader.service', 'w') as f:
-                            f.write(service)
+                        if os.path.exists(f'{path.normpath(path.expanduser("~/.config/"))}/autostart') is False:
+                            os.makedirs(f'{path.normpath(path.expanduser("~/.config/"))}/autostart')
 
-                        subprocess.run(['sudo', 'systemctl', 'daemon-reload'])
-                        subprocess.run(['sudo', 'systemctl', 'enable', 'BuxarVideoUploader.service'])
-                        subprocess.run(['sudo', 'systemctl', 'start', 'BuxarVideoUploader.service'])
+                        with open(f'{path.normpath(path.expanduser("~/.config/"))}/autostart/BuxarVideoUploader.desktop', 'x') as f:
+                            f.write(service)
                     else:
-                        subprocess.run(['sudo', 'systemctl', 'disable', 'BuxarVideoUploader.service'])
+                        os.remove(f'{path.normpath(path.expanduser("~/.config/"))}/autostart/BuxarVideoUploader.desktop')
 
         except:
             log_error(traceback.format_exc())
@@ -545,4 +554,6 @@ class SettingsPage(QtWidgets.QDialog):
                 ffmpeg=self.old_settings.ffmpeg,
                 encrypted_key=self.old_settings.encrypted_key,
                 user_mail=self.old_settings.user_mail,
-                debug_browser=self.debug_browser.checkState() != 0))
+                video_extension=self.extension_chooser_combo_box.currentIndex(),
+                debug_browser=self.debug_browser.checkState() != 0,
+                autostart=self.autostart.checkState() != 0))

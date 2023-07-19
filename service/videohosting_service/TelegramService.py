@@ -42,13 +42,13 @@ class TelegramService(VideohostingService):
 
         return result
 
-    def show_login_dialog(self, hosting, form):
+    def show_login_dialog(self, hosting, form, title='login', login='', password='', can_relogin=False):
 
         login = ''
 
         while True:
-            self.login_form = LoginForm(form, hosting, self, 1, 'Введите номер телефона', username_val=login)
-            self.login_form.exec_()
+            self.login_form = LoginForm(form, hosting, self, 1, 'Введите номер телефона', username_val=login, relogin=can_relogin)
+            self.login_form.open()
 
             if self.login_form.account is not None and self.login_form.account.auth is not None:
                 return self.login_form.account

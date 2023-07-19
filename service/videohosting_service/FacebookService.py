@@ -58,9 +58,9 @@ class FacebookService(VideohostingService):
 
         return result
 
-    def show_login_dialog(self, hosting, form):
-        self.login_form = LoginForm(form, hosting, self, 2)
-        self.login_form.exec_()
+    def show_login_dialog(self, hosting, form, title='login', login='', password='', can_relogin=False):
+        self.login_form = LoginForm(form, hosting, self, 2, username_val=login, password_val=password)
+        self.login_form.open()
 
         return self.login_form.account
 

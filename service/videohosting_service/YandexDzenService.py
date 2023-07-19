@@ -37,8 +37,8 @@ class YandexDzenService(VideohostingService):
 
         return result
 
-    def show_login_dialog(self, hosting, form):
-        self.login_form = LoginForm(form, hosting, self, 1, 'Введите название аккаунта')
+    def show_login_dialog(self, hosting, form, title='login', login='', password='', can_relogin=False):
+        self.login_form = LoginForm(form, hosting, self, 1, get_str('login'), title=title, username_val=login, password_val=password, relogin=can_relogin)
         self.login_form.exec_()
 
         return self.login_form.account
@@ -65,7 +65,7 @@ class YandexDzenService(VideohostingService):
             page = context.new_page()
             page.goto('https://dzen.ru/profile/editor/create#video-editor', timeout=0)
 
-            page.wait_for_selector('.author-studio-header__addButton-1Z.author-studio-header__rightItemButton-3a', timeout=60_000)
+            page.wait_for_selector('.author-studio-header__addButton-1Z.author-studio-header__rightItemButton-3a', timeout=0)
             page.click('.author-studio-header__addButton-1Z.author-studio-header__rightItemButton-3a')
 
             page.wait_for_selector('.ui-lib-context-menu__item.new-publication-dropdown__button-rl')

@@ -69,10 +69,17 @@ class AddUploadQueueByUploadedMediaForm(QDialog):
 
         self.result = None
 
-        if os.path.isfile(self.dir) and os.path.exists(self.dir):
-            handle_result = self.handle_file(self.dir)
-            if handle_result is not False:
-                self.result = handle_result
+        if os.path.exists(self.dir) is False:
+            for upload_target in self.upload_targets:
+                self.event_service.add_event(Event(f'{get_str("video_not_exists")}: {self.dir}'))
+                self.add_error_upload_item(self.dir, upload_target, f'{get_str("video_not_exists")}: {self.dir}')
+            self.passed = True
+            self.close()
+            return
+
+        handle_result = self.handle_file(self.dir)
+        if handle_result is not False:
+            self.result = handle_result
 
         self.passed = True
         self.close()
@@ -84,7 +91,7 @@ class AddUploadQueueByUploadedMediaForm(QDialog):
         upload_targets = list()
 
         try:
-            f = open(os.path.splitext(file_dir)[0] + '.info.json')
+            f = open(os.path.splitext(file_dir)[0] + '.info.json', 'r', encoding='utf-8')
             data = json.load(f)
 
             title = data['title']

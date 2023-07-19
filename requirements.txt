@@ -18,3 +18,4 @@ youtube-dl
 pyinstaller
 getmac
 pyperclip
+pyshortcuts

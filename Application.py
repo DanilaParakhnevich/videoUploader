@@ -53,6 +53,7 @@ if __name__ == "__main__":
 
             if process:
                 form = ConfirmExitForm()
+                form.setWindowIcon(QIcon('icon.png'))
                 form.exec_()
 
                 if form.passed is False or form.confirmed is False:
@@ -94,6 +95,7 @@ if __name__ == "__main__":
 
         while activated is False:
             form = EnterLicenseKeyForm()
+            form.setWindowIcon(QIcon('icon.png'))
             form.exec_()
 
             if form.passed is False:
@@ -119,7 +121,6 @@ if __name__ == "__main__":
         dialog = ShowErrorDialog(None, get_str('check_internet_connection'), get_str('error'))
         dialog.exec_()
 
-    # Подгрузка зависимостей
     try:
         if os.name == 'nt':
             settings.ffmpeg = os.path.abspath('dist/Application/ffmpeg-master-latest-win64-gpl')
@@ -131,17 +132,17 @@ if __name__ == "__main__":
         failed = False
         while True:
             form = AcceptLoadingPackagesForm(failed)
+            form.setWindowIcon(QIcon('icon.png'))
             form.exec_()
             if form.accept:
                 try:
                     if os.name == 'nt':
-
                         os.putenv('NODE_SKIP_PLATFORM_CHECK', '1')
                         os.putenv('PLAYWRIGHT_BROWSERS_PATH', '0')
                         os.system('call playwright\\driver\\playwright.cmd install chromium')
                         response = requests.get(
                             'https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip',
-                            stream=True, timeout=3000)
+                            stream=True, timeout=6000)
                         if response.status_code == 200:
                             with open('ffmpeg-master-latest-win64-gpl.zip', 'wb') as f:
                                 f.write(response.raw.read())
@@ -151,12 +152,11 @@ if __name__ == "__main__":
                             f'powershell Expand-Archive -Path ffmpeg-master-latest-win64-gpl.zip -DestinationPath {os.path.abspath("dist/Application")}')
                         os.remove('ffmpeg-master-latest-win64-gpl.zip')
                     else:
-
                         os.system('PLAYWRIGHT_BROWSERS_PATH=0 sh playwright/driver/playwright.sh install chromium')
 
                         response = requests.get(
                             'https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz',
-                            stream=True, timeout=3000)
+                            stream=True, timeout=6000)
                         if response.status_code == 200:
                             with open('ffmpeg-master-latest-linux64-gpl.tar.xz', 'wb') as f:
                                 f.write(response.raw.read())
@@ -166,7 +166,12 @@ if __name__ == "__main__":
                         os.system(
                             f'tar -xf ffmpeg-master-latest-linux64-gpl.tar.xz -C {os.path.abspath("dist/Application/")}')
                         os.system('rm ffmpeg-master-latest-linux64-gpl.tar.xz')
-                except:
+                except Exception as e:
+
+                    dialog = ShowErrorDialog(None, e.args[0], get_str('error'))
+                    dialog.setWindowIcon(QIcon('icon.png'))
+                    dialog.exec_()
+
                     if os.name == 'nt':
                         os.remove('ffmpeg-master-latest-win64-gpl.zip')
                     else:
@@ -177,6 +182,7 @@ if __name__ == "__main__":
 
                     failed = True
                     form.close()
+
                     continue
             else:
                 sys.exit(0)
@@ -189,6 +195,7 @@ if __name__ == "__main__":
 
     if current_version != current_client_version:
         dialog = ExistsNewVersionDialog(current_version)
+        dialog.setWindowIcon(QIcon('icon.png'))
         dialog.exec_()
 
     try:

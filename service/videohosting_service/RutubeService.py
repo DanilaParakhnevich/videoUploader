@@ -38,8 +38,8 @@ class RutubeService(VideohostingService):
 
         return result
 
-    def show_login_dialog(self, hosting, form):
-        self.login_form = LoginForm(form, hosting, self, 1, 'Введите название аккаунта')
+    def show_login_dialog(self, hosting, form, title='login', login='', password='', can_relogin=False):
+        self.login_form = LoginForm(None, hosting, self, 1, get_str('enter_login'), title=title, username_val=login, password_val=password, relogin=can_relogin)
         self.login_form.exec_()
 
         return self.login_form.account
@@ -123,7 +123,7 @@ class RutubeService(VideohostingService):
             page = context.new_page()
             page.goto('https://rutube.ru/', wait_until='domcontentloaded', timeout=0)
             try:
-                page.wait_for_selector('.freyja_char-base-button__pointerCursor__JNA7y', timeout=10_000)
+                page.wait_for_selector('.freyja_char-base-button__pointerCursor__JNA7y', timeout=3_000)
                 return False
             except:
                 return True

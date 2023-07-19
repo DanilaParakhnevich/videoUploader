@@ -191,5 +191,10 @@
   "fps": "Количество кадров в секунду",
   "debug_browser": "Отображать окно браузера",
   "check_internet_connection": "Проверьте подключение к интернету",
-  "bad_internet_connection": "Плохое соединение с интернетом"
+  "bad_internet_connection": "Плохое соединение с интернетом",
+  "check_fail_for": "Ошибка авторизации для",
+  "enter_pas": "Введите пароль",
+  "enter_login": "Введите логин",
+  "enter_code": "Введите код",
+  "video_not_exists": "Видео не существует"
 }
