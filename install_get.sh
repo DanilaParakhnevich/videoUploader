@@ -29,7 +29,7 @@ source myenv/bin/activate
 python3.8 -m pip install --upgrade pip
 python3.8 -m pip install -r requirements.txt
 export QT_PLUGIN_PATH=$PWD/venv/lib64/python3.8/site-packages/PyQt5/Qt/plugins/
-pyinstaller --add-data "service/locale/*.json:./service/locale/" --add-data "gui/widgets/button_icons/*.gif:./gui/widgets/button_icons/" --add-data "service/videohosting_service/tmp:./service/videohosting_service/tmp" --add-data "version.txt:." --add-data "icon.png:." --icon "icon.png" Application.py
+pyinstaller --add-data "service/locale/*.json:./service/locale/" --add-data "gui/widgets/button_icons/*.gif:./gui/widgets/button_icons/" --add-data "service/videohosting_service/tmp:./service/videohosting_service/tmp" --add-data "version.txt:." --add-data "icon.png:." --add-data "icon.ico:." --icon "icon.ico" Application.py
 
 mkdir debpack/usr/
 mkdir debpack/usr/share/
