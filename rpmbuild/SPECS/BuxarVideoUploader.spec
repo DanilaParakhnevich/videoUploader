@@ -20,13 +20,15 @@ tar -xf %{SOURCE0} -C %{buildroot}/usr/share/
 
 %post
 sudo bash -c "echo '[Desktop Entry]
-Version=1.0.0
+Version=1.0.0.0
+GenericName[ru]=BuxarVideoUploader
 Name=BuxarVideoUploader
 Comment=BuxarVideoUploader
 Icon=/usr/share/BuxarVideoUploader/dist/Application/icon.png
 Exec=sh -c \"cd /usr/share/BuxarVideoUploader/dist/Application && ./Application\"
 Terminal=false
 StartupWMClass=Application
+Categories=Network;FileTransfer;
 Type=Application' > /usr/share/applications/BuxarVideoUploader.desktop"
 
 sudo chmod -R 777 /usr/share/BuxarVideoUploader
