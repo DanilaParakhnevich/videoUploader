@@ -2,12 +2,12 @@
 
 FILE=/usr/share/applications/BuxarVideoUploader.desktop
 
-if [ "$FILE" ]; then
+if [ -f "$FILE" ]; then
 sudo rm /usr/share/applications/BuxarVideoUploader.desktop
 fi
 
 FILE=/usr/share/BuxarVideoUploader
 
-if [ "$FILE" ]; then
+if [ -f "$FILE" ]; then
 sudo rm /usr/share/BuxarVideoUploader
 fi

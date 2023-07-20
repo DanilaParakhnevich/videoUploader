@@ -5,8 +5,11 @@ if ! hash python3.8; then
     sudo apt-get install build-essential
     sudo apt install -y zlib1g-dev zlibc
     sudo apt install -y libssl-dev
+    sudo apt-get install libsqlite3-dev
     sudo apt-get install libffi-dev
+    sudo apt-get install libxcb-xinerama0
     sudo apt install -y libssl1.1 || sudo apt install -y libssl1.0
+    sudo apt-get install libxcb-xinerama0
     sudo apt-get install libxcb-xinerama0
     wget https://www.python.org/ftp/python/3.8.14/Python-3.8.14.tar.xz
     tar -xf Python-3.8.14.tar.xz
@@ -26,7 +29,9 @@ else
 sudo apt-get install build-essential
 sudo apt install -y zlib1g-dev zlibc
 sudo apt install -y libssl-dev
+sudo apt-get install libsqlite3-dev
 sudo apt-get install libffi-dev
+sudo apt-get install libxcb-xinerama0
 sudo apt install -y libssl1.1 || sudo apt install -y libssl1.0
 sudo apt-get install libxcb-xinerama0
 
