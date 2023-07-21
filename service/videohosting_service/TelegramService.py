@@ -1,4 +1,5 @@
 from datetime import datetime
+from os.path import exists
 
 from service.LocalizationService import get_str
 from service.LoggingService import log_error
@@ -44,14 +45,19 @@ class TelegramService(VideohostingService):
 
     def show_login_dialog(self, hosting, form, title='login', login='', password='', can_relogin=False):
 
-        login = ''
+        if can_relogin is False:
+            login = ''
 
         while True:
             self.login_form = LoginForm(form, hosting, self, 1, 'Введите номер телефона', username_val=login, relogin=can_relogin)
-            self.login_form.open()
+            self.login_form.exec_()
 
             if self.login_form.account is not None and self.login_form.account.auth is not None:
                 return self.login_form.account
+            elif self.login_form.account is None:
+                if exists(f'service/videohosting_service/tmp/{self.login_form.lineEdit_username.text()}.session'):
+                    os.remove(f'service/videohosting_service/tmp/{self.login_form.lineEdit_username.text()}.session')
+                return
             elif self.login_form.passed is False:
                 return
 
@@ -82,7 +88,6 @@ class TelegramService(VideohostingService):
                             enter_auth_code = get_str('reenter_auth_code')
                     if activated:
                         break
-            app.disconnect()
             return True
         finally:
             app.disconnect()
@@ -169,12 +174,7 @@ class TelegramService(VideohostingService):
             }
 
     def check_auth(self, account) -> bool:
-        try:
-            with Client(name=account.login, api_id=self.api_id, api_hash=self.api_hash,
-                        workdir='service/videohosting_service/tmp'):
-                return True
-        except:
-            return False
+        return os.path.exists(f'service/videohosting_service/tmp/{account.login}.session')
 
     def need_to_be_uploaded_to_special_source(self) -> bool:
         return True

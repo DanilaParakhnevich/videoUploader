@@ -196,5 +196,6 @@
   "enter_pas": "Enter password",
   "enter_login": "Enter login",
   "enter_code": "Enter code",
-  "video_not_exists": "Video not exists"
+  "video_not_exists": "Video not exists",
+  "reauthorize": "Reauthorize"
 }

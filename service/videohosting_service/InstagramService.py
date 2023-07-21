@@ -64,7 +64,7 @@ class InstagramService(VideohostingService):
 
     def show_login_dialog(self, hosting, form, title='login', login='', password='', can_relogin=False):
         self.login_form = LoginForm(form, hosting, self, 2, get_str('enter_login'), get_str('enter_pas'), username_val=login, password_val=password, relogin=can_relogin)
-        self.login_form.open()
+        self.login_form.exec_()
 
         return self.login_form.account
 

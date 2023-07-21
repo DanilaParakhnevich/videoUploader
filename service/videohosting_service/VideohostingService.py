@@ -200,6 +200,8 @@ class VideohostingService(ABC):
             download_audio_path = fr'{download_dir}/{hosting}/audio_%(title)s_{video_quality}.%(ext)s' if manual_settings \
                 else fr'{download_dir}/{hosting}/audio_%(title)s.%(ext)s'
 
+        final_path = download_path.replace('%(ext)s', video_extension)
+
         def prog_hook(d, table_item):
             try:
                 if d["status"] == "downloading":
@@ -401,7 +403,7 @@ class VideohostingService(ABC):
                             domain_initial_dot=True, port_specified=False, domain_specified=True, path_specified=False))
                 info = ydl.extract_info(url)
 
-        if exists(download_path) is False:
+        if exists(final_path) is False:
             raise Exception('Невозможно найти скачанный файл')
 
         if 'title' in info:
@@ -437,9 +439,9 @@ class VideohostingService(ABC):
                 return f'{download_dir}/{hosting}/{title}_{video_quality}.{ext}'
         else:
             if 'video_ext' in info:
-                return f'{download_dir}/{hosting}/{title}.{ext}'
+                return final_path
             else:
-                return f'{download_dir}/{hosting}/{title}.{ext}'
+                return final_path
 
     def get_video_info(self, url: str, manual_settings, video_quality_str, audio_quality_str, video_bitrate,
                        audio_bitrate, audio_sampling_rate, fps, video_quality, video_extension, account=None):

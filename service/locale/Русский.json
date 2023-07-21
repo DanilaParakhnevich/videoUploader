@@ -196,5 +196,6 @@
   "enter_pas": "Введите пароль",
   "enter_login": "Введите логин",
   "enter_code": "Введите код",
-  "video_not_exists": "Видео не существует"
+  "video_not_exists": "Видео не существует",
+  "reauthorize": "Реавторизваться"
 }
