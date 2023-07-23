@@ -18,7 +18,7 @@ class TikTokService(VideohostingService):
         self.channel_regex = 'https://www.tiktok.com/.*'
         self.title_size_restriction = 2_200
         self.min_title_size = 0
-        self.duration_restriction = 30
+        self.duration_restriction = 5
         self.size_restriction = 2 * 1024
         self.upload_video_formats = list(['mp4', 'webm'])
 
