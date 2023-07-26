@@ -130,7 +130,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             name = ''
             description = ''
 
-            if queue_media.title is None and queue_media.description is None:
+            if queue_media.title == '' or queue_media.title is None or queue_media.description == '' or queue_media.description is None:
                 try:
                     f = open(os.path.splitext(queue_media.video_dir)[0] + '.info.json', 'r', encoding='utf-8')
                     data = json.load(f)

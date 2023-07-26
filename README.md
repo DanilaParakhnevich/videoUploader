@@ -1,12 +1,18 @@
-<h1>
-Для того, чтобы сделать сборку проекта, необходимо:<br></h1>
+<h1>Для UNIX-систем:<br></h1>
 <h2>
-1.Создать venv: "virtualenv --python=python3 venv"<br>
-2.Для того чтобы работать в venv: "source venv/bin/activate"<br>
-3.Скачать все зависимости: "pip install -r requirements.txt"<br>
-4.Соответственно собрать проект: "pyinstaller --add-data "service/locale/*.json:./service/locale/" --add-data "gui/widgets/button_icons/*.gif:./gui/widgets/button_icons/" --add-data "service/videohosting_service/tmp:./service/videohosting_service/tmp" --add-data "version.txt:." --add-data "icon.png:." Application.py"
+Необходимо выполнить команду: bash install.sh
+<br><br>
+Если пакетный менеджер системы apt или pacman (можно использовать install_get.sh), то в корневой папке проекта появится файл-установщик BuxarVideoUploader.deb
+<br><br>
+Если пакетный менеджер системы urpmi (можно использовать install_urpmi.sh), то по директории rpmbuild/RPMS появится папка с файлом-установщиком в расширении .rpm
 <br>
 </h2>
-<h1>
-Required: python 3.6+, virtualenv
-</h1>
+<h1>Для Windows:<br></h1>
+<h2>
+1.Необходимо вручную поставить python версии 3.7 и выше
+<br><br>
+2.Выполнить сборку проекта с помощью скрипта install_windows.sh
+<br><br>
+3.С помощью любой утилиты для создания инсталляторов создать файл-установщик. Сам использовал Smart Instal Maker. Файл конфигурации оставил (BuxarVideoUploader.smm). Для использования необходимо удалить и заново добавить файлы собранной версии (папка, созданная скриптом, "BuxarVideoUploader/")
+<br><br>
+</h2>

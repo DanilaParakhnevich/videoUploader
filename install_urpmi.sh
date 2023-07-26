@@ -6,10 +6,13 @@ if ! hash python3.8; then
     wget https://www.python.org/ftp/python/3.8.14/Python-3.8.14.tar.xz
     tar -xf Python-3.8.14.tar.xz
     cd Python-3.8.14/
-    sudo ./configure --enable-shared
-    sudo make install
+    sudo ./configure --enable-shared --with-ssl
+    sudo make
+    sudo make altinstall
+    sudo cp --no-clobber ./libpython3.8.so* /lib64/
+    sudo chmod 755 /lib64/libpython3.8.so*
     cd ../
-    rm -r Python-3.8.14/ Python-3.8.14.tar.xz
+    sudo rm -r Python-3.8.14/ Python-3.8.14.tar.xz
     echo "Launch script again"
 else
     echo "Python3.8 installed"

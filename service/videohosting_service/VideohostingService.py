@@ -425,9 +425,9 @@ class VideohostingService(ABC):
                 data['title'] = title
                 f.close()
 
-                w = open(os.path.splitext(download_path)[0] + '.info.json', 'w')
+                w = open(os.path.splitext(download_path)[0] + '.info.json', 'w', encoding='utf-8')
 
-                json.dump(data, w)
+                json.dump(data, w, ensure_ascii=False)
                 w.close()
             except:
                 log_error(f'{os.path.splitext(download_path)[0]} - .info.json не найден')

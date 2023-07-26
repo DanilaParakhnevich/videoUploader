@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QLabel
 
 from gui.widgets.ClickableLabel import ClickableLabel
 from service.LocalizationService import *
+from service.VersionService import VersionService
 
 
 class AboutPage(QtWidgets.QDialog):
@@ -38,7 +39,7 @@ class AboutPage(QtWidgets.QDialog):
         self.text_info_label = QLabel()
         self.text_info_label.setText(get_str('text_info_text'))
         self.text_label = QLabel()
-        self.text_label.setText(get_str('text_info_value'))
+        self.text_label.setText(get_str('text_info_value').replace('{version}', VersionService().get_current_version()))
 
         self.gridLayout.addWidget(self.text_info_label, 2, 0)
         self.gridLayout.addWidget(self.text_label, 2, 1)

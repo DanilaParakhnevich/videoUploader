@@ -6,6 +6,8 @@ from gui.widgets.ClickableLabel import ClickableLabel
 from service.LocalizationService import *
 from service.LoggingService import log_error
 from service.MailService import MailService
+from service.VersionService import VersionService
+
 
 class EnterLicenseKeyForm(QDialog):
     license = None
@@ -55,7 +57,7 @@ class EnterLicenseKeyForm(QDialog):
         self.layout.addWidget(about_label, 5, 0)
 
         about = QLabel()
-        about.setText(get_str('text_info_value'))
+        about.setText(get_str('text_info_value').replace('{version}', VersionService().get_current_version()))
 
         self.layout.addWidget(about, 5, 1)
 

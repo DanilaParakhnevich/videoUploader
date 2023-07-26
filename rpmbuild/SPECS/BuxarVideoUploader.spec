@@ -32,6 +32,7 @@ Categories=Network;FileTransfer;
 Type=Application' > /usr/share/applications/BuxarVideoUploader.desktop"
 
 sudo chmod -R 777 /usr/share/BuxarVideoUploader
+sudo chmod a+x /usr/share/BuxarVideoUploader/dist/Application/Application
 
 %clean
 rm -rf $RPM_BUILD_ROOT/usr/share

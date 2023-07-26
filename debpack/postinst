@@ -16,6 +16,8 @@ Type=Application' > /usr/share/applications/BuxarVideoUploader.desktop"
 
 FILE=/usr/lib/x86_64-linux-gnu/libxcb-util.so.1
 
+sudo chmod a+x /usr/share/BuxarVideoUploader/dist/Application/Application
+
 if [ ! "$FILE" ]; then
     sudo ln -s /usr/lib/x86_64-linux-gnu/libxcb-util.so.0 /usr/lib/x86_64-linux-gnu/libxcb-util.so.1
 fi
