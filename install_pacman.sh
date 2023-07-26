@@ -1,6 +1,6 @@
 version=$(python3.8 -V 2>&1 | grep -Po '(?<=Python )(.+)')
 
-pacman -S dpkg
+sudo pacman -S dpkg
 
 if ! hash python3.8; then
     echo "Installing python3.8"
