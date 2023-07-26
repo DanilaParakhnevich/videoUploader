@@ -10,7 +10,7 @@ if [[ ! -z $URPMI_CMD ]]; then
     bash install_get.sh
  elif [[ ! -z $PACMAN_CMD ]]; then
     echo "3"
-    bash install_get.sh
+    bash install_pacman.sh
  else
     echo "error can't install package $PACKAGE"
  fi
