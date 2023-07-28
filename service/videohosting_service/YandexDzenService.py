@@ -2,6 +2,7 @@ import time
 from datetime import datetime
 
 from PyQt5.QtWidgets import QTableWidgetItem
+from googletrans import Translator
 
 from service.LocalizationService import get_str
 from service.StateService import StateService
@@ -80,11 +81,16 @@ class YandexDzenService(VideohostingService):
 
             if table_item is not None:
                 table_item.setText(get_str('ending'))
-            try:
-                page.wait_for_selector('.ql-editor', timeout=50_000)
-                page.click('.ql-editor', click_count=3)
-            except:
-                raise Exception('Видео в слишком низком разрешении')
+            while True:
+                try:
+                    page.wait_for_selector('.ql-editor', timeout=3_000)
+                    page.click('.ql-editor', click_count=3)
+                    break
+                except:
+                    translator = Translator()
+                    status = page.query_selector('.video-queue-drawer__item-status')
+                    if status is None or translator.translate(status.text_content()).text.strip() != 'Checked':
+                        raise Exception('Видео в слишком низком разрешении')
 
             try:
                 page.wait_for_selector('.Textarea-Control.Texteditor-Control.Texteditor-Control_withSizing.Texteditor-Control_withMargin', timeout=5_000)

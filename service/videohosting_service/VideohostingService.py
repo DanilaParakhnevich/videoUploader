@@ -402,6 +402,8 @@ class VideohostingService(ABC):
                             comment=None, comment_url=None, rest={'HttpOnly': None},
                             domain_initial_dot=True, port_specified=False, domain_specified=True, path_specified=False))
                 info = ydl.extract_info(url)
+        if os.name.__contains__('nt'):
+            final_path = final_path.replace(os.path.basename(final_path), re.sub('[\\|:?/<>*]', '#', os.path.basename(final_path)))
 
         if exists(final_path) is False:
             raise Exception('Невозможно найти скачанный файл')
@@ -419,29 +421,30 @@ class VideohostingService(ABC):
 
         if title is not None:
             try:
-                f = open(os.path.splitext(download_path)[0] + '.info.json', 'r', encoding='utf-8')
+                f = open(os.path.splitext(final_path)[0] + '.info.json', 'r', encoding='utf-8')
                 data = json.load(f)
 
                 data['title'] = title
                 f.close()
 
-                w = open(os.path.splitext(download_path)[0] + '.info.json', 'w', encoding='utf-8')
+                w = open(os.path.splitext(final_path)[0] + '.info.json', 'w', encoding='utf-8')
 
                 json.dump(data, w, ensure_ascii=False)
                 w.close()
             except:
-                log_error(f'{os.path.splitext(download_path)[0]} - .info.json не найден')
+                log_error(f'{os.path.splitext(final_path)[0]} - .info.json не найден')
 
         if manual_settings:
+
+            if os.name.__contains__('nt'):
+                title = re.sub('[\\|:?/<>*]', '#', title)
+
             if 'video_ext' in info:
                 return f'{download_dir}/{hosting}/{title}_{video_quality}.{ext}'
             else:
                 return f'{download_dir}/{hosting}/{title}_{video_quality}.{ext}'
         else:
-            if 'video_ext' in info:
-                return final_path
-            else:
-                return final_path
+            return final_path
 
     def get_video_info(self, url: str, manual_settings, video_quality_str, audio_quality_str, video_bitrate,
                        audio_bitrate, audio_sampling_rate, fps, video_quality, video_extension, account=None):

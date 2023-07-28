@@ -224,6 +224,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         return None
 
     def insert_queue_media(self, queue_media, index=None):
+        self.lock.acquire()
         upload_video_thread = None
         if index is None:
             self.insertRow(self.rowCount())
@@ -310,6 +311,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
         if upload_video_thread is not None:
             upload_video_thread.start()
+        self.lock.release()
 
     def set_media_status(self, media_id, status, error_name=None):
         self.lock.acquire()
