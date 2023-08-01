@@ -107,7 +107,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             elif queue_media.upload_date is None and queue_media.upload_in is not None:
                 media = self.find_queue_media_by_id(queue_media.wait_for)
                 if media is not None:
-                    if media.status == 2 or media.status == 3:
+                    if media.status == 2:
                         queue_media.upload_date = datetime.now() + queue_media.upload_in
                 else:
                     queue_media.upload_date = datetime.now() + queue_media.upload_in
