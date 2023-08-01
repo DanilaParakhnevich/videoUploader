@@ -107,19 +107,18 @@ class AddUploadQueueByDirectoryForm(QDialog):
             elif len(self.video_info) == 0:
                 return
 
-            upload_date = datetime.now()
+            if upload_interval_type == 0:
+                upload_in = relativedelta(minutes=upload_interval)
+            elif upload_interval_type == 1:
+                upload_in = relativedelta(hours=upload_interval)
+            elif upload_interval_type == 2:
+                upload_in = relativedelta(days=upload_interval)
+            else:
+                upload_in = relativedelta(months=upload_interval)
 
             for info in self.video_info:
-                info[3] = upload_date
 
-                if upload_interval_type == 0:
-                    upload_date = upload_date + relativedelta(minutes=upload_interval)
-                elif upload_interval_type == 1:
-                    upload_date = upload_date + relativedelta(hours=upload_interval)
-                elif upload_interval_type == 2:
-                    upload_date = upload_date + relativedelta(days=upload_interval)
-                else:
-                    upload_date = upload_date + relativedelta(months=upload_interval)
+                info[3] = upload_in
 
         else:
             handle_result = self.handle_file(self.directory)
@@ -149,6 +148,7 @@ class AddUploadQueueByDirectoryForm(QDialog):
             log_error(f'{os.path.splitext(file_dir)[0]} - .info.json не найден')
 
         for target in self.upload_targets:
+
             try:
                 Hosting[target['hosting']].value[0].validate_video_info_for_uploading(video_dir=file_dir)
             except VideoDurationException:

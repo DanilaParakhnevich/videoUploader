@@ -86,6 +86,9 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         for queue_media in self.queue_media_list:
             self.insert_queue_media(queue_media)
 
+        self.updating_upload_items = QTimer(self)
+        self.updating_upload_items.timeout.connect(self.update_upload_items)
+        self.updating_upload_items.start(10_000)
 
         self.uploading_by_schedule_timer = QTimer(self)
         self.uploading_by_schedule_timer.timeout.connect(self.update_queue_media)
@@ -96,6 +99,18 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         self.uploading_by_schedule_timer.start(10_000)
 
         self.horizontalHeader().sectionResized.connect(self.section_resized)
+
+    def update_upload_items(self):
+        for queue_media in self.queue_media_list:
+            if queue_media.upload_date is None and queue_media.wait_for is None:
+                queue_media.upload_date = datetime.now()
+            elif queue_media.upload_date is None and queue_media.upload_in is not None:
+                media = self.find_queue_media_by_id(queue_media.wait_for)
+                if media is not None:
+                    if media.status == 2 or media.status == 3:
+                        queue_media.upload_date = datetime.now() + queue_media.upload_in
+                else:
+                    queue_media.upload_date = datetime.now() + queue_media.upload_in
 
     def upload_by_schedule(self):
         for queue_media in self.queue_media_list:
@@ -214,6 +229,12 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                     self.insert_queue_media(queue_media, i)
 
         self.state_service.save_upload_queue_media(self.queue_media_list)
+
+    def find_queue_media_by_id(self, id):
+        for queue_media in self.queue_media_list:
+            if queue_media.id == id:
+                return queue_media
+        return None
 
     def find_row_number_by_id(self, id):
         i = 0
@@ -437,9 +458,12 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         form.exec_()
 
         if form.passed is True:
+            prev_id = None
+
             for item in form.video_info:
                 for target in item[4]:
-                    self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(uuid.uuid4()),
+                    id = str(uuid.uuid4())
+                    self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=id,
                                                                                       video_dir=item[0],
                                                                                       hosting=target['hosting'],
                                                                                       status=0,
@@ -448,10 +472,13 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                                                                                           target['login']),
                                                                                       destination=target[
                                                                                           'upload_target'],
-                                                                                      upload_date=item[3],
+                                                                                      upload_date=None,
+                                                                                      upload_in=target[3],
+                                                                                      wait_for=prev_id,
                                                                                       title=item[1],
                                                                                       description=item[2],
                                                                                       remove_files_after_upload=False))
+                    prev_id = id
 
     def get_status_table_item_by_id(self, media_id):
         i = 0

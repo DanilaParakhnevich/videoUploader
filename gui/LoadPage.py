@@ -500,8 +500,19 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             self.state_service.save_tabs_state(self.tab_models)
         tab.remove_files_after_upload.setChecked(tab_model.remove_files_after_upload)
 
-    def process(self, upload_after_download_form, upload_on, upload_time_type, upload_interval, upload_targets, new_media, upload_date, approve_download, current_table_index):
+    def process(self, upload_after_download_form, upload_on, upload_time_type, upload_interval, new_media, upload_date, approve_download, current_table_index):
         table = self.tables[current_table_index]
+
+        upload_in = None
+        if upload_on:
+            if upload_time_type == 0:
+                upload_in = relativedelta(minutes=upload_interval)
+            elif upload_time_type == 1:
+                upload_in = relativedelta(hours=upload_interval)
+            elif upload_time_type == 2:
+                upload_in = relativedelta(days=upload_interval)
+            else:
+                upload_in = relativedelta(months=upload_interval)
 
         for i in range(0, table.rowCount()).__reversed__():
 
@@ -535,24 +546,24 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                     if description is None:
                         description = ''
 
-                if self.tab_models[current_table_index].manual_settings and video_info['is_exists_format'][0] is False\
-                        and approve_download is False:
-                    agree_to_download_dialog = AgreeToDownloadDialog(None, video_info['is_exists_format'][1])
-                    agree_to_download_dialog.exec_()
-
-                    if agree_to_download_dialog.is_agree is False:
-                        return
-                    else:
-                        approve_download = True
-
-                if self.tab_models[current_table_index].manual_settings and self.state_service.if_video_has_been_loaded(table.item(i, 1).text(),
-                                                               self.tab_models[current_table_index].video_quality[1],
-                                                               self.tab_models[current_table_index].video_extension[1]):
-                    agree_to_repeat_download_dialog = AgreeToRepeatDownloadDialog(None)
-                    agree_to_repeat_download_dialog.exec_()
-
-                    if agree_to_repeat_download_dialog.is_agree is False:
-                        continue
+                # if self.tab_models[current_table_index].manual_settings and video_info['is_exists_format'][0] is False\
+                #         and approve_download is False:
+                #     agree_to_download_dialog = AgreeToDownloadDialog(None, video_info['is_exists_format'][1])
+                #     agree_to_download_dialog.exec_()
+                #
+                #     if agree_to_download_dialog.is_agree is False:
+                #         return
+                #     else:
+                #         approve_download = True
+                #
+                # if self.tab_models[current_table_index].manual_settings and self.state_service.if_video_has_been_loaded(table.item(i, 1).text(),
+                #                                                self.tab_models[current_table_index].video_quality[1],
+                #                                                self.tab_models[current_table_index].video_extension[1]):
+                #     agree_to_repeat_download_dialog = AgreeToRepeatDownloadDialog(None)
+                #     agree_to_repeat_download_dialog.exec_()
+                #
+                #     if agree_to_repeat_download_dialog.is_agree is False:
+                #         continue
 
             except:
                 log_error(traceback.format_exc())
@@ -645,6 +656,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                           upload_after_download=upload_on and upload_this,
                                           upload_targets=upload_targets,
                                           upload_date=upload_date,
+                                          upload_in=upload_in,
                                           format=self.tab_models[current_table_index].format[1],
                                           video_quality=self.tab_models[current_table_index].video_quality[1],
                                           video_extension=self.tab_models[current_table_index].video_extension[1],
@@ -663,14 +675,6 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
             # Если необходима выгрузка, учитывается интервал выгрузки, исходя из типа интервала. 1 видео выгружается сразу
             if upload_on and upload_this:
-                if upload_time_type == 0:
-                    upload_date = upload_date + relativedelta(minutes=upload_interval)
-                elif upload_time_type == 1:
-                    upload_date = upload_date + relativedelta(hours=upload_interval)
-                elif upload_time_type == 2:
-                    upload_date = upload_date + relativedelta(days=upload_interval)
-                else:
-                    upload_date = upload_date + relativedelta(months=upload_interval)
 
                 for target in queue_media.upload_targets:
                     if target['error'] is False:
@@ -719,7 +723,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         upload_date = datetime.datetime.now()
         approve_download = False
 
-        thread = Thread(target=self.process, daemon=True, args=[upload_after_download_form, upload_on, upload_time_type, upload_interval, upload_targets, new_media, upload_date, approve_download, self.current_table_index])
+        thread = Thread(target=self.process, daemon=True, args=[upload_after_download_form, upload_on, upload_time_type, upload_interval, new_media, upload_date, approve_download, self.current_table_index])
         thread.start()
 
     def on_channel_changed(self, item):
