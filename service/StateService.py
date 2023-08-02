@@ -137,7 +137,7 @@ class StateService(object):
                     queue_media.id = str(uuid.uuid4())
                 if queue_media.status == 3 and hasattr(queue_media, 'status_name') is False:
                     queue_media.status_name = 'technical_error'
-                if queue_media.status == 3 and hasattr(queue_media, 'upload_in') is False:
+                if hasattr(queue_media, 'upload_in') is False:
                     queue_media.upload_in = None
 
         return StateService.download_queue_media
