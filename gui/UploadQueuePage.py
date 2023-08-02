@@ -219,12 +219,18 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 i = self.find_row_number_by_id(queue_media.id)
                 if i is not None:
                     queue_media.error_name = self.queue_media_list[i].error_name
+                    queue_media.wait_for = self.queue_media_list[i].wait_for
+                    queue_media.upload_in = self.queue_media_list[i].upload_in
+
                     self.queue_media_list[i] = queue_media
                     self.insert_queue_media(queue_media, i)
             else:
                 i = self.find_row_number_by_id(queue_media.id)
 
                 if i is not None:
+                    queue_media.wait_for = self.queue_media_list[i].wait_for
+                    queue_media.upload_in = self.queue_media_list[i].upload_in
+
                     self.queue_media_list[i] = queue_media
                     self.insert_queue_media(queue_media, i)
 
@@ -458,11 +464,19 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         form.exec_()
 
         if form.passed is True:
-            prev_id = None
+            prev_id = {}
 
             for item in form.video_info:
                 for target in item[4]:
+
                     id = str(uuid.uuid4())
+
+                    wait_for = None
+
+                    if str([target['hosting'], target['login']]) in prev_id:
+                        wait_for = prev_id[str([target['hosting'], target['login']])]
+
+
                     self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=id,
                                                                                       video_dir=item[0],
                                                                                       hosting=target['hosting'],
@@ -473,12 +487,12 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                                                                                       destination=target[
                                                                                           'upload_target'],
                                                                                       upload_date=None,
-                                                                                      upload_in=target[3],
-                                                                                      wait_for=prev_id,
+                                                                                      upload_in=form.upload_in,
+                                                                                      wait_for=wait_for,
                                                                                       title=item[1],
                                                                                       description=item[2],
                                                                                       remove_files_after_upload=False))
-                    prev_id = id
+                    prev_id[str([target['hosting'], target['login']])] = id
 
     def get_status_table_item_by_id(self, media_id):
         i = 0

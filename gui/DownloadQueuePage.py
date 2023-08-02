@@ -164,7 +164,6 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
             media.video_dir = video_dir
             if media.upload_after_download:
-                prev_id = None
                 for upload_target in media.upload_targets:
                     if upload_target['error'] is False:
                         status = 0
@@ -181,13 +180,10 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                                                                                               upload_target['login']),
                                                                                           destination=upload_target[
                                                                                               'upload_target'],
-                                                                                          upload_date=None,
                                                                                           upload_in=media.upload_in,
-                                                                                          wait_for=prev_id,
                                                                                           remove_files_after_upload=media.remove_files_after_upload,
                                                                                           title=media.title,
                                                                                           description=media.description))
-                    prev_id = str(upload_target['id'])
         except SystemExit:
             self.download_thread_dict.pop(media.id)
             self.set_media_status(media.id, 0)

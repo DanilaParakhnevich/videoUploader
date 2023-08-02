@@ -108,17 +108,13 @@ class AddUploadQueueByDirectoryForm(QDialog):
                 return
 
             if upload_interval_type == 0:
-                upload_in = relativedelta(minutes=upload_interval)
+                self.upload_in = relativedelta(minutes=upload_interval)
             elif upload_interval_type == 1:
-                upload_in = relativedelta(hours=upload_interval)
+                self.upload_in = relativedelta(hours=upload_interval)
             elif upload_interval_type == 2:
-                upload_in = relativedelta(days=upload_interval)
+                self.upload_in = relativedelta(days=upload_interval)
             else:
-                upload_in = relativedelta(months=upload_interval)
-
-            for info in self.video_info:
-
-                info[3] = upload_in
+                self.upload_in = relativedelta(months=upload_interval)
 
         else:
             handle_result = self.handle_file(self.directory)
@@ -165,6 +161,8 @@ class AddUploadQueueByDirectoryForm(QDialog):
                 log_error(traceback.format_exc())
                 self.event_service.add_event(Event(f'{get_str("bad_file_format")}{file_dir}'))
                 self.add_error_upload_item(file_dir, target, f'{get_str("bad_file_format")}{file_dir}')
+                continue
+            except Exception:
                 continue
 
             if title is None:

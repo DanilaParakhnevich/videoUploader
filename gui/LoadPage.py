@@ -514,6 +514,12 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             else:
                 upload_in = relativedelta(months=upload_interval)
 
+            prev_upload_item_ids = list()
+            upload_item_ids = list()
+            for item in upload_after_download_form.upload_targets:
+                prev_upload_item_ids.append(None)
+                upload_item_ids.append(None)
+
         for i in range(0, table.rowCount()).__reversed__():
 
             if table.item(i, 3).checkState() == 0:
@@ -573,11 +579,12 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             video_size = None
             if upload_on and upload_this:
                 video_size = video_info['filesize']
+                j = 0
                 # Если необходимо выгружать видео после загрузки, проводим валидацию
                 for upload_target in upload_after_download_form.upload_targets:
                     upload_hosting = Hosting[upload_target['hosting']]
                     upload_target_copy = upload_target.copy()
-                    upload_target_copy['id'] = uuid.uuid4()
+                    upload_target_copy['id'] = str(uuid.uuid4())
                     try:
                         upload_target_copy['error'] = False
                         upload_hosting.value[0].validate_video_info_for_uploading(title=title,
@@ -645,6 +652,10 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                         log_error(traceback.format_exc())
                         if StateService().get_settings().send_crash_notifications is True:
                             MailService().send_log()
+
+                    if upload_target_copy['error'] is False:
+                        upload_item_ids[j] = upload_target_copy['id']
+                    j += 1
                     upload_targets.append(upload_target_copy)
 
             queue_media = LoadQueuedMedia(media_id=str(uuid.uuid4()),
@@ -675,7 +686,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
             # Если необходима выгрузка, учитывается интервал выгрузки, исходя из типа интервала. 1 видео выгружается сразу
             if upload_on and upload_this:
-
+                j = 0
                 for target in queue_media.upload_targets:
                     if target['error'] is False:
                         account = self.state_service.get_account_by_hosting_and_login(target['hosting'], target['login'])
@@ -684,9 +695,18 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                                                                           hosting=target['hosting'],
                                                                                           destination=target[
                                                                                               'upload_target'],
+                                                                                          upload_in=upload_in,
+                                                                                          wait_for=prev_upload_item_ids[i],
                                                                                           status=5,
                                                                                           account=account,
                                                                                           remove_files_after_upload=queue_media.remove_files_after_upload))
+                    j += 1
+
+            prev_upload_item_ids = upload_item_ids
+            upload_item_ids = list()
+
+            for item in prev_upload_item_ids:
+                upload_item_ids.append(None)
 
             new_media.append(queue_media)
 
@@ -706,7 +726,6 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         upload_on = False
         upload_time_type = None
         upload_interval = None
-        upload_targets = None
 
         if self.tab_models[self.current_table_index].format[0] != 3:
             upload_after_download_form = UploadAfterDownloadForm(None)
