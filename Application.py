@@ -191,7 +191,6 @@ if __name__ == "__main__":
                     continue
             else:
                 sys.exit(0)
-            form.close()
             break
 
     # Проверка новой версии

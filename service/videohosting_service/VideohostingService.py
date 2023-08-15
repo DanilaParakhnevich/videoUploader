@@ -35,7 +35,7 @@ class VideohostingService(ABC):
         'ignoreerrors': True,
         'skip_download': True,
         'logger': False,
-        "extract_flat": True,
+        "extract_flat": True
     }
 
     # Аргументы для обхода защиты многих сайтов

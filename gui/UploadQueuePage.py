@@ -196,6 +196,10 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 self.set_media_status(queue_media.id, 3, 'video_in_low_resolution')
             elif e.args[0].__contains__('Необходимо активировать аккаунт'):
                 self.set_media_status(queue_media.id, 3, 'need_make_some_action_on_videohosting')
+            elif e.args[0].__contains__('ERR_CONNECTION_RESET'):
+                self.set_media_status(queue_media.id, 3, 'check_internet_connection')
+            elif e.args[0].__contains__('Дубликат'):
+                self.set_media_status(queue_media.id, 3, 'duplicate')
             else:
                 self.set_media_status(queue_media.id, 3, 'technical_error')
             if state_service.get_settings().send_crash_notifications:
@@ -487,7 +491,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                                                                                       destination=target[
                                                                                           'upload_target'],
                                                                                       upload_date=None,
-                                                                                      upload_in=form.upload_in,
+                                                                                      upload_in=True,
                                                                                       wait_for=wait_for,
                                                                                       title=item[1],
                                                                                       description=item[2],

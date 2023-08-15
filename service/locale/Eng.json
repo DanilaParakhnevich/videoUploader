@@ -197,5 +197,7 @@
   "enter_login": "Enter login",
   "enter_code": "Enter code",
   "video_not_exists": "Video not exists",
-  "reauthorize": "Reauthorize"
+  "reauthorize": "Reauthorize",
+  "duplicate": "Duplicate",
+  "loading": "Loading"
 }

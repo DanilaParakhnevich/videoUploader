@@ -3,6 +3,7 @@ import datetime
 import uuid
 from functools import partial
 
+from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QIntValidator
 from dateutil.relativedelta import relativedelta
 
@@ -84,6 +85,11 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                 tab.audio_sampling_rate, tab.fps, tab.video_list)
 
         self.first_start = False
+        self.error = False
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.show_error)
+        self.timer.start(1_000)
 
         self.setCurrentIndex(0)
         self.event_service = EventService()
@@ -696,17 +702,18 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                                                                           destination=target[
                                                                                               'upload_target'],
                                                                                           upload_in=upload_in,
-                                                                                          wait_for=prev_upload_item_ids[i],
+                                                                                          wait_for=prev_upload_item_ids[j],
                                                                                           status=5,
                                                                                           account=account,
                                                                                           remove_files_after_upload=queue_media.remove_files_after_upload))
                     j += 1
 
-            prev_upload_item_ids = upload_item_ids
-            upload_item_ids = list()
+            if upload_on:
+                prev_upload_item_ids = upload_item_ids
+                upload_item_ids = list()
 
-            for item in prev_upload_item_ids:
-                upload_item_ids.append(None)
+                for item in prev_upload_item_ids:
+                    upload_item_ids.append(None)
 
             new_media.append(queue_media)
 
@@ -897,15 +904,20 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
                 index += 1
         except:
-            dialog = ShowErrorDialog(None, get_str('happened_error'), get_str('error'))
-            dialog.exec_()
             log_error(traceback.format_exc())
+            self.error = True
 
         self.tab_models[table_index].current_channel = channel.url
         self.state_service.save_tabs_state(self.tab_models)
 
         table.update()
         button.stop_animation()
+
+    def show_error(self):
+        if self.error:
+            dialog = ShowErrorDialog(None, get_str('happened_error'), get_str('error'))
+            dialog.exec_()
+            self.error = False
 
     def resizeEvent(self, event):
         self.change = False

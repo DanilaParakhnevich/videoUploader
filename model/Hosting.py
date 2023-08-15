@@ -1,5 +1,6 @@
 import enum
 
+from service.videohosting_service.DailyMotionService import DailyMotionService
 from service.videohosting_service.YoutubeService import YoutubeService
 from service.videohosting_service.TikTokService import TikTokService
 from service.videohosting_service.VKService import VKService
@@ -7,7 +8,7 @@ from service.videohosting_service.YandexDzenService import YandexDzenService
 from service.videohosting_service.FacebookService import FacebookService
 from service.videohosting_service.TelegramService import TelegramService
 from service.videohosting_service.OKService import OKService
-from service.videohosting_service.DTubeService import DTubeService
+from service.videohosting_service.RumbleService import RumbleService
 from service.videohosting_service.RutubeService import RutubeService
 from service.videohosting_service.InstagramService import InstagramService
 
@@ -24,5 +25,6 @@ class Hosting(enum.Enum):
     VK = [VKService(), False]
     OK = [OKService(), False]
     Rutube = [RutubeService(), False]
-    DTube = [DTubeService(), False]
+    Rumble = [RumbleService(), False]
     Telegram = [TelegramService(), True]
+    DailyMotion = [DailyMotionService(), False]

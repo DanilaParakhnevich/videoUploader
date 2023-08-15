@@ -197,5 +197,7 @@
   "enter_login": "Введите логин",
   "enter_code": "Введите код",
   "video_not_exists": "Видео не существует",
-  "reauthorize": "Реавторизваться"
+  "reauthorize": "Реавторизваться",
+  "duplicate": "Дубликат",
+  "loading": "Загрузка"
 }
