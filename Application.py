@@ -11,6 +11,7 @@ import os
 import requests
 from requests import ConnectionError
 
+from gui.UpdatePage import UpdatePage
 from gui.widgets.ConfirmExitForm import ConfirmExitForm
 from gui.widgets.EnterLicenseKeyForm import EnterLicenseKeyForm
 from gui.widgets.ExistsNewVersionDialog import ExistsNewVersionDialog
@@ -140,55 +141,11 @@ if __name__ == "__main__":
             form.setWindowIcon(QIcon('icon.png'))
             form.exec_()
             if form.accept:
-                try:
-                    if os.name == 'nt':
-                        os.putenv('NODE_SKIP_PLATFORM_CHECK', '1')
-                        os.putenv('PLAYWRIGHT_BROWSERS_PATH', '0')
-                        os.system('call playwright\\driver\\playwright.cmd install chromium')
-                        response = requests.get(
-                            'https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip',
-                            stream=True, timeout=6000)
-                        if response.status_code == 200:
-                            with open('ffmpeg-master-latest-win64-gpl.zip', 'wb') as f:
-                                f.write(response.raw.read())
+                update_page = UpdatePage(settings)
+                update_page.exec_()
 
-                        os.makedirs('dist\\Application', exist_ok=True)
-                        os.system(
-                            f'powershell Expand-Archive -Path ffmpeg-master-latest-win64-gpl.zip -DestinationPath {os.path.abspath("dist/Application")}')
-                        os.remove('ffmpeg-master-latest-win64-gpl.zip')
-                    else:
-                        os.system('PLAYWRIGHT_BROWSERS_PATH=0 sh playwright/driver/playwright.sh install chromium')
-
-                        response = requests.get(
-                            'https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz',
-                            stream=True, timeout=6000)
-                        if response.status_code == 200:
-                            with open('ffmpeg-master-latest-linux64-gpl.tar.xz', 'wb') as f:
-                                f.write(response.raw.read())
-
-                        os.system(f'mkdir dist')
-                        os.system(f'mkdir dist/Application')
-                        os.system(
-                            f'tar -xf ffmpeg-master-latest-linux64-gpl.tar.xz -C {os.path.abspath("dist/Application/")}')
-                        os.system('rm ffmpeg-master-latest-linux64-gpl.tar.xz')
-                except Exception as e:
-
-                    dialog = ShowErrorDialog(None, e.args[0], get_str('error'))
-                    dialog.setWindowIcon(QIcon('icon.png'))
-                    dialog.exec_()
-
-                    if os.name == 'nt':
-                        os.remove('ffmpeg-master-latest-win64-gpl.zip')
-                    else:
-                        os.system('rm ffmpeg-master-latest-linux64-gpl.tar.xz')
-
-                    os.removedirs(settings.ffmpeg)
-                    os.removedirs(os.path.abspath('playwright/driver/package/.local-browsers'))
-
-                    failed = True
-                    form.close()
-
-                    continue
+                if update_page.failed is True:
+                    sys.exit(-1)
             else:
                 sys.exit(0)
             break

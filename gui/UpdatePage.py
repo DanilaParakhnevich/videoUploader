@@ -1,5 +1,6 @@
 import os
 import sys
+import threading
 
 import requests
 from PyQt5 import QtWidgets
@@ -10,27 +11,34 @@ from gui.widgets import LoadingButton
 from gui.widgets.ShowErrorDialog import ShowErrorDialog
 from gui.widgets.introduction.AcceptLoadingPackagesForm import AcceptLoadingPackagesForm
 from service.LocalizationService import get_str
+from service.VersionService import VersionService
 
 
 class UpdatePage(QDialog):
     def __init__(self, settings):
         super().__init__()
+        thread = threading.Thread(daemon=True, target=self.func)
+
+        self.windowIconChanged.connect(thread.start)
+        current_client_version = VersionService().get_current_client_version()
+        self.setWindowTitle(f'BuxarVideoUploader {current_client_version}')
         self.setWindowIcon(QIcon('icon.png'))
-        self.setFixedSize(400, 200)
+        self.setStyleSheet('background: rgb(255,255,255)')
+        self.setFixedSize(300, 100)
         self.horizontal_layout = QtWidgets.QHBoxLayout()
         self.horizontal_layout.setObjectName("horizontal_layout")
         label = QLabel(get_str('loading'))
         self.horizontal_layout.addWidget(label)
-        button = LoadingButton.AnimatedButton(self)
-        self.horizontal_layout.addWidget(button)
+        self.button = LoadingButton.AnimatedButton(self)
+        self.button.setStyleSheet('background: rgb(255,255,255);border: None')
+        self.horizontal_layout.addWidget(self.button)
         self.setLayout(self.horizontal_layout)
 
         self.failed = True
         self.settings = settings
+        self.button.start_animation()
 
-    def exec_(self) -> None:
-        super().exec_()
-
+    def func(self) -> None:
         try:
             if os.name == 'nt':
                 os.putenv('NODE_SKIP_PLATFORM_CHECK', '1')
@@ -47,6 +55,7 @@ class UpdatePage(QDialog):
                 os.system(
                     f'powershell Expand-Archive -Path ffmpeg-master-latest-win64-gpl.zip -DestinationPath {os.path.abspath("dist/Application")}')
                 os.remove('ffmpeg-master-latest-win64-gpl.zip')
+                self.failed = False
             else:
                 os.system('PLAYWRIGHT_BROWSERS_PATH=0 sh playwright/driver/playwright.sh install chromium')
 
