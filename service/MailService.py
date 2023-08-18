@@ -17,7 +17,7 @@ class MailService(object):
         smtpObj = smtplib.SMTP('smtp.gmail.com', 587)
         smtpObj.starttls()
         smtpObj.login(self.mail, self.password)
-        smtpObj.sendmail(self.mail, self.mail, msg)
+        smtpObj.sendmail(self.mail, self.receiver_mail, msg)
         smtpObj.quit()
 
     def send_log(self):

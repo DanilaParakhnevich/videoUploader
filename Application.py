@@ -114,11 +114,13 @@ if __name__ == "__main__":
                         license_model.encrypted_key = list(result['encrypted_key'])
                         state_service.save_license_model(license_model)
                         activated = True
+                        MailService().send_mail(f'Лицензия активирована: mac_id: {get_mac_address()}, mail: {form.mail}, license_key: {form.license}, version: {current_client_version}')
 
                 if activated is False:
                     dialog = ShowErrorDialog(None, get_str('activation_failed'), get_str('error'))
                     dialog.exec_()
                     log_error(f'Неудачная попытка активации: mac_id: {get_mac_address()}, mail: {form.mail}, license_key: {form.license}, version: {current_client_version}')
+                    MailService().send_log()
         except ConnectionError as e:
             dialog = ShowErrorDialog(None, get_str('check_internet_connection'), get_str('error'))
             dialog.exec_()
