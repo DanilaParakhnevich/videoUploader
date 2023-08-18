@@ -200,7 +200,10 @@ class VideohostingService(ABC):
             download_audio_path = fr'{download_dir}/{hosting}/audio_%(title)s_{video_quality}.%(ext)s' if manual_settings \
                 else fr'{download_dir}/{hosting}/audio_%(title)s.%(ext)s'
 
-        final_path = download_path.replace('%(ext)s', video_extension)
+        if 'ext' in video_info:
+            final_path = download_path.replace('%(ext)s', video_info['ext'])
+        else:
+            final_path = download_path.replace('%(ext)s', video_extension)
 
         def prog_hook(d, table_item):
             try:

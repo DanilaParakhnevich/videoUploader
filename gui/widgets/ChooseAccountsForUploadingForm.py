@@ -12,7 +12,7 @@ class ChooseAccountsForUploadingForm(QDialog):
         super().__init__(parent)
         self.state_service = StateService()
         self.setWindowTitle(get_str('choose_channels_for_uploading'))
-        self.resize(500, 120)
+        self.resize(state_service.get_accounts_list_widget_size()[0], state_service.get_accounts_list_widget_size()[1])
 
         layout = QGridLayout()
 
@@ -27,6 +27,23 @@ class ChooseAccountsForUploadingForm(QDialog):
 
         self.accounts = list()
         self.setLayout(layout)
+
+    def resizeEvent(self, event):
+        self.not_resize = True
+        state_service.save_accounts_list_widget_size(self.width(), self.height())
+        coef_x = self.width() / 500
+
+        self.accounts_list_widget.setColumnWidth(0, int(self.state_service.get_tab_column_weight(
+            'acc_list_widget', 0, start_width=460, count=3) * coef_x))
+
+        self.accounts_list_widget.setColumnWidth(1, int(self.state_service.get_tab_column_weight(
+            'acc_list_widget', 1, start_width=460, count=3) * coef_x))
+
+        self.accounts_list_widget.setColumnWidth(2, int(self.state_service.get_tab_column_weight(
+            'acc_list_widget', 2, start_width=460, count=3) * coef_x))
+        super().resizeEvent(event)
+        self.not_resize = False
+
 
     def choose_accounts(self):
         for i in range(0, self.accounts_list_widget.rowCount()):

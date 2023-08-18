@@ -339,11 +339,11 @@ class StateService(object):
     def save_tab_column_weight(self, name: str, index, width):
         self.q_settings.setValue(f'width_{name}_{index}', width)
 
-    def get_tab_column_weight(self, name: str, index):
+    def get_tab_column_weight(self, name: str, index, start_width=590, count=5):
         result = self.q_settings.value(f'width_{name}_{index}')
 
-        if result is None:
-            return 590 / 5
+        if result is None or int(result) == 0:
+            return start_width / count
         return int(result)
 
     def save_column_row(self, name, index, width):
@@ -365,3 +365,14 @@ class StateService(object):
             return [950, 600]
 
         return [int(result[0]), int(result[1])]
+
+    def get_accounts_list_widget_size(self):
+        result = self.q_settings.value('accounts_list_widget')
+
+        if result is None:
+            return [500, 120]
+
+        return [int(result[0]), int(result[1])]
+
+    def save_accounts_list_widget_size(self, width, height):
+        self.q_settings.setValue('accounts_list_widget', [width, height])

@@ -16,7 +16,7 @@ class LoginForm(QDialog):
                  username: str = get_str('username'), password:str = get_str('password'), username_val='', password_val='', title='login', relogin=False):
         super().__init__(parent)
         self.setWindowTitle(get_str(title))
-        self.resize(500, 120)
+        self.setFixedSize(500, 120)
 
         layout = QGridLayout()
 

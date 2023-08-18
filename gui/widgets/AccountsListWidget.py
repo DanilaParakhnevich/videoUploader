@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 
 from service.LocalizationService import get_str
+from service.StateService import StateService
 
 
 class AccountsListWidget(QtWidgets.QTableWidget):
@@ -13,6 +14,8 @@ class AccountsListWidget(QtWidgets.QTableWidget):
         self.setObjectName("accounts_page_widget")
         self.setColumnCount(3)
 
+        self.state_service = StateService()
+
         self.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
         self.setHorizontalHeaderItem(0, item)
@@ -21,8 +24,7 @@ class AccountsListWidget(QtWidgets.QTableWidget):
         item = QtWidgets.QTableWidgetItem()
         self.setHorizontalHeaderItem(2, item)
         self.horizontalHeader().sectionClicked.connect(self.section_clicked)
-        self.horizontalHeader().setDefaultSectionSize(155)
-
+        self.horizontalHeader().sectionResized.connect(self.section_resized)
         for account in account_list:
             self.insertRow(self.rowCount())
             item1 = QtWidgets.QTableWidgetItem(account.url if account.url is not None else account.login)
@@ -43,6 +45,12 @@ class AccountsListWidget(QtWidgets.QTableWidget):
         item.setText(get_str("videohosting"))
         item = self.horizontalHeaderItem(2)
         item.setText(get_str("upload"))
+
+    def section_resized(self, index):
+        if self.parent().not_resize is False:
+            coef_x = self.parent().width() / 500
+
+            self.state_service.save_tab_column_weight('acc_list_widget', index, int(self.columnWidth(index) / coef_x))
 
     def section_clicked(self, index):
         if index == 2:

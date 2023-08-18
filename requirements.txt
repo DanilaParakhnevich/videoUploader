@@ -5,7 +5,6 @@ activesoup
 requests
 playwright==1.26
 yt_dlp
-ytdlp-dtube
 pyrogram
 vk_api
 scrapetube

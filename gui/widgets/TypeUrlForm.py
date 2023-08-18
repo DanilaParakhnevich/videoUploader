@@ -11,7 +11,7 @@ class TypeUrlForm(QDialog):
     def __init__(self, parent: QWidget, hosting: Hosting, title: str = get_str("type_url_for")):
         super().__init__(parent)
         self.setWindowTitle(f'{title} {hosting.name}')
-        self.resize(500, 120)
+        self.setFixedSize(500, 120)
 
         layout = QGridLayout()
 

@@ -11,7 +11,7 @@ class DirOrFileForm(QDialog):
     def __init__(self, parent: QWidget):
         super().__init__(parent)
         self.setWindowTitle(get_str('choose_the_dir_or_file'))
-        self.resize(500, 120)
+        self.setFixedSize(500, 120)
 
         self.gridLayout = QGridLayout(self)
 

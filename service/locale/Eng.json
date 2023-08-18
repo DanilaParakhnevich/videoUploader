@@ -174,7 +174,7 @@
   "email_text": "Manufacturer's mail:",
   "email_value": "buxarnet@yandex.com",
   "text_info_text": "App Info:",
-  "text_info_value": "BuxarVideoUploader {version} - Automa-\nically download and upload videos\nfrom/to any video hosting (YouTube,\nTikTok, Instagram, Facebook, Yandex\nZen, Vkontakte, Odnoklassniki,\nRutube, Dailymotion, d.tube, \nTelegram, etc.)",
+  "text_info_value": "BuxarVideoUploader {version} - Automa-\nically download and upload videos\nfrom/to any video hosting (YouTube,\nTikTok, Instagram, Facebook, Yandex\nZen, Vkontakte, Odnoklassniki,\nRutube, Dailymotion, Rumble, \nTelegram, etc.)",
   "confirm_exit": "Not all processes have exited. Exit?",
   "bestvideo": "Best Video",
   "worstvideo": "Worst video",

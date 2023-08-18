@@ -40,7 +40,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
 
         super().__init__(parent)
         self.setWindowTitle(get_str('adding_video_via_url'))
-        self.resize(500, 120)
+        self.setFixedSize(500, 120)
 
         layout = QGridLayout()
 

@@ -29,7 +29,7 @@ class AddUploadQueueByUploadedMediaForm(QDialog):
 
         super().__init__(parent)
         self.setWindowTitle(get_str('adding_video_by_uploaded_media'))
-        self.resize(500, 120)
+        self.setFixedSize(500, 120)
 
         layout = QGridLayout()
 
