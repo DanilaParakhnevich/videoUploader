@@ -8,6 +8,8 @@ if ! hash python3.8; then
     ./config --prefix=/usr --openssldir=/usr
     sudo make
     sudo make install
+    cd ../
+    sudo rm -r openssl-*
 
     echo "Installing python3.8"
     wget https://www.python.org/ftp/python/3.8.14/Python-3.8.14.tar.xz
