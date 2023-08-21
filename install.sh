@@ -8,9 +8,14 @@ if [[ ! -z $URPMI_CMD ]]; then
  elif [[ ! -z $APT_GET_CMD ]]; then
     echo "2"
     bash install_get.sh
+
+    mv debpack/usr/share/BuxarVideoUploader ../BuxarVideoUploader
+
  elif [[ ! -z $PACMAN_CMD ]]; then
     echo "3"
     bash install_pacman.sh
+    
+    mv debpack/usr/share/BuxarVideoUploader ../BuxarVideoUploader
  else
     echo "error can't install package $PACKAGE"
  fi

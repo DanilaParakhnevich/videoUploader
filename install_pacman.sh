@@ -33,26 +33,9 @@ python3.8 -m pip install -r requirements.txt
 export QT_PLUGIN_PATH=$PWD/myenv/lib64/python3.8/site-packages/PyQt5/Qt/plugins/
 pyinstaller --add-data "service/locale/*.json:./service/locale/" --add-data "gui/widgets/button_icons/*.gif:./gui/widgets/button_icons/" --add-data "service/videohosting_service/tmp:./service/videohosting_service/tmp" --add-data "version.txt:." --add-data "icon.png:." --add-data "icon.ico:." --icon "icon.ico" Application.py
 
-mkdir debpack/usr/
-mkdir debpack/usr/share/
-mkdir debpack/usr/share/BuxarVideoUploader
-
 mv build debpack/usr/share/BuxarVideoUploader
 mv dist debpack/usr/share/BuxarVideoUploader
 
-cd debpack
-
-tar czf data.tar.gz usr/share/
-tar czf  control.tar.gz control postinst postrm
-echo 2.0 > debian-binary
-ar -r ../BuxarVideoUploader.deb  debian-binary control.tar.gz data.tar.gz
-
-sudo rm -r usr
-sudo rm data.tar.gz
-sudo rm control.tar.gz
-
-cd ../
-rm -r myenv/
-rm Application.spec
+rm -r myenv
 
 fi
