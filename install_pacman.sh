@@ -1,10 +1,10 @@
 version=$(python3.8 -V 2>&1 | grep -Po '(?<=Python )(.+)')
 
-sudo pacman -S dpkg
-sudo pacman -S xcb-util
-sudo pacman -S xcb-util-keysyms
-sudo pacman -S xcb-util-cursor
-sudo pacman -S xcb-util-wm
+yes | sudo pacman -S dpkg
+yes | sudo pacman -S xcb-util
+yes | sudo pacman -S xcb-util-keysyms
+yes | sudo pacman -S xcb-util-cursor
+yes | sudo pacman -S xcb-util-wm
 
 if ! hash python3.8; then
     echo "Installing python3.8"

@@ -2,16 +2,16 @@ version=$(python3.8 -V 2>&1 | grep -Po '(?<=Python )(.+)')
 
 if ! hash python3.8; then
     echo "Installing python3.8"
-    sudo apt-get install build-essential
-    sudo apt install zlib1g-dev zlibc
-    sudo apt install libssl-dev
-    sudo apt-get install libsqlite3-dev
-    sudo apt-get install libffi-dev
-    sudo apt-get install zlib1g-dev
-    sudo apt-get install libxcb-xinerama0
-    sudo apt install libssl1.1 || sudo apt install libssl1.0
-    sudo apt-get install libxcb-xinerama0
-    sudo apt-get install libxcb-xinerama0
+    sudo apt-get -y install build-essential
+    sudo apt -y install zlib1g-dev zlibc
+    sudo apt -y install libssl-dev
+    sudo apt-get -y install libsqlite3-dev
+    sudo apt-get -y install libffi-dev
+    sudo apt-get -y install zlib1g-dev
+    sudo apt-get -y install libxcb-xinerama0
+    sudo apt -y install libssl1.1 || sudo apt install libssl1.0
+    sudo apt-get -y install libxcb-xinerama0
+    sudo apt-get -y install libxcb-xinerama0
     wget https://www.python.org/ftp/python/3.8.14/Python-3.8.14.tar.xz
     tar -xf Python-3.8.14.tar.xz
     cd Python-3.8.14/

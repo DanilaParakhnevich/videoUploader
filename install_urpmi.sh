@@ -35,8 +35,8 @@ sudo chmod -R 777 myenv
 export QT_PLUGIN_PATH=$PWD/myenv/lib64/python3.8/site-packages/PyQt5/Qt/plugins/
 pyinstaller --add-data "service/locale/*.json:./service/locale/" --add-data "gui/widgets/button_icons/*.gif:./gui/widgets/button_icons/" --add-data "service/videohosting_service/tmp:./service/videohosting_service/tmp" --add-data "version.txt:." --add-data "icon.png:." --add-data "icon.ico:." Application.py
 
-if [ -d "BuxarVideoUploader"] then
-  rm -r BuxarVideoUploader
+if [ -d $PWD/BuxarVideoUploader ]; then
+  sudo rm -r $PWD/BuxarVideoUploader
 fi
 
 mkdir BuxarVideoUploader
