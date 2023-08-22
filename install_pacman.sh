@@ -17,7 +17,7 @@ if ! hash python3.8; then
     sudo cp --no-clobber ./libpython3.8.so* /lib64/
     sudo chmod 755 /lib64/libpython3.8.so*
     cd ../
-    rm -r Python-3.8.14/ Python-3.8.14.tar.xz
+    sudo rm -r Python-3.8.14/ Python-3.8.14.tar.xz
     echo "Launch script again"
 else
     echo "Python3.8 installed"
