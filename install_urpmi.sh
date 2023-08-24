@@ -1,5 +1,5 @@
 # Обновляем информацию о доступных пакетах и устанавливаем Python 3.6 и пакеты для виртуального окружения
-sudo yes | urpmi rpmdev build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev wget
+sudo yes | sudo urpmi rpmdev build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev wget
 
 if ! hash python3.8; then
     wget https://www.openssl.org/source/openssl-1.1.1g.tar.gz
