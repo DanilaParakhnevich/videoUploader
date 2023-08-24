@@ -22,7 +22,7 @@ class YandexDzenService(VideohostingService):
         self.min_title_size = 0
         self.size_restriction = 30 * 1024
         self.duration_restriction = 240
-        self.upload_video_formats = list(['3gpp', 'x-fvl', 'mp4', 'webm', 'x-ms-wmv', 'x-ms-asf', 'ogg', 'mpeg',
+        self.upload_video_formats = list(['3gpp', '3gp', 'x-fvl', 'mp4', 'webm', 'x-ms-wmv', 'x-ms-asf', 'ogg', 'mpeg',
                                           'quicktime', 'x-m4v', 'x-msvideo', 'mkv'])
 
     def get_videos_by_url(self, url: str, account=None):
