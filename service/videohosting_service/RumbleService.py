@@ -15,7 +15,7 @@ class RumbleService(VideohostingService):
 
     def __init__(self):
         self.video_regex = 'https:\/\/rumble.com\/.*.html'
-        self.channel_regex = '(https:\/\/rumble.com\/с\/.*)|(https:\/\/rumble.com\/user\/.*)'
+        self.channel_regex = '(https:\/\/rumble.com\/c\/.*)|(https:\/\/rumble.com\/user\/.*)'
 
     def get_videos_by_url(self, url, account=None):
         result = list()
@@ -54,8 +54,16 @@ class RumbleService(VideohostingService):
         with sync_playwright() as p:
             if table_item is not None:
                 table_item.setText(get_str('preparing'))
+
             context = self.new_context(p=p, headless=StateService.settings.debug_browser is False,
                                        use_user_agent_arg=True)
+
+            page = context.new_page()
+            page.goto(destination, timeout=0)
+
+            page.wait_for_selector('.channel-header--title', timeout=0)
+            title = page.query_selector('.channel-header--title').text_content()
+
             context.add_cookies(account.auth)
             page = context.new_page()
             page.goto('https://rumble.com/upload.php', timeout=0)
@@ -70,6 +78,11 @@ class RumbleService(VideohostingService):
             page.wait_for_selector('#title', timeout=0)
             page.query_selector('#title').type(name)
             page.query_selector('#description').type(description)
+
+            for option in page.query_selector('#channelId').query_selector_all('option'):
+                if option.text_content() == title:
+                    page.locator('#channelId').select_option(value=option.get_attribute('value'))
+                    break
 
             page.wait_for_selector('.num_percent')
 
@@ -104,5 +117,26 @@ class RumbleService(VideohostingService):
 
             return True
 
+    def validate_url_by_account(self, url: str, account) -> int:
+        with sync_playwright() as p:
+            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+            context.add_cookies(account.auth)
+            page = context.new_page()
+
+            page.goto(url, timeout=0)
+
+            page.wait_for_selector('.channel-header--title', timeout=0)
+            title = page.query_selector('.channel-header--title').text_content()
+
+            page.goto('https://rumble.com/upload.php', timeout=0)
+
+            page.wait_for_selector('#channelId')
+
+            for option in page.query_selector('#channelId').query_selector_all('option'):
+                if option.text_content() == title:
+                    return True
+
+            return False
+
     def need_to_pass_channel_after_login(self):
-        return False
+        return True

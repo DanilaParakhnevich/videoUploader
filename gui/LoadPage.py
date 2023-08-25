@@ -242,12 +242,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             tab.choose_dir_button.setText(download_dir)
 
         def pick_new():
-            sorter = QtCore.QSortFilterProxyModel()
-            sorter.setDynamicSortFilter(True)
+            folder_path = QtWidgets.QFileDialog.getExistingDirectory(None, get_str('choose_dir'))
 
-            dialog = QtWidgets.QFileDialog()
-            dialog.setProxyModel(sorter)
-            folder_path = dialog.getExistingDirectory(None, get_str('choose_dir'))
             if folder_path != '':
                 self.tab_models[self.current_table_index].download_dir = folder_path
                 self.state_service.save_tabs_state(self.tab_models)

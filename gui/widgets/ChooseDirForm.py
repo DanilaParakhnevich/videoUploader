@@ -44,18 +44,13 @@ class ChooseDirForm(QDialog):
             msg.exec_()
 
     def pick_new(self):
-        dialog = QFileDialog()
-
         sorter = QtCore.QSortFilterProxyModel()
         sorter.setDynamicSortFilter(True)
-        dialog.setViewMode(QFileDialog.ViewMode.Detail)
-
-        dialog.setProxyModel(sorter)
 
         if self.file_need:
-            folder_path = dialog.getOpenFileName(None, get_str('choose_file'))
+            folder_path = QFileDialog.getOpenFileName(self, get_str('choose_file'))
         else:
-            folder_path = dialog.getExistingDirectory(None, get_str('choose_dir'))
+            folder_path = QFileDialog.getExistingDirectory(self, get_str('choose_dir'))
 
         if folder_path != '':
             if type(folder_path) is tuple:
