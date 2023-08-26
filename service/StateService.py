@@ -1,7 +1,8 @@
 import uuid
 
-from PyQt5.QtCore import QSettings, QSize
+from PyQt5.QtCore import QSettings, QSize, QDir
 
+from model.Event import Event
 from model.LicenseModel import LicenseModel
 from model.Settings import Settings
 import os
@@ -184,6 +185,11 @@ class StateService(object):
             if StateService.events is None:
                 # Настройки по-умолчанию
                 StateService.events = list()
+            else:
+                if len(StateService.events) != 0:
+                    for index in range(len(StateService.events) - 1):
+                        if type(StateService.events[index]) == str:
+                            StateService.events[index] = Event(StateService.events[index])
 
         return StateService.events
 
@@ -376,3 +382,9 @@ class StateService(object):
 
     def save_accounts_list_widget_size(self, width, height):
         self.q_settings.setValue('accounts_list_widget', [width, height])
+
+    def save_dir(self, directory):
+        self.q_settings.setValue('dir', directory)
+
+    def get_dir(self):
+        return str(self.q_settings.value('dir', QDir.homePath()))

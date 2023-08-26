@@ -436,6 +436,9 @@ class LoadPageWidget(QtWidgets.QTabWidget):
 
             for index in range(0, self.tables[self.current_table_index].rowCount()):
                 self.tables[self.current_table_index].item(index, 3).setCheckState(to_set)
+                self.tab_models[self.current_table_index].video_list[index].checked = to_set != 0
+
+            self.state_service.save_tabs_state(self.tab_models)
 
     def reset_tab_settings(self):
         tab_model = self.tab_models[self.current_table_index]

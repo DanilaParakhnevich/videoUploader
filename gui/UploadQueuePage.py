@@ -427,13 +427,13 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 if hosting.value[0].validate_url_by_account(media.account.url, media.account) is False:
                     msg = QtWidgets.QMessageBox(self)
                     msg.setText(f'{get_str("failed_account_validation")}: {media.account.url}')
-                    self.event_service.add_event(f'{get_str("failed_account_validation")}: {media.account.url}')
+                    self.event_service.add_event(Event(f'{get_str("failed_account_validation")}: {media.account.url}'))
                     msg.exec_()
                     return
             except:
                 msg.exec_()
                 log_error(traceback.format_exc())
-                self.event_service.add_event(f'{get_str("failed_account_validation")}: {media.account.url}')
+                self.event_service.add_event(Event(f'{get_str("failed_account_validation")}: {media.account.url}'))
                 self.add_button.stop_animation()
                 return
         msg.exec_()
