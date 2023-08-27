@@ -68,12 +68,12 @@ class FacebookService(VideohostingService):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=False, use_user_agent_arg=True)
             page = context.new_page()
-            page.goto('https://mbasic.facebook.com')
+            page.goto('https://facebook.com')
             page.type('input[name=email]', login)
             page.type('input[name=pass]', password)
             page.keyboard.press('Enter')
 
-            page.wait_for_selector('#mbasic_inline_feed_composer', timeout=0)
+            page.wait_for_selector('.x1i10hfl.x1qjc9v5.xjbqb8w.xjqpnuy.xa49m3k.xqeqjp1.x2hbi6w.x13fuv20.xu3j5b3.x1q0q8m5.x26u7qi.x972fbf.xcfux6l.x1qhh985.xm0m39n.x9f619.x1ypdohk.xdl72j9.x2lah0s.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.x2lwn1j.xeuugli.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x1n2onr6.x16tdsg8.x1hl2dhg.xggy1nq.x1ja2u2z.x1t137rt.x1o1ewxj.x3x9cwd.x1e5q0jg.x13rtm0m.x1q0g3np.x87ps6o.x1lku1pv.x1a2a7pz.xzsf02u.x1rg5ohu', timeout=0)
             return page.context.cookies()
 
     def validate_url_by_account(self, url: str, account) -> int:
@@ -199,9 +199,10 @@ class FacebookService(VideohostingService):
                     time.sleep(2)
 
             but1.click()
-
-            page.wait_for_selector('.x9f619.x1n2onr6.x1ja2u2z.__fb-light-mode.x6s0dn4.x1wkzo03.x1192kqh.xjfsc2c.xg8fqjl.x1kdh5me.xi1c1fh.x78zum5.x2lah0s.x1cs6qxi.x1hqenl9.xuv3zuj.xd3owfx.x192rfv7.x13jxccy.xh8yej3', timeout=0)
             time.sleep(3)
+
+            while page.query_selector('.always-enable-animations.x1c74tu6.x1u6ievf.xa4qsjk.xuxiujg.x1bndym7.x1pb3rhs') is not None:
+                time.sleep(3)
 
     def check_auth(self, account) -> bool:
         with sync_playwright() as p:

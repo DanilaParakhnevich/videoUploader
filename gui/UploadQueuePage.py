@@ -166,9 +166,17 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 self.set_media_status(queue_media.id, 3, 'check_fail')
                 return
 
+            acc = None
+            for upload_account in state_service.get_accounts():
+                if queue_media.account.login == upload_account.login and queue_media.account.hosting == upload_account.hosting and queue_media.account.url == upload_account.url:
+                    acc = upload_account
+
+            if acc is None:
+                acc = queue_media.account
+
             Hosting[queue_media.hosting].value[0].upload_video(
                 file_path=queue_media.video_dir,
-                account=queue_media.account,
+                account=acc,
                 name=name,
                 description=description,
                 destination=queue_media.destination,
@@ -179,7 +187,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                     if filename.startswith(os.path.splitext(queue_media.video_dir)[0]):
                         remove = True
                         for item in self.queue_media_list:
-                            if (item.hosting != queue_media.hosting or item.account != queue_media.account) \
+                            if (item.hosting != queue_media.hosting or item.account != acc) \
                                     and item.video_dir == queue_media.video_dir and item.status != 2:
                                 remove = False
                                 break
@@ -207,7 +215,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             return
 
         self.event_service.add_event(Event(
-            f'{get_str("event_uploaded")} {queue_media.video_dir} {get_str("to")} {queue_media.hosting}, {queue_media.destination if queue_media.destination is not None else queue_media.account.login}'))
+            f'{get_str("event_uploaded")} {queue_media.video_dir} {get_str("to")} {queue_media.hosting}, {queue_media.destination if queue_media.destination is not None else acc.login}'))
         self.set_media_status(queue_media.id, 2)
         self.upload_thread_dict.pop(queue_media.id)
 
@@ -424,7 +432,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
         if hosting.value[0].need_to_pass_channel_after_login():
             try:
-                if hosting.value[0].validate_url_by_account(media.account.url, media.account) is False:
+                if hosting.value[0].validate_url_by_account(media.account.url, account) is False:
                     msg = QtWidgets.QMessageBox(self)
                     msg.setText(f'{get_str("failed_account_validation")}: {media.account.url}')
                     self.event_service.add_event(Event(f'{get_str("failed_account_validation")}: {media.account.url}'))
@@ -438,8 +446,8 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 return
         msg.exec_()
 
-        media.account.password = account.password
-        media.account.auth = account.auth
+        account.url = media.account.url
+        media.account = account
 
         accounts = self.state_service.get_accounts()
         accounts[index] = media.account

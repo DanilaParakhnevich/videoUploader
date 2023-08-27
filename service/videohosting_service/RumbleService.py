@@ -61,10 +61,11 @@ class RumbleService(VideohostingService):
             page = context.new_page()
             page.goto(destination, timeout=0)
 
-            page.wait_for_selector('.channel-header--title', timeout=0)
-            title = page.query_selector('.channel-header--title').text_content()
-
             context.add_cookies(account.auth)
+
+            page.wait_for_selector('.media-subscribe-and-notify', timeout=0)
+            id = page.query_selector('.media-subscribe-and-notify').get_attribute('data-slug').replace('c-', '')
+
             page = context.new_page()
             page.goto('https://rumble.com/upload.php', timeout=0)
 
@@ -80,7 +81,7 @@ class RumbleService(VideohostingService):
             page.query_selector('#description').type(description)
 
             for option in page.query_selector('#channelId').query_selector_all('option'):
-                if option.text_content() == title:
+                if option.get_attribute('value') == id:
                     page.locator('#channelId').select_option(value=option.get_attribute('value'))
                     break
 
@@ -125,15 +126,16 @@ class RumbleService(VideohostingService):
 
             page.goto(url, timeout=0)
 
-            page.wait_for_selector('.channel-header--title', timeout=0)
-            title = page.query_selector('.channel-header--title').text_content()
+            page.wait_for_selector('.media-subscribe-and-notify', timeout=0)
+
+            id = page.query_selector('.media-subscribe-and-notify').get_attribute('data-slug').replace('c-', '')
 
             page.goto('https://rumble.com/upload.php', timeout=0)
 
             page.wait_for_selector('#channelId')
 
             for option in page.query_selector('#channelId').query_selector_all('option'):
-                if option.text_content() == title:
+                if option.get_attribute('value') == id:
                     return True
 
             return False

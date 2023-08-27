@@ -117,11 +117,13 @@ class YandexDzenService(VideohostingService):
                 raise Exception('Необходимо активировать аккаунт')
 
     def check_auth(self, account) -> bool:
-        for auth in account.auth:
-            if auth['name'] == 'yandex_login':
-                if datetime.utcfromtimestamp(auth['expires']) > datetime.now():
-                    return True
-                else:
-                    return False
-
-        return False
+        with sync_playwright() as p:
+            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+            context.add_cookies(account.auth)
+            page = context.new_page()
+            page.goto('https://dzen.ru/video', wait_until='domcontentloaded', timeout=0)
+            try:
+                page.wait_for_selector('.login-button__textButton-3Y', timeout=5_000)
+                return False
+            except:
+                return True

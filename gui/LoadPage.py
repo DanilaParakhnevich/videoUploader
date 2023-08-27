@@ -871,11 +871,13 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         while table.rowCount() > 0:
             table.removeRow(0)
 
+        video_list_cp = self.tab_models[table_index].video_list.copy()
         self.tab_models[table_index].video_list.clear()
 
         index = 0
         try:
-            for video in service.get_videos_by_url(url=channel.url, account=account):
+            video_list = service.get_videos_by_url(url=channel.url, account=account)
+            for video in video_list:
                 table.insertRow(index)
 
                 item1 = QtWidgets.QTableWidgetItem(video.name)
@@ -884,9 +886,22 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 item4 = QtWidgets.QTableWidgetItem()
                 item4.setFlags(QtCore.Qt.ItemIsUserCheckable |
                                QtCore.Qt.ItemIsEnabled)
-                item4.setCheckState(QtCore.Qt.Checked)
 
-                video.checked = True
+                if self.tab_models[table_index].current_channel == channel.url:
+                    have = False
+                    for old_video in video_list_cp:
+                        if old_video.url == video.url:
+                            video.checked = old_video.checked
+                            item4.setCheckState(QtCore.Qt.Checked if old_video.checked else 0)
+                            have = True
+                            break
+
+                    if have is False:
+                        item4.setCheckState(QtCore.Qt.Checked)
+                        video.checked = True
+                else:
+                    item4.setCheckState(QtCore.Qt.Checked)
+                    video.checked = True
 
                 is_downloaded = get_str('yes') \
                     if self.state_service.get_download_queue_media_by_url(video.url) is not None else get_str('no')
