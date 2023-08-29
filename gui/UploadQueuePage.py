@@ -161,18 +161,19 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 name = queue_media.title
                 description = queue_media.description
 
-            result = Hosting[queue_media.hosting].value[0].check_auth(queue_media.account)
-            if result is False:
-                self.set_media_status(queue_media.id, 3, 'check_fail')
-                return
-
             acc = None
             for upload_account in state_service.get_accounts():
                 if queue_media.account.login == upload_account.login and queue_media.account.hosting == upload_account.hosting and queue_media.account.url == upload_account.url:
                     acc = upload_account
+                    break
 
             if acc is None:
                 acc = queue_media.account
+
+            result = Hosting[queue_media.hosting].value[0].check_auth(acc)
+            if result is False:
+                self.set_media_status(queue_media.id, 3, 'check_fail')
+                return
 
             Hosting[queue_media.hosting].value[0].upload_video(
                 file_path=queue_media.video_dir,

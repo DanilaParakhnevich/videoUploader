@@ -84,12 +84,17 @@ class YandexDzenService(VideohostingService):
             while True:
                 try:
                     page.wait_for_selector('.ql-editor', timeout=3_000)
-                    page.click('.ql-editor', click_count=3)
+                    page.click('.ql-editor')
+                    page.wait_for_selector('.ql-editor', timeout=3_000)
+                    page.click('.ql-editor')
+                    page.wait_for_selector('.ql-editor', timeout=3_000)
+                    page.click('.ql-editor')
                     break
                 except:
                     translator = Translator()
-                    status = page.query_selector('.video-queue-drawer__item-status')
-                    if status is None or translator.translate(status.text_content()).text.strip() != 'Checked':
+                    status = page.query_selector('.video-queue-drawer__item-error')
+
+                    if status is not None and translator.translate(status.text_content()).text.strip() == 'Video in low resolution':
                         raise Exception('Видео в слишком низком разрешении')
 
             try:
