@@ -19,5 +19,5 @@ pyinstaller
 getmac
 pyperclip
 pyshortcuts
-instagrapi
+instagrapi==1.19.8
 python-ffmpeg
