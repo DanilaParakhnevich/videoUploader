@@ -19,3 +19,5 @@ pyinstaller
 getmac
 pyperclip
 pyshortcuts
+instagrapi
+python-ffmpeg

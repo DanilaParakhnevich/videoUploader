@@ -897,8 +897,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                             break
 
                     if have is False:
-                        item4.setCheckState(QtCore.Qt.Checked)
-                        video.checked = True
+                        item4.setCheckState(0)
+                        video.checked = False
                 else:
                     item4.setCheckState(QtCore.Qt.Checked)
                     video.checked = True
