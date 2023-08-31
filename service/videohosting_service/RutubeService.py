@@ -39,7 +39,7 @@ class RutubeService(VideohostingService):
         return result
 
     def show_login_dialog(self, hosting, form, title='login', login='', password='', can_relogin=False):
-        self.login_form = LoginForm(None, hosting, self, 1, get_str('enter_login'), title=title, username_val=login, password_val=password, relogin=can_relogin)
+        self.login_form = LoginForm(None, hosting, self, 2, get_str('enter_login'), title=title, username_val=login, password_val=password, relogin=can_relogin)
         self.login_form.exec_()
 
         return self.login_form.account
@@ -48,28 +48,20 @@ class RutubeService(VideohostingService):
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=False)
             page = context.new_page()
-            page.goto('https://rutube.ru', timeout=0, wait_until='commit')
-            page.reload(timeout=0, wait_until='commit')
-            try:
-                page.wait_for_selector('.freyja_char-base-button__pointerCursor__JNA7y', timeout=10_000)
-                page.click('.freyja_char-base-button__pointerCursor__JNA7y', timeout=10_000)
-                page.wait_for_selector('.wdp-header-right-module__wrapper', timeout=10_000)
-                page.query_selector('.wdp-header-right-module__wrapper').query_selector_all('button')[3].click(timeout=10_000)
-            except:
-                page.reload(timeout=0, wait_until='commit')
-                try:
-                    page.wait_for_selector('.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
-                    if page.query_selector('.freyja_char-base-button__pointerCursor__JNA7y') is not None:
-                        page.click('.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
-                except:
-                    log_error('Не нашлось кнопки для подтверждения куки (rutube)')
-                try:
-                    page.wait_for_selector('.wdp-header-right-module__wrapper', timeout=0)
-                    page.query_selector('.wdp-header-right-module__wrapper').query_selector_all('button')[3].click(timeout=10_000)
-                except:
-                    log_error('Не нашлось кнопки логина (rutube)')
+            page.goto('https://studio.rutube.ru/', timeout=0, wait_until='commit')
 
-            page.wait_for_selector('[alt="user_avatar"]', timeout=0)
+            page.wait_for_selector('#phone-or-email-login', timeout=0)
+
+            page.query_selector('#phone-or-email-login').type(login)
+            time.sleep(3)
+            page.query_selector('#submit-login-continue').click()
+            time.sleep(3)
+            page.wait_for_selector('#login-password', timeout=0)
+            page.query_selector('#login-password').type(password)
+            page.click(
+                '.freyja_char-base-button__btnContent__3vr55.freyja_char-base-button__btnContent-icon-left__3L4yd')
+
+            page.wait_for_selector('.pen-page-header_main-header.pen-page-header_color-default.pen-page-header_size-default.pen-page-header_margin-top', timeout=0)
 
             return page.context.cookies()
 
@@ -81,10 +73,25 @@ class RutubeService(VideohostingService):
             table_item.setText(get_str('preparing'))
         with sync_playwright() as p:
             context = self.new_context(p=p, headless=StateService.settings.debug_browser is False, use_user_agent_arg=True)
-            context.add_cookies(account.auth)
+            context.add_cookies(account.auth.copy())
 
             page = context.new_page()
             page.goto('https://studio.rutube.ru/uploader/', timeout=0)
+
+            try:
+                page.wait_for_selector(
+                    '.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y',
+                    timeout=5_000)
+            except:
+                if page.query_selector('#phone-or-email-login') is not None:
+                    page.query_selector('#phone-or-email-login').type(account.login)
+                    time.sleep(3)
+                    page.query_selector('#submit-login-continue').click()
+                    time.sleep(3)
+                    page.wait_for_selector('#login-password', timeout=0)
+                    page.query_selector('#login-password').type(account.password)
+                    page.click(
+                        '.freyja_char-base-button__btnContent__3vr55.freyja_char-base-button__btnContent-icon-left__3L4yd')
 
             page.wait_for_selector('.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
             with page.expect_file_chooser() as fc_info:
@@ -118,12 +125,26 @@ class RutubeService(VideohostingService):
 
     def check_auth(self, account) -> bool:
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+            context = self.new_context(p=p, headless=False, use_user_agent_arg=True)
             context.add_cookies(account.auth)
             page = context.new_page()
-            page.goto('https://rutube.ru/', wait_until='domcontentloaded', timeout=0)
+            page.goto('https://studio.rutube.ru/uploader/', wait_until='domcontentloaded', timeout=0)
             try:
-                page.wait_for_selector('.freyja_char-base-button__pointerCursor__JNA7y', timeout=3_000)
-                return False
-            except:
+                page.wait_for_selector(
+                    '.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y',
+                    timeout=5_000)
                 return True
+            except:
+                if page.query_selector('#phone-or-email-login') is not None:
+                    page.query_selector('#phone-or-email-login').type(account.login)
+                    time.sleep(3)
+                    page.query_selector('#submit-login-continue').click()
+                    time.sleep(3)
+                    page.wait_for_selector('#login-password', timeout=0)
+                    page.query_selector('#login-password').type(account.password)
+                    page.click(
+                        '.freyja_char-base-button__btnContent__3vr55.freyja_char-base-button__btnContent-icon-left__3L4yd')
+
+                    page.wait_for_selector('.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y', timeout=10_000)
+                    return True
+            return False
