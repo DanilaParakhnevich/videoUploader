@@ -181,11 +181,14 @@ class FacebookService(VideohostingService):
                     but1 = page.query_selector('.x6s0dn4.x9f619.x78zum5.x1qughib.x1pi30zi.x1swvt13.xyamay9.xh8yej3')
                 else:
                     page.click('.xzsf02u.x1a2a7pz.x1n2onr6.x14wi4xw.x9f619.x1lliihq.x5yr21d.xh8yej3.notranslate')
-                    page.query_selector('.x9f619.x1n2onr6.x1ja2u2z').wait_for_selector('.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.xl56j7k.x6s0dn4.xozqiw3.x1q0g3np.xi112ho.x17zwfj4.x585lrc.x1403ito.x972fbf.xcfux6l.x1qhh985.xm0m39n.x9f619.xn6708d.x1ye3gou.xtvsq51.x1r1pt67')
+                    page.wait_for_selector('.x9f619.x1n2onr6.x1ja2u2z', timeout=0)
+                    page.query_selector('.x9f619.x1n2onr6.x1ja2u2z').wait_for_selector('.xt7dq6l.x1a2a7pz.x6ikm8r.x10wlt62.x1n2onr6.x14atkfc', timeout=0)
+                    page.query_selector('.x9f619.x1n2onr6.x1ja2u2z').query_selector('.xt7dq6l.x1a2a7pz.x6ikm8r.x10wlt62.x1n2onr6.x14atkfc').wait_for_selector('.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.xl56j7k.x6s0dn4.xozqiw3.x1q0g3np.xi112ho.x17zwfj4.x585lrc.x1403ito.x972fbf.xcfux6l.x1qhh985.xm0m39n.x9f619.xn6708d.x1ye3gou.xtvsq51.x1r1pt67')
                     but1 = page.query_selector('.x9f619.x1n2onr6.x1ja2u2z').query_selector('.xt7dq6l.x1a2a7pz.x6ikm8r.x10wlt62.x1n2onr6.x14atkfc').query_selector('.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.xl56j7k.x6s0dn4.xozqiw3.x1q0g3np.xi112ho.x17zwfj4.x585lrc.x1403ito.x972fbf.xcfux6l.x1qhh985.xm0m39n.x9f619.xn6708d.x1ye3gou.xtvsq51.x1r1pt67')
             else:
-                page.wait_for_selector('.x9f619.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.x1qughib.x1qjc9v5.xozqiw3.x1q0g3np.x1pi30zi.x1swvt13.xyamay9.xykv574.xbmpl8g.x4cne27.xifccgj', timeout=0)
-                but1 = page.query_selector_all('.x9f619.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.x1qughib.x1qjc9v5.xozqiw3.x1q0g3np.x1pi30zi.x1swvt13.xyamay9.xykv574.xbmpl8g.x4cne27.xifccgj')[1]
+                page.wait_for_selector('.x9f619.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.x1qughib.x1qjc9v5.xozqiw3.x1q0g3np.x1pi30zi.x1swvt13.xyamay9.xcud41i.x139jcc6.x4vbgl9.x1rdy4ex', timeout=0)
+                page.query_selector('.x9f619.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.x1qughib.x1qjc9v5.xozqiw3.x1q0g3np.x1pi30zi.x1swvt13.xyamay9.xcud41i.x139jcc6.x4vbgl9.x1rdy4ex').wait_for_selector('.x6s0dn4.x78zum5.xl56j7k.x1608yet.xljgi0e.x1e0frkt', timeout=0)
+                but1 = page.query_selector('.x9f619.x1n2onr6.x1ja2u2z.x78zum5.x2lah0s.x1qughib.x1qjc9v5.xozqiw3.x1q0g3np.x1pi30zi.x1swvt13.xyamay9.xcud41i.x139jcc6.x4vbgl9.x1rdy4ex').query_selector('.x6s0dn4.x78zum5.xl56j7k.x1608yet.xljgi0e.x1e0frkt')
 
             page.keyboard.type(name)
 
