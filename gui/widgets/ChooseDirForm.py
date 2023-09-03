@@ -33,6 +33,7 @@ class ChooseDirForm(QDialog):
 
         self.file_need = file_need
         self.gridLayout.addWidget(self.ok_button, 3, 1)
+        self.state_service = StateService()
 
     def ok(self):
         if self.choose_dir_button.text() != '':
@@ -44,15 +45,33 @@ class ChooseDirForm(QDialog):
             msg.exec_()
 
     def pick_new(self):
-        sorter = QtCore.QSortFilterProxyModel()
-        sorter.setDynamicSortFilter(True)
+        qfdlg = QFileDialog(None, get_str('choose_dir'))
+
+        qfdlg.setOption(QFileDialog.DontUseNativeDialog, False)
+        qfdlg.setFileMode(QFileDialog.FileMode.DirectoryOnly)
+
+        self.state_service.q_settings.beginGroup("fileopendlg")
+        qfdlg.restoreState(self.state_service.q_settings.value("savestate_upload", qfdlg.saveState()))
+        qfdlg.setDirectory(self.state_service.q_settings.value("savestate_upload_dir"))
+        self.state_service.q_settings.endGroup()
 
         if self.file_need:
-            folder_path = QFileDialog.getOpenFileName(self, get_str('choose_file'))
+            qfdlg.setFileMode(QFileDialog.FileMode.ExistingFile)
+            qfdlg.setWindowTitle(get_str('choose_file'))
         else:
-            folder_path = QFileDialog.getExistingDirectory(self, get_str('choose_dir'))
+            qfdlg.setFileMode(QFileDialog.FileMode.DirectoryOnly)
+            qfdlg.setWindowTitle(get_str('choose_dir'))
 
-        if folder_path != '':
-            if type(folder_path) is tuple:
-                folder_path = folder_path[0]
-            self.choose_dir_button.setText(folder_path)
+        result = qfdlg.exec_()
+        folder_path = qfdlg.directory().path()
+
+        if result:
+            if self.file_need:
+                self.choose_dir_button.setText(qfdlg.selectedFiles()[0])
+            else:
+                self.choose_dir_button.setText(folder_path)
+
+        self.state_service.q_settings.beginGroup("fileopendlg")
+        self.state_service.q_settings.setValue("savestate_upload", qfdlg.saveState())
+        self.state_service.q_settings.setValue("savestate_upload_dir", qfdlg.directory().path())
+        self.state_service.q_settings.endGroup()

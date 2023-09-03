@@ -361,6 +361,15 @@ class StateService(object):
             return int(value)
         return value
 
+    def save_name(self, name, value):
+        self.q_settings.setValue(name, value)
+
+    def get_name(self, name):
+        value = self.q_settings.value(name)
+        if value is None:
+            return ''
+        return value
+
     def save_main_window_size(self, width, height):
         self.q_settings.setValue('main_window_size', [width, height])
 

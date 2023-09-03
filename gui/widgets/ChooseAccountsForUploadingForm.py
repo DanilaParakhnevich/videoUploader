@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import (QWidget, QDialog, QPushButton, QLabel, QGridLayout, QComboBox)
+from PyQt5.QtWidgets import (QWidget, QDialog, QPushButton, QLabel, QGridLayout, QComboBox, QLineEdit)
 
 from gui.widgets.AccountsListWidget import AccountsListWidget
 from service.LocalizationService import *
@@ -16,9 +16,11 @@ class ChooseAccountsForUploadingForm(QDialog):
 
         layout = QGridLayout()
 
+        self.search = QLineEdit(self)
         self.accounts_list_widget = AccountsListWidget(self, self.state_service.get_accounts())
 
-        layout.addWidget(self.accounts_list_widget, 0, 0)
+        layout.addWidget(self.search, 0, 0)
+        layout.addWidget(self.accounts_list_widget, 1, 0)
 
         button_login = QPushButton(get_str('choose'))
         button_login.clicked.connect(self.choose_accounts)
@@ -27,6 +29,16 @@ class ChooseAccountsForUploadingForm(QDialog):
 
         self.accounts = list()
         self.setLayout(layout)
+        self.search.textChanged.connect(self.findName)
+        self.search.setText(self.state_service.get_name('edit_name'))
+
+    def findName(self):
+        name = self.search.text().lower()
+        self.state_service.save_name('edit_name', name)
+        for row in range(self.accounts_list_widget.rowCount()):
+            item = self.accounts_list_widget.item(row, 1)
+            # if the search is *not* in the item's text *do not hide* the row
+            self.accounts_list_widget.setRowHidden(row, name not in item.text().lower())
 
     def resizeEvent(self, event):
         self.not_resize = True

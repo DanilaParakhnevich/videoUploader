@@ -3,6 +3,7 @@ import uuid
 
 from PyQt5.QtWidgets import (QDialog, QPushButton, QLabel, QMessageBox, QComboBox, QGridLayout)
 
+from gui.widgets.ComboBoxWithCompleter import ComboBoxWithCompleter
 from gui.widgets.TypeStrForm import TypeStrForm
 from gui.widgets.UploadAfterDownloadForm import UploadAfterDownloadForm
 from model.Event import Event
@@ -45,7 +46,7 @@ class AddDownloadQueueViaLinkForm(QDialog):
         layout = QGridLayout()
 
         label_name = QLabel(f'<font size="4"> {get_str("videohosting")} </font>')
-        self.hosting_combo_box = QComboBox()
+        self.hosting_combo_box = ComboBoxWithCompleter()
 
         for hosting in Hosting:
             self.hosting_combo_box.addItem(hosting.name, hosting)

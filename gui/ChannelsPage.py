@@ -2,6 +2,7 @@ import traceback
 
 from PyQt5 import QtCore, QtWidgets
 
+from gui.widgets.ComboBoxWithCompleter import ComboBoxWithCompleter
 from model.Hosting import Hosting
 from model.Channel import Channel
 from service.LocalizationService import *
@@ -12,7 +13,7 @@ from service.MailService import MailService
 
 
 class ChannelsPageWidget(QtWidgets.QTableWidget):
-    comboBox = QtWidgets.QComboBox()
+    comboBox = ComboBoxWithCompleter()
     url_edit = QtWidgets.QLineEdit()
 
     state_service = StateService()

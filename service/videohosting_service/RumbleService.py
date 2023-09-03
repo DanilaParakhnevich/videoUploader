@@ -16,6 +16,11 @@ class RumbleService(VideohostingService):
     def __init__(self):
         self.video_regex = 'https:\/\/rumble.com\/.*.html'
         self.channel_regex = '(https:\/\/rumble.com\/c\/.*)|(https:\/\/rumble.com\/user\/.*)'
+        self.title_size_restriction = 255
+        self.min_title_size = 0
+        self.description_size_restriction = 999999
+        self.size_restriction = 15 * 1024
+        self.upload_video_formats = list(['m4v', 'mp4', 'ogm', 'wmv', 'mpg', 'webm', 'ogv', 'mov', 'asx', 'mpeg', 'mp4', 'm4v', 'avi'])
 
     def get_videos_by_url(self, url, account=None):
         result = list()

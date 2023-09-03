@@ -2,6 +2,7 @@ import traceback
 
 from PyQt5 import QtCore, QtWidgets
 
+from gui.widgets.ComboBoxWithCompleter import ComboBoxWithCompleter
 from gui.widgets.TypeUrlForm import TypeUrlForm
 from model.Event import Event
 from model.Hosting import Hosting
@@ -12,7 +13,7 @@ from service.LoggingService import log_error
 
 
 class AccountsPageWidget(QtWidgets.QTableWidget):
-    comboBox = QtWidgets.QComboBox()
+    comboBox = ComboBoxWithCompleter()
 
     state_service = StateService()
     event_service = EventService()

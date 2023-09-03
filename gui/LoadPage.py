@@ -5,6 +5,7 @@ from functools import partial
 
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QIntValidator
+from PyQt5.QtWidgets import QFileDialog
 from dateutil.relativedelta import relativedelta
 
 from PyQt5 import QtCore, QtWidgets
@@ -131,6 +132,11 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         tab.setObjectName("Tab.py")
 
         tab.channel_box = ChannelComboBox(tab, selected_channel)
+        completer = QtWidgets.QCompleter()
+        completer.setCaseSensitivity(QtCore.Qt.CaseSensitivity.CaseInsensitive)
+        completer.setCompletionColumn(1)
+        completer.setCompletionMode(QtWidgets.QCompleter.CompletionMode.UnfilteredPopupCompletion)
+        tab.channel_box.setCompleter(completer)
 
         tab.channel_box.setObjectName("channel_box")
         tab.add_button = AnimatedButton(tab)
@@ -242,12 +248,25 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             tab.choose_dir_button.setText(download_dir)
 
         def pick_new():
-            folder_path = QtWidgets.QFileDialog.getExistingDirectory(None, get_str('choose_dir'))
+            qfdlg = QFileDialog(None, get_str('choose_dir'))
 
-            if folder_path != '':
-                self.tab_models[self.current_table_index].download_dir = folder_path
+            qfdlg.setOption(QFileDialog.DontUseNativeDialog, False)
+            qfdlg.setFileMode(QFileDialog.FileMode.DirectoryOnly)
+
+            self.state_service.q_settings.beginGroup("fileopendlg")
+            qfdlg.restoreState(self.state_service.q_settings.value("savestate", qfdlg.saveState()))
+            qfdlg.setDirectory(self.state_service.q_settings.value("savestate_dir"))
+            self.state_service.q_settings.endGroup()
+
+            if qfdlg.exec_():
+                self.tab_models[self.current_table_index].download_dir = qfdlg.directory().path()
                 self.state_service.save_tabs_state(self.tab_models)
-                tab.choose_dir_button.setText(folder_path)
+                tab.choose_dir_button.setText(qfdlg.directory().path())
+
+            self.state_service.q_settings.beginGroup("fileopendlg")
+            self.state_service.q_settings.setValue("savestate", qfdlg.saveState())
+            self.state_service.q_settings.setValue("savestate_dir", qfdlg.directory().path())
+            self.state_service.q_settings.endGroup()
 
         tab.choose_dir_button.clicked.connect(pick_new)
         tab.remove_files_after_upload = QtWidgets.QCheckBox(tab)
@@ -262,8 +281,6 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         tab.reset_tab_settings_button.setObjectName("reset_tab_settings_button")
         tab.reset_tab_settings_button.setText(get_str('reset_from_settings'))
         tab.reset_tab_settings_button.clicked.connect(self.reset_tab_settings)
-
-        tab.choose_dir_button.clicked.connect(pick_new)
 
         def on_add():
             form = AddDownloadQueueViaLinkForm(self, self.tab_models[self.current_table_index].format[0],

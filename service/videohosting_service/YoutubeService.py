@@ -129,10 +129,10 @@ class YoutubeService(VideohostingService):
 
             page.query_selector('#title-textarea').click(click_count=3)
             page.keyboard.press("Backspace")
-            page.query_selector('#title-textarea').type(text=name)
+            page.query_selector('#title-textarea').type(text=name, timeout=0)
 
             page.query_selector('#description-textarea').click()
-            page.query_selector('#description-textarea').type(text=description if description is not None else '')
+            page.query_selector('#description-textarea').type(text=description if description is not None else '', timeout=0)
 
             page.click(selector='[name=VIDEO_MADE_FOR_KIDS_NOT_MFK]', timeout=0)
 
@@ -143,6 +143,10 @@ class YoutubeService(VideohostingService):
 
             page.wait_for_selector('[name=PUBLIC]', timeout=0)
             page.click(selector='[name=PUBLIC]', timeout=0)
+
+            while page.query_selector('.left-button-area.style-scope.ytcp-uploads-dialog').query_selector('.progress-label.style-scope.ytcp-video-upload-progress') is not None \
+                    and page.query_selector('.left-button-area.style-scope.ytcp-uploads-dialog').query_selector('.progress-label.style-scope.ytcp-video-upload-progress').text_content().split(' ')[1] != '100':
+                time.sleep(3)
 
             page.click(selector='#done-button', timeout=0)
 
