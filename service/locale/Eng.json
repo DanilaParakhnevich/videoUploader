@@ -199,5 +199,6 @@
   "video_not_exists": "Video not exists",
   "reauthorize": "Reauthorize",
   "duplicate": "Duplicate",
-  "loading": "Loading"
+  "loading": "Loading",
+  "already_sent": "There are no new errors in the report"
 }

@@ -14,6 +14,7 @@ from gui.widgets.FormatChooserComboBox import FormatChooserComboBox
 from model.Settings import Settings
 from service.LocalizationService import *
 from service.LoggingService import log_error
+from service.MailService import MailService
 from service.VersionService import VersionService
 
 
@@ -302,16 +303,22 @@ class SettingsPage(QtWidgets.QDialog):
         self.save_password.setChecked(self.old_settings.save_password)
         self.gridLayout.addWidget(self.save_password, 30, 0)
 
+        self.send_notifications_button = QtWidgets.QPushButton()
+        self.send_notifications_button.setObjectName("send_notifications")
+        self.send_notifications_button.setMaximumWidth(160)
+        self.send_notifications_button.clicked.connect(self.on_send)
+        self.gridLayout.addWidget(self.send_notifications_button, 31, 0)
+
         self.save_button = QtWidgets.QPushButton()
         self.save_button.setObjectName("save_button")
         self.save_button.setMaximumWidth(80)
         self.save_button.clicked.connect(self.on_save)
-        self.gridLayout.addWidget(self.save_button, 31, 0)
+        self.gridLayout.addWidget(self.save_button, 32, 0)
 
         self.autostart = QtWidgets.QCheckBox()
         self.autostart.setObjectName("autostart")
         self.autostart.setChecked(self.old_settings.autostart)
-        self.gridLayout.addWidget(self.autostart, 31, 1)
+        self.gridLayout.addWidget(self.autostart, 32, 1)
 
         if self.old_settings.manual_settings is False:
             self.audio_quality_number_label.hide()
@@ -365,6 +372,7 @@ class SettingsPage(QtWidgets.QDialog):
         self.debug_browser.setText(get_str('debug_browser'))
         self.add_localization_label.setText(get_str('add_localization'))
         self.choose_dir_button.setText(self.old_settings.download_dir)
+        self.send_notifications_button.setText(get_str('report_bug'))
         self.save_button.setText(get_str('save'))
         self.manual_settings_label.setText(get_str('manual_settings'))
         self.video_quality_label.setText(get_str('video_quality'))
@@ -458,6 +466,21 @@ class SettingsPage(QtWidgets.QDialog):
             self.audio_quality_label.hide()
             self.video_quality.hide()
             self.video_quality_label.hide()
+
+    def on_send(self):
+        msg = QtWidgets.QMessageBox(self)
+        msg.setWindowTitle(get_str('error'))
+
+        if self.state_service.is_error_appeared():
+            try:
+                MailService().send_log()
+                msg.setText(get_str('send_successfully'))
+                self.state_service.set_error_status(False)
+            except:
+                msg.setText(get_str('send_failed'))
+        else:
+            msg.setText(get_str('already_sent'))
+        msg.exec_()
 
     def on_save(self):
 

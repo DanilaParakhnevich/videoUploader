@@ -24,11 +24,20 @@ class RumbleService(VideohostingService):
 
     def get_videos_by_url(self, url, account=None):
         result = list()
+        with sync_playwright() as p:
+            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+            if account is not None:
+                context.add_cookies(account.auth)
+            page = context.new_page()
+            page.goto(url, timeout=0)
+            page.wait_for_selector('.video-listing-entry')
+            self.scroll_page_to_the_bottom(page=page)
 
-        with YoutubeDL() as ydl:
-            info = ydl.extract_info(url, download=False)
-            for item in info['entries']:
-                result.append(VideoModel(item['original_url'], item['title'], get_str('no_info')))
+            elements = page.query_selector_all('.video-listing-entry')
+            for box in elements:
+                result.append(VideoModel(url='https://rumble.com' + box.query_selector('.video-item--a').get_attribute('href'),
+                                         name=box.query_selector('.video-item--title').text_content(),
+                                         date=box.query_selector('.video-item--meta.video-item--time').text_content()))
 
         return result
 
@@ -82,8 +91,8 @@ class RumbleService(VideohostingService):
             file_chooser.set_files(file_path)
 
             page.wait_for_selector('#title', timeout=0)
-            page.query_selector('#title').type(name)
-            page.query_selector('#description').type(description)
+            page.query_selector('#title').type(name, timeout=0)
+            page.query_selector('#description').type(description, timeout=0)
 
             for option in page.query_selector('#channelId').query_selector_all('option'):
                 if option.get_attribute('value') == id:

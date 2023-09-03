@@ -28,14 +28,27 @@ class DailyMotionService(VideohostingService):
 
     def get_videos_by_url(self, url: str, account=None):
         result = list()
-
         with YoutubeDL(self.extract_info_opts) as ydl:
             if url.endswith('/') is False:
                 url = url.strip() + '/'
 
             info = ydl.extract_info(url)
             for item in info['entries']:
-                result.append(VideoModel(item['url'], get_str('no_info'), get_str('no_info')))
+                title = get_str('no_info')
+                date = get_str('no_info')
+                try:
+                    with sync_playwright() as p:
+                        context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+                        if account is not None:
+                            context.add_cookies(account.auth)
+                        page = context.new_page()
+                        page.goto(item['url'], timeout=0)
+                        page.wait_for_selector('.PubDate__videoPubDate___3o7a-', timeout=0)
+                        date = page.query_selector('.PubDate__videoPubDate___3o7a-').text_content()
+                        title = page.query_selector('.NewVideoInfoTitle__videoTitle___3kiXi').text_content()
+                except:
+                    pass
+                result.append(VideoModel(item['url'], title, date))
 
         return result
 

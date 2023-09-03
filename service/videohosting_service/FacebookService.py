@@ -36,23 +36,41 @@ class FacebookService(VideohostingService):
             if url.endswith('/'):
                 url = url[0:len(url) - 1]
 
+            video_selector = '.xrvj5dj.x5yr21d.xh8yej3'
             if url.__contains__('groups'):
                 page.goto(f'{url}/media/videos', timeout=0)
-            else:
-                page.goto(f'{url}/videos', timeout=0)
 
-            page.wait_for_selector('.x6s0dn4.x9f619.x78zum5.x2lah0s.x1hshjfz.x1n2onr6.xng8ra.x1pi30zi.x1swvt13')
+            else:
+                page.goto(f'{url}&sk=videos', timeout=0)
+                try:
+                    page.wait_for_selector('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.x1heor9g.xt0b8zv.x1lliihq.x5yr21d.x1n2onr6.xh8yej3')
+                    video_selector = '.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.x1heor9g.xt0b8zv.x1lliihq.x5yr21d.x1n2onr6.xh8yej3'
+                except:
+                    video_selector = '.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.x1heor9g.xt0b8zv[aria-hidden="true"]'
+
+            page.wait_for_selector(video_selector)
 
             time.sleep(1)
             self.scroll_page_to_the_bottom(page=page, timeout=3)
-            stream_boxes = page.query_selector_all('.x9f619.x1r8uery.x1iyjqo2.x6ikm8r.x10wlt62.x1n2onr6')
-            for box in stream_boxes:
-                if box.query_selector('a') is not None:
+            stream_boxes = page.query_selector_all(video_selector)
+            for box in stream_boxes.copy():
+                if box.get_attribute('href') is not None or (box.query_selector('a') is not None and box.query_selector('a').get_attribute('href') is not None):
+                    if video_selector == '.xrvj5dj.x5yr21d.xh8yej3':
+                        url = str(box.query_selector('a').get_attribute('href'))
+                    else:
+                        url = str(box.get_attribute('href'))
 
                     result.append(
-                        VideoModel(url=str(box.query_selector('a').get_property('href')),
-                                   name=get_str('no_info'),
-                                   date=get_str('no_info')))
+                        VideoModel(url=url,
+                                   name=None,
+                                   date=None))
+
+            for elem in result:
+                url = elem.url
+                page.goto(url)
+                page.wait_for_selector('.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.x1vvkbs', timeout=0)
+                elem.name = page.query_selector('.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.x1vvkbs').text_content()
+                elem.date = page.query_selector('.x1i10hfl.xjbqb8w.x6umtig.x1b1mbwd.xaqea5y.xav7gou.x9f619.x1ypdohk.xt0psk2.xe8uvvx.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x16tdsg8.x1hl2dhg.xggy1nq.x1a2a7pz.x1heor9g.xt0b8zv.xo1l8bm').query_selector('span').text_content()
 
         return result
 

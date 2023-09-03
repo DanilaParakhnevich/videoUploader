@@ -54,7 +54,7 @@ class OKService(VideohostingService):
             for box in stream_boxes.element_handles():
                 if str(box.get_property('href')).__contains__('video'):
                     result.append(
-                        VideoModel(url=str(box.get_property('href')), name=box.inner_html(), date='Нет информации'))
+                        VideoModel(url=str(box.get_property('href')), name=box.inner_html(), date=get_str('no_info')))
 
         return result
 

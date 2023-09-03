@@ -52,12 +52,12 @@ class RutubeService(VideohostingService):
 
             page.wait_for_selector('#phone-or-email-login', timeout=0)
 
-            page.query_selector('#phone-or-email-login').type(login)
+            page.query_selector('#phone-or-email-login').type(login, timeout=0)
             time.sleep(3)
             page.query_selector('#submit-login-continue').click()
             time.sleep(3)
             page.wait_for_selector('#login-password', timeout=0)
-            page.query_selector('#login-password').type(password)
+            page.query_selector('#login-password').type(password, timeout=0)
             page.click(
                 '.freyja_char-base-button__btnContent__3vr55.freyja_char-base-button__btnContent-icon-left__3L4yd')
 
@@ -84,12 +84,12 @@ class RutubeService(VideohostingService):
                     timeout=5_000)
             except:
                 if page.query_selector('#phone-or-email-login') is not None:
-                    page.query_selector('#phone-or-email-login').type(account.login)
+                    page.query_selector('#phone-or-email-login').type(account.login, timeout=0)
                     time.sleep(3)
                     page.query_selector('#submit-login-continue').click()
                     time.sleep(3)
                     page.wait_for_selector('#login-password', timeout=0)
-                    page.query_selector('#login-password').type(account.password)
+                    page.query_selector('#login-password').type(account.password, timeout=0)
                     page.click(
                         '.freyja_char-base-button__btnContent__3vr55.freyja_char-base-button__btnContent-icon-left__3L4yd')
 
@@ -109,9 +109,9 @@ class RutubeService(VideohostingService):
             time.sleep(1)
 
             page.query_selector('[name="title"]').fill('')
-            page.query_selector('[name="title"]').type(text=name)
+            page.query_selector('[name="title"]').type(text=name, timeout=0)
 
-            page.query_selector('[name="description"]').type(description if description is not None else '')
+            page.query_selector('[name="description"]').type(description if description is not None else '', timeout=0)
 
             page.click('[name="categories"]')
             page.click('.freyja_char-dropdown-layout__dropdownItem__x8JCK')
@@ -136,12 +136,12 @@ class RutubeService(VideohostingService):
                 return True
             except:
                 if page.query_selector('#phone-or-email-login') is not None:
-                    page.query_selector('#phone-or-email-login').type(account.login)
+                    page.query_selector('#phone-or-email-login').type(account.login, timeout=0)
                     time.sleep(3)
                     page.query_selector('#submit-login-continue').click()
                     time.sleep(3)
                     page.wait_for_selector('#login-password', timeout=0)
-                    page.query_selector('#login-password').type(account.password)
+                    page.query_selector('#login-password').type(account.password, timeout=0)
                     page.click(
                         '.freyja_char-base-button__btnContent__3vr55.freyja_char-base-button__btnContent-icon-left__3L4yd')
 

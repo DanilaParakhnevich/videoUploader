@@ -397,3 +397,13 @@ class StateService(object):
 
     def get_dir(self):
         return str(self.q_settings.value('dir', QDir.homePath()))
+
+    def set_error_status(self, value):
+        self.q_settings.setValue('error', value)
+
+    def is_error_appeared(self):
+        if self.q_settings.value('error') is None:
+            return False
+
+        return False if self.q_settings.value('error') == 'false' else True
+

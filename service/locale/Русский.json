@@ -199,5 +199,7 @@
   "video_not_exists": "Видео не существует",
   "reauthorize": "Реавторизваться",
   "duplicate": "Дубликат",
-  "loading": "Загрузка"
+  "loading": "Загрузка",
+  "already_sent": "В отчёте нет новых ошибок"
+
 }

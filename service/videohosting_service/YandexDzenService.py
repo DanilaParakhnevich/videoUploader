@@ -28,13 +28,22 @@ class YandexDzenService(VideohostingService):
     def get_videos_by_url(self, url: str, account=None):
         result = list()
 
-        with YoutubeDL(self.extract_info_opts) as ydl:
-            if url.endswith('/') is False:
-                url = url.strip() + '/'
 
-            info = ydl.extract_info(url)
-            for item in info['entries']:
-                result.append(VideoModel(item['url'], get_str('no_info'), get_str('no_info')))
+        with sync_playwright() as p:
+            context = self.new_context(p=p, headless=True, use_user_agent_arg=True)
+            if account is not None:
+                context.add_cookies(account.auth)
+            page = context.new_page()
+            page.goto(url, timeout=0)
+            page.wait_for_selector('.card-video-ad-animations.card-video-2-view__content-wrap')
+            self.scroll_page_to_the_bottom(page=page)
+
+            elements = page.query_selector_all('.card-video-ad-animations.card-video-2-view__content-wrap')
+            for box in elements:
+                result.append(
+                    VideoModel(url=box.query_selector('.zen-ui-line-clamp.zen-ui-card-title-clamp').get_attribute('href'),
+                               name=box.query_selector('.zen-ui-line-clamp.zen-ui-card-title-clamp').text_content(),
+                               date=box.query_selector('.zen-ui-common-layer-meta._type_card').text_content().split('•')[0]))
 
         return result
 
