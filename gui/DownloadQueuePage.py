@@ -160,6 +160,14 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                 audio_sampling_rate=media.audio_sampling_rate,
                 fps=media.fps)
 
+            hash = str(uuid.uuid4())
+            if media.upload_after_download:
+                old_dir = video_dir
+                video_dir = video_dir.replace(os.path.splitext(video_dir)[0], os.path.splitext(video_dir)[0] + hash)
+                os.renames(old_dir, video_dir)
+                os.renames(os.path.splitext(old_dir)[0] + '.info.json',
+                           (os.path.splitext(old_dir)[0] + '.info.json').replace(os.path.splitext(old_dir)[0], os.path.splitext(old_dir)[0] + hash))
+
             self.state_service.add_loaded_video_to_the_history(media.url, media.video_quality, media.video_extension)
 
             media.video_dir = video_dir
@@ -172,6 +180,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
                     self.queue_media_service.replace_to_the_upload_queue(UploadQueueMedia(media_id=str(upload_target['id']),
                                                                                           video_dir=video_dir,
+                                                                                          hash=hash,
                                                                                           hosting=upload_target[
                                                                                               'hosting'],
                                                                                           status=status,

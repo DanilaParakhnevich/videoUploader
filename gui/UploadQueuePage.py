@@ -147,14 +147,13 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
             if queue_media.title == '' or queue_media.title is None or queue_media.description == '' or queue_media.description is None:
                 try:
-                    f = open(os.path.splitext(queue_media.video_dir)[0] + '.info.json', 'r', encoding='utf-8')
-                    data = json.load(f)
+                    with open(os.path.splitext(queue_media.video_dir)[0] + '.info.json', 'r', encoding='utf-8') as f:
+                        data = json.load(f)
 
-                    name = data['title']
+                        name = data['title']
 
-                    if 'description' in data:
-                        description = data['description']
-
+                        if 'description' in data:
+                            description = data['description']
                 except:
                     log_error(f'{os.path.splitext(queue_media.video_dir)[0]} - .info.json не найден')
             else:
@@ -182,6 +181,34 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 description=description,
                 destination=queue_media.destination,
                 table_item=self.get_status_table_item_by_id(queue_media_id))
+
+            rename = True
+
+            for item in self.queue_media_list:
+                if (item.hosting != queue_media.hosting or item.destination != queue_media.destination) \
+                        and item.video_dir == queue_media.video_dir and item.status != 2:
+                    rename = False
+                    break
+
+            if rename and queue_media.hash is not None:
+                os.renames(queue_media.video_dir,
+                           queue_media.video_dir.replace(queue_media.hash, ''))
+                os.renames(os.path.splitext(queue_media.video_dir)[0] + '.info.json',
+                           (os.path.splitext(queue_media.video_dir)[0] + '.info.json').replace(queue_media.hash, ''))
+
+                for item in self.queue_media_list:
+                    if item.video_dir == queue_media.video_dir and item != queue_media:
+                        item.video_dir = queue_media.video_dir.replace(queue_media.hash, '')
+                        self.item(self.find_row_number_by_id(item.id), 0).setText(item.video_dir)
+                        self.update()
+
+                for item in self.state_service.get_download_queue_media():
+                    if item.video_dir == queue_media.video_dir:
+                        item.video_dir = queue_media.video_dir.replace(queue_media.hash, '')
+                        self.state_service.save_download_queue_media(self.state_service.get_download_queue_media())
+
+                queue_media.video_dir = queue_media.video_dir.replace(queue_media.hash, '')
+
 
             if queue_media.remove_files_after_upload:
                 for filename in glob.glob(os.path.dirname(queue_media.video_dir) + '/*'):
@@ -378,6 +405,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                     elif status == 2:
                         self.cellWidget(i, 3).clicked.disconnect()
                         self.cellWidget(i, 3).clicked.connect(self.do_nothing)
+                        self.item(i, 0).setText(media.video_dir)
                         self.cellWidget(i, 3).setText(get_str('end'))
                         self.cellWidget(i, 4).setText('-')
                         self.cellWidget(i, 4).clicked.disconnect()
