@@ -104,6 +104,8 @@ class AddUploadQueueByUploadedMediaForm(QDialog):
 
         for target in self.upload_targets:
             try:
+                target['title'] = title
+                target['description'] = description
                 Hosting[target['hosting']].value[0].validate_video_info_for_uploading(video_dir=file_dir)
             except VideoDurationException:
                 log_error(traceback.format_exc())
@@ -122,18 +124,18 @@ class AddUploadQueueByUploadedMediaForm(QDialog):
                 continue
 
             try:
-                if title is None:
+                if target['title'] is None:
                     form = TypeStrForm(parent=self, label=f'{get_str("input_title")}: {file_dir}')
                     form.exec_()
 
-                    title = form.str
+                    target['title'] = form.str
 
-                Hosting[target['hosting']].value[0].validate_video_info_for_uploading(title=title)
+                Hosting[target['hosting']].value[0].validate_video_info_for_uploading(title=target['title'])
             except NameIsTooLongException:
                 while (Hosting[target['hosting']].value[0].title_size_restriction is not None and \
-                        len(title) > Hosting[target['hosting']].value[0].title_size_restriction) or \
+                        len(target['title']) > Hosting[target['hosting']].value[0].title_size_restriction) or \
                         (Hosting[target['hosting']].value[0].min_title_size is not None and \
-                        len(title) < Hosting[target['hosting']].value[0].min_title_size):
+                        len(target['title']) < Hosting[target['hosting']].value[0].min_title_size):
                     log_error(traceback.format_exc())
                     if Hosting[target['hosting']].value[0].title_size_restriction is not None:
                         label = f'{get_str("bad_title")} ({str(Hosting[target["hosting"]].value[0].min_title_size)} <= {get_str("name")} > {str(Hosting[target["hosting"]].value[0].title_size_restriction)})'
@@ -141,27 +143,27 @@ class AddUploadQueueByUploadedMediaForm(QDialog):
                         label = f'{get_str("bad_title")} ({str(Hosting[target["hosting"]].value[0].min_title_size)} <= {get_str("name")})'
                     form = TypeStrForm(parent=self,
                                        label=label,
-                                       current_text=title)
+                                       current_text=target['title'])
                     form.exec_()
-                    title = form.str
+                    target['title'] = form.str
 
             if Hosting[target['hosting']].value[0].description_size_restriction is not None:
                 try:
-                    if description is None:
+                    if target['description'] is None:
                         form = TypeStrForm(parent=self, label=f'{get_str("input_description")}: {file_dir}')
                         form.exec_()
 
-                        description = form.str
+                        target['description'] = form.str
 
-                    Hosting[target['hosting']].value[0].validate_video_info_for_uploading(description=description)
+                    Hosting[target['hosting']].value[0].validate_video_info_for_uploading(description=target['description'])
                 except DescriptionIsTooLongException:
-                    while len(description) > Hosting[target['hosting']].value[0].description_size_restriction:
+                    while len(target['description']) > Hosting[target['hosting']].value[0].description_size_restriction:
                         log_error(traceback.format_exc())
                         form = TypeStrForm(parent=self,
                                            label=f'{get_str("too_long_description")}{str(Hosting[target["hosting"]].value[0].description_size_restriction)}',
-                                           current_text=description)
+                                           current_text=target['description'])
                         form.exec_()
-                        description = form.str
+                        target['description'] = form.str
 
             upload_targets.append(target)
             upload = True

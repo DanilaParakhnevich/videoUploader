@@ -10,10 +10,13 @@ class LoadQueuedMedia(object):
                  video_quality: str, video_extension:str, remove_files_after_upload: bool, upload_date=None, upload_in=None, upload_targets: list = None,
                  account: Account = None, title: str = None, description: str = None, download_dir: str = None, video_size: str = None,
                  manual_settings=True, audio_quality_str=0, video_quality_str=0, audio_bitrate=0, video_bitrate=0,
-                 audio_sampling_rate=0, fps=0, status_name = None):
+                 audio_sampling_rate=0, fps=0, status_name = None, wait_for=None, load_in=None, load_date=None):
 
         self.id = media_id
         self.url = url
+        self.wait_for = wait_for
+        self.load_in = load_in
+        self.load_date = load_date
         # Всего 4 статуса: 0 - пауза, 1 - процесс, 2 - завершено, 3 - ошибка загрузки
         self.status = status
         self.account = account

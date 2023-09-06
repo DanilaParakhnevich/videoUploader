@@ -25,7 +25,6 @@ class LoginForm(QDialog):
         if count == 2:
             label_name = QLabel(f'<font size="4"> {username} </font>')
             self.lineEdit_username = QLineEdit()
-            self.lineEdit_username.setEnabled(relogin is False)
             layout.addWidget(label_name, 0, 0)
             layout.addWidget(self.lineEdit_username, 0, 1)
 
@@ -37,7 +36,6 @@ class LoginForm(QDialog):
         else:
             label_name = QLabel(f'<font size="4"> {username} </font>')
             self.lineEdit_username = QLineEdit()
-            self.lineEdit_username.setEnabled(relogin is False)
             layout.addWidget(label_name, 0, 0)
             layout.addWidget(self.lineEdit_username, 0, 1)
 

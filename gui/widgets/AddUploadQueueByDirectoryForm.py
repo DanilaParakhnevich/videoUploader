@@ -1,6 +1,6 @@
 import traceback
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from PyQt5.QtWidgets import (QDialog, QPushButton, QLabel, QMessageBox, QComboBox, QGridLayout)
 from dateutil.relativedelta import relativedelta
@@ -67,60 +67,64 @@ class AddUploadQueueByDirectoryForm(QDialog):
                 'hosting': account.hosting,
                 'upload_target': account.url})
 
-        form = DirOrFileForm(parent=self.parentWidget())
-        form.exec_()
+        # form = DirOrFileForm(parent=self.parentWidget())
+        # form.exec_()
+        #
+        # if form.passed is False:
+        #     return
+        #
+        # file_need = form.file_need
 
-        if form.passed is False:
-            return
-
-        file_need = form.file_need
-
-        form = ChooseDirForm(parent=self.parentWidget(), file_need=file_need)
+        form = ChooseDirForm(parent=self.parentWidget(), file_need=True)
         form.exec_()
 
         if form.passed is False:
             return
 
         self.directory = form.choose_dir_button.text()
-
         self.video_info = list()
 
-        if os.path.isdir(self.directory):
-            for target in os.listdir(self.directory):
-                if os.path.isfile(f'{self.directory}/{target}'):
-                    handle_result = self.handle_file(f'{self.directory}/{target}')
-                    if handle_result is not False:
-                        self.video_info.append(handle_result)
+        for target in form.result:
+            if os.path.isfile(target):
+                handle_result = self.handle_file(target)
+                if handle_result is not False:
+                    self.video_info.append(handle_result)
 
-            upload_interval = 0
-            upload_interval_type = 0
+        upload_interval = 0
+        upload_interval_type = 0
 
-            if len(self.video_info) > 1:
-                form = ChooseIntervalForm(self)
-                form.exec_()
+        upload_hours = 0
+        upload_minutes = 0
 
-                if form.passed is False:
-                    return
-                elif form.yes:
-                    upload_interval_type = form.upload_interval_type
-                    upload_interval = form.upload_interval
-            elif len(self.video_info) == 0:
+        if len(self.video_info) > 1:
+            form = ChooseIntervalForm(self)
+            form.exec_()
+
+            if form.passed is False:
                 return
+            elif form.yes:
+                upload_interval_type = form.upload_interval_type
+                upload_interval = form.upload_interval
+                upload_hours = form.upload_hours
+                upload_minutes = form.upload_minutes
 
-            if upload_interval_type == 0:
-                self.upload_in = relativedelta(minutes=upload_interval)
-            elif upload_interval_type == 1:
-                self.upload_in = relativedelta(hours=upload_interval)
-            elif upload_interval_type == 2:
-                self.upload_in = relativedelta(days=upload_interval)
-            else:
-                self.upload_in = relativedelta(months=upload_interval)
+        elif len(self.video_info) == 0:
+            return
 
+        if upload_interval_type == 0:
+            self.upload_in = relativedelta(minutes=upload_interval)
+        elif upload_interval_type == 1:
+            self.upload_in = relativedelta(hours=upload_interval)
+        elif upload_interval_type == 2:
+            self.upload_in = relativedelta(days=upload_interval)
         else:
-            handle_result = self.handle_file(self.directory)
-            if handle_result is not False:
-                handle_result.append(datetime.now())
-                self.video_info.append(handle_result)
+            self.upload_in = relativedelta(months=upload_interval)
+
+        self.first_upload_date = datetime.now()
+        if self.first_upload_date.hour > upload_hours:
+            self.first_upload_date + timedelta(days=1)
+
+        self.first_upload_date = self.first_upload_date.replace(minute=upload_minutes, hour=upload_hours)
 
         self.passed = True
         self.close()
@@ -146,6 +150,8 @@ class AddUploadQueueByDirectoryForm(QDialog):
         for target in self.upload_targets:
 
             try:
+                target['title'] = title
+                target['description'] = description
                 Hosting[target['hosting']].value[0].validate_video_info_for_uploading(video_dir=file_dir)
             except VideoDurationException:
                 log_error(traceback.format_exc())
@@ -165,19 +171,19 @@ class AddUploadQueueByDirectoryForm(QDialog):
             except Exception:
                 continue
 
-            if title is None:
+            if target['title'] is None:
                 form = TypeStrForm(parent=self, label=f'{get_str("input_title")}: {file_dir}')
                 form.exec_()
 
-                title = form.str
+                target['title'] = form.str
 
             try:
-                Hosting[target['hosting']].value[0].validate_video_info_for_uploading(title=title)
+                Hosting[target['hosting']].value[0].validate_video_info_for_uploading(title=target['title'])
             except NameIsTooLongException:
                 while (Hosting[target['hosting']].value[0].title_size_restriction is not None and \
-                        len(title) > Hosting[target['hosting']].value[0].title_size_restriction) or \
+                        len(target['title']) > Hosting[target['hosting']].value[0].title_size_restriction) or \
                         (Hosting[target['hosting']].value[0].min_title_size is not None and \
-                        len(title) < Hosting[target['hosting']].value[0].min_title_size):
+                        len(target['title']) < Hosting[target['hosting']].value[0].min_title_size):
                     log_error(traceback.format_exc())
                     if Hosting[target['hosting']].value[0].title_size_restriction is not None:
                         label = f'{get_str("bad_title")} ({str(Hosting[target["hosting"]].value[0].min_title_size)} <= {get_str("name")} > {str(Hosting[target["hosting"]].value[0].title_size_restriction)})'
@@ -185,27 +191,27 @@ class AddUploadQueueByDirectoryForm(QDialog):
                         label = f'{get_str("bad_title")} ({str(Hosting[target["hosting"]].value[0].min_title_size)} <= {get_str("name")})'
                     form = TypeStrForm(parent=self,
                                        label=label,
-                                       current_text=title)
+                                       current_text=target['title'])
                     form.exec_()
-                    title = form.str
+                    target['title'] = form.str
 
             if Hosting[target['hosting']].value[0].description_size_restriction is not None:
-                if description is None:
+                if target['description'] is None:
                     form = TypeStrForm(parent=self, label=f'{get_str("input_description")}: {file_dir}')
                     form.exec_()
 
-                    description = form.str
+                    target['description'] = form.str
 
                 try:
-                    Hosting[target['hosting']].value[0].validate_video_info_for_uploading(description=description)
+                    Hosting[target['hosting']].value[0].validate_video_info_for_uploading(description=target['description'])
                 except DescriptionIsTooLongException:
-                    while len(description) > Hosting[target['hosting']].value[0].description_size_restriction:
+                    while len(target['description']) > Hosting[target['hosting']].value[0].description_size_restriction:
                         log_error(traceback.format_exc())
                         form = TypeStrForm(parent=self,
                                            label=f'{get_str("too_long_description")}{str(Hosting[target["hosting"]].value[0].description_size_restriction)}',
-                                           current_text=description)
+                                           current_text=target['description'])
                         form.exec_()
-                        description = form.str
+                        target['description'] = form.str
 
             upload_targets.append(target)
             upload = True

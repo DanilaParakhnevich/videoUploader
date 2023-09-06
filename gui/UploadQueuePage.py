@@ -90,9 +90,9 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         self.updating_upload_items.timeout.connect(self.update_upload_items)
         self.updating_upload_items.start(10_000)
 
-        self.uploading_by_schedule_timer = QTimer(self)
-        self.uploading_by_schedule_timer.timeout.connect(self.update_queue_media)
-        self.uploading_by_schedule_timer.start(10_000)
+        self.updating_media_timer = QTimer(self)
+        self.updating_media_timer.timeout.connect(self.update_queue_media)
+        self.updating_media_timer.start(10_000)
 
         self.uploading_by_schedule_timer = QTimer(self)
         self.uploading_by_schedule_timer.timeout.connect(self.upload_by_schedule)
@@ -102,20 +102,21 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
     def update_upload_items(self):
         for queue_media in self.queue_media_list:
-            if queue_media.upload_date is None and queue_media.wait_for is None:
-                queue_media.upload_date = datetime.now()
-            elif queue_media.upload_date is None and queue_media.upload_in is not None:
-                media = self.find_queue_media_by_id(queue_media.wait_for)
-                if media is not None:
-                    if media.status == 2:
+            if queue_media.upload_date is None:
+                if queue_media.wait_for is None:
+                    queue_media.upload_date = datetime.now()
+                elif queue_media.upload_in is not None:
+                    media = self.find_queue_media_by_id(queue_media.wait_for)
+                    if media is not None:
+                        if media.status == 2:
+                            queue_media.upload_date = datetime.now() + queue_media.upload_in
+                    else:
                         queue_media.upload_date = datetime.now() + queue_media.upload_in
-                else:
-                    queue_media.upload_date = datetime.now() + queue_media.upload_in
 
     def upload_by_schedule(self):
         for queue_media in self.queue_media_list:
             if queue_media.upload_date is not None and queue_media.upload_date < datetime.now() \
-                    and queue_media.status == 0:
+                    and queue_media.status == 0 and queue_media.video_dir != get_str('on_download'):
 
                 queue_media.status = 1
                 self.state_service.save_upload_queue_media(self.queue_media_list)
@@ -162,7 +163,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
             acc = None
             for upload_account in state_service.get_accounts():
-                if queue_media.account.login == upload_account.login and queue_media.account.hosting == upload_account.hosting and queue_media.account.url == upload_account.url:
+                if queue_media.account.login == upload_account.login and queue_media.account.hosting == upload_account.hosting and queue_media.destination == upload_account.url:
                     acc = upload_account
                     break
 
@@ -261,6 +262,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                     queue_media.error_name = self.queue_media_list[i].error_name
                     queue_media.wait_for = self.queue_media_list[i].wait_for
                     queue_media.upload_in = self.queue_media_list[i].upload_in
+                    queue_media.upload_date = self.queue_media_list[i].upload_date
 
                     self.queue_media_list[i] = queue_media
                     self.insert_queue_media(queue_media, i)
@@ -452,7 +454,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
         index = 0
         for acc in self.state_service.get_accounts():
-            if acc.hosting == account.hosting and acc.login == account.login:
+            if acc.hosting == media.account.hosting and acc.login == media.account.login and acc.url == media.account.url:
                 break
             index += 1
 
@@ -461,10 +463,10 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
         if hosting.value[0].need_to_pass_channel_after_login():
             try:
-                if hosting.value[0].validate_url_by_account(media.account.url, account) is False:
+                if hosting.value[0].validate_url_by_account(media.destination, account) is False:
                     msg = QtWidgets.QMessageBox(self)
-                    msg.setText(f'{get_str("failed_account_validation")}: {media.account.url}')
-                    self.event_service.add_event(Event(f'{get_str("failed_account_validation")}: {media.account.url}'))
+                    msg.setText(f'{get_str("failed_account_validation")}: {media.destination}')
+                    self.event_service.add_event(Event(f'{get_str("failed_account_validation")}: {media.destination}'))
                     msg.exec_()
                     return
             except:
@@ -475,12 +477,35 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 return
         msg.exec_()
 
-        account.url = media.account.url
+        for item in self.queue_media_list:
+            if item.account.login == media.account.login and item.account.hosting == media.account.hosting and item.account.url == media.account.url and item != media:
+                item.account = account
+                self.set_media_status(item.id, 0)
+
+                if item.destination is not None:
+                    item2 = item.destination
+                else:
+                    item2 = item.account.login
+
+                self.item(self.find_row_number_by_id(item.id), 1).setText(item2)
+
+        self.state_service.save_upload_queue_media(self.queue_media_list)
+
+        account.url = media.destination
         media.account = account
+
+        if media.destination is not None:
+            item2 = media.destination
+        else:
+            item2 = media.account.login
+
+        self.item(self.find_row_number_by_id(media.id), 1).setText(item2)
 
         accounts = self.state_service.get_accounts()
         accounts[index] = media.account
         self.state_service.save_accounts(accounts)
+
+        self.update()
 
         event_loop = None
 
@@ -508,6 +533,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             prev_id = {}
 
             for item in form.video_info:
+                index = 0
                 for target in item[4]:
 
                     id = str(uuid.uuid4())
@@ -517,6 +543,10 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                     if str([target['hosting'], target['login']]) in prev_id:
                         wait_for = prev_id[str([target['hosting'], target['login']])]
 
+                    upload_date = None
+
+                    if index == 1:
+                        upload_date = form.first_upload_date
 
                     self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=id,
                                                                                       video_dir=item[0],
@@ -527,12 +557,13 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                                                                                           target['login']),
                                                                                       destination=target[
                                                                                           'upload_target'],
-                                                                                      upload_date=None,
-                                                                                      upload_in=True,
+                                                                                      upload_date=upload_date,
+                                                                                      upload_in=form.upload_in,
                                                                                       wait_for=wait_for,
-                                                                                      title=item[1],
-                                                                                      description=item[2],
+                                                                                      title=target['title'],
+                                                                                      description=target['description'],
                                                                                       remove_files_after_upload=False))
+                    index += 1
                     prev_id[str([target['hosting'], target['login']])] = id
 
     def get_status_table_item_by_id(self, media_id):

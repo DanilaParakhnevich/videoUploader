@@ -6,6 +6,8 @@ class ChooseIntervalForm(QDialog):
 
     upload_interval = None
     upload_interval_type = None
+    upload_minutes = None
+    upload_hours = None
     yes = False
     passed = False
 
@@ -16,30 +18,47 @@ class ChooseIntervalForm(QDialog):
 
         layout = QGridLayout()
 
-        label_name = QLabel(f'<font size="4"> {get_str("interval")} </font>')
-        self.time_edit = QSpinBox()
-        layout.addWidget(label_name, 0, 0)
-        layout.addWidget(self.time_edit, 0, 1)
-        self.time_type_edit = QComboBox()
+        upload_label_name = QLabel(f'<font size="4"> {get_str("interval")} </font>')
+        self.upload_time_edit = QSpinBox()
+        layout.addWidget(upload_label_name, 1, 0)
+        layout.addWidget(self.upload_time_edit, 1, 1)
+        self.upload_time_type_edit = QComboBox()
 
-        self.time_type_edit.addItem(get_str('minutes'))
-        self.time_type_edit.addItem(get_str('hours'))
-        self.time_type_edit.addItem(get_str('days'))
-        self.time_type_edit.addItem(get_str('months'))
+        self.upload_time_type_edit.addItem(get_str('minutes'))
+        self.upload_time_type_edit.addItem(get_str('hours'))
+        self.upload_time_type_edit.addItem(get_str('days'))
+        self.upload_time_type_edit.addItem(get_str('months'))
 
-        self.time_type_edit.setCurrentIndex(0)
+        self.upload_time_type_edit.setCurrentIndex(0)
 
-        layout.addWidget(self.time_type_edit, 0, 2)
+        layout.addWidget(self.upload_time_type_edit, 1, 2)
+
+        upload_time_label = QLabel(f'<font size="4"> {get_str("first_upload_time")} </font>')
+
+        self.upload_hours_edit = QSpinBox()
+        self.upload_hours_edit.setMinimum(0)
+        self.upload_hours_edit.setMaximum(24)
+        self.upload_minutes_edit = QSpinBox()
+        self.upload_minutes_edit.setMinimum(0)
+        self.upload_minutes_edit.setMaximum(60)
+
+        layout.addWidget(upload_time_label, 2, 0)
+        layout.addWidget(self.upload_hours_edit, 2, 1)
+        layout.addWidget(self.upload_minutes_edit, 2, 2)
 
         ok_button = QPushButton(get_str('choose'))
         ok_button.clicked.connect(self.ok)
-        layout.addWidget(ok_button, 2, 0, 1, 2)
+        layout.addWidget(ok_button, 3, 0, 1, 2)
 
         self.setLayout(layout)
 
     def ok(self):
-        self.upload_interval = int(self.time_edit.text())
-        self.upload_interval_type = self.time_type_edit.currentIndex()
+        self.upload_minutes = int(self.upload_minutes_edit.text())
+        self.upload_hours = int(self.upload_hours_edit.text())
+
+        self.upload_interval = int(self.upload_time_edit.text())
+        self.upload_interval_type = self.upload_time_type_edit.currentIndex()
+
         self.yes = True
         self.passed = True
         self.close()

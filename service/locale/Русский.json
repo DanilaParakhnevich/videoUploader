@@ -200,6 +200,8 @@
   "reauthorize": "Реавторизваться",
   "duplicate": "Дубликат",
   "loading": "Загрузка",
-  "already_sent": "В отчёте нет новых ошибок"
-
+  "already_sent": "В отчёте нет новых ошибок",
+  "load_interval": "Интервал загрузки",
+  "first_upload_time": "Время выгрузки (ч, с)",
+  "upload_interval": "Интервал выгрузки"
 }

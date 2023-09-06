@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from PyQt5.QtWidgets import (QDialog, QPushButton, QLabel, QSpinBox, QGridLayout, QComboBox, QMessageBox)
 
 from gui.widgets.ChooseAccountsForUploadingForm import ChooseAccountsForUploadingForm
@@ -11,6 +13,9 @@ class UploadAfterDownloadForm(QDialog):
 	upload_interval = None
 	upload_interval_type = None
 	upload_targets = None
+	first_upload_date = None
+	load_interval = 0
+	load_interval_type = 0
 	passed = False
 
 	def __init__(self, parent, need_interval: bool = True, video_size: str = None):
@@ -21,30 +26,60 @@ class UploadAfterDownloadForm(QDialog):
 		layout = QGridLayout()
 		if need_interval:
 			self.resize(500, 120)
-			label_name = QLabel(f'<font size="4"> {get_str("interval")} </font>')
-			self.time_edit = QSpinBox()
-			layout.addWidget(label_name, 0, 0)
-			layout.addWidget(self.time_edit, 0, 1)
-			self.time_type_edit = QComboBox()
+			load_label_name = QLabel(f'<font size="4"> {get_str("load_interval")} </font>')
+			self.load_time_edit = QSpinBox()
+			layout.addWidget(load_label_name, 0, 0)
+			layout.addWidget(self.load_time_edit, 0, 1)
+			self.load_time_type_edit = QComboBox()
 
-			self.time_type_edit.addItem(get_str('minutes'))
-			self.time_type_edit.addItem(get_str('hours'))
-			self.time_type_edit.addItem(get_str('days'))
-			self.time_type_edit.addItem(get_str('months'))
+			self.load_time_type_edit.addItem(get_str('minutes'))
+			self.load_time_type_edit.addItem(get_str('hours'))
+			self.load_time_type_edit.addItem(get_str('days'))
+			self.load_time_type_edit.addItem(get_str('months'))
 
-			self.time_type_edit.setCurrentIndex(0)
+			self.load_time_type_edit.setCurrentIndex(0)
 
-			layout.addWidget(self.time_type_edit, 0, 2)
+			layout.addWidget(self.load_time_type_edit, 0, 2)
+
+			upload_label_name = QLabel(f'<font size="4"> {get_str("upload_interval")} </font>')
+			self.upload_time_edit = QSpinBox()
+			layout.addWidget(upload_label_name, 1, 0)
+			layout.addWidget(self.upload_time_edit, 1, 1)
+			self.upload_time_type_edit = QComboBox()
+
+			self.upload_time_type_edit.addItem(get_str('minutes'))
+			self.upload_time_type_edit.addItem(get_str('hours'))
+			self.upload_time_type_edit.addItem(get_str('days'))
+			self.upload_time_type_edit.addItem(get_str('months'))
+
+			self.upload_time_type_edit.setCurrentIndex(0)
+
+			layout.addWidget(self.upload_time_type_edit, 1, 2)
+
+			upload_time_label = QLabel(f'<font size="4"> {get_str("first_upload_time")} </font>')
+
+			self.upload_hours_edit = QSpinBox()
+			self.upload_hours_edit.setMinimum(0)
+			self.upload_hours_edit.setMaximum(24)
+			self.upload_hours_edit.setMaximumWidth(50)
+			self.upload_minutes_edit = QSpinBox()
+			self.upload_minutes_edit.setMinimum(0)
+			self.upload_minutes_edit.setMaximum(60)
+			self.upload_minutes_edit.setMaximumWidth(50)
+
+			layout.addWidget(upload_time_label, 2, 0)
+			layout.addWidget(self.upload_hours_edit, 2, 1)
+			layout.addWidget(self.upload_minutes_edit, 2, 2)
 
 		yes_button = QPushButton(get_str('yes'))
 		yes_button.clicked.connect(self.on_yes)
 		yes_button.setMaximumWidth(100)
-		layout.addWidget(yes_button, 2, 0)
+		layout.addWidget(yes_button, 3, 0)
 
 		no_button = QPushButton(get_str('no'))
 		no_button.clicked.connect(self.on_no)
 		no_button.setMaximumWidth(100)
-		layout.addWidget(no_button, 2, 1)
+		layout.addWidget(no_button, 3, 1)
 		layout.setRowMinimumHeight(2, 75)
 
 		if video_size is not None:
@@ -66,12 +101,28 @@ class UploadAfterDownloadForm(QDialog):
 	def on_no(self):
 		self.upload_flag = False
 		self.passed = True
+
+		self.load_interval = int(self.load_time_edit.text())
+		self.load_interval_type = self.load_time_type_edit.currentIndex()
+
 		self.close()
 
 	def on_yes(self):
 		if self.need_interval:
-			self.upload_interval = int(self.time_edit.text())
-			self.upload_interval_type = self.time_type_edit.currentIndex()
+			self.upload_interval = int(self.upload_time_edit.text())
+			self.upload_interval_type = self.upload_time_type_edit.currentIndex()
+
+			upload_hours = int(self.upload_hours_edit.text())
+			upload_minutes = int(self.upload_minutes_edit.text())
+
+			self.first_upload_date = datetime.now()
+			if self.first_upload_date.hour > upload_hours:
+				self.first_upload_date + timedelta(days=1)
+
+			self.first_upload_date = self.first_upload_date.replace(minute=upload_minutes, hour=upload_hours)
+
+			self.load_interval = int(self.load_time_edit.text())
+			self.load_interval_type = self.load_time_type_edit.currentIndex()
 
 		# Выбираем аккаунты для выгрузки
 		choose_accounts_for_uploading_form = ChooseAccountsForUploadingForm(self)

@@ -522,10 +522,20 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             self.state_service.save_tabs_state(self.tab_models)
         tab.remove_files_after_upload.setChecked(tab_model.remove_files_after_upload)
 
-    def process(self, upload_after_download_form, upload_on, upload_time_type, upload_interval, new_media, upload_date, approve_download, current_table_index):
+    def process(self, upload_after_download_form, upload_on, first_upload_date, upload_time_type, upload_interval, load_time_type, load_interval, new_media, upload_date, approve_download, current_table_index):
         table = self.tables[current_table_index]
 
         upload_in = None
+
+        if load_time_type == 0:
+            load_in = relativedelta(minutes=load_interval)
+        elif load_time_type == 1:
+            load_in = relativedelta(hours=load_interval)
+        elif load_time_type == 2:
+            load_in = relativedelta(days=load_interval)
+        else:
+            load_in = relativedelta(months=load_interval)
+
         if upload_on:
             if upload_time_type == 0:
                 upload_in = relativedelta(minutes=upload_interval)
@@ -541,6 +551,9 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             for item in upload_after_download_form.upload_targets:
                 prev_upload_item_ids.append(None)
                 upload_item_ids.append(None)
+
+        prev_load_id = None
+        index = 0
 
         for i in range(0, table.rowCount()).__reversed__():
 
@@ -607,10 +620,12 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                     upload_hosting = Hosting[upload_target['hosting']]
                     upload_target_copy = upload_target.copy()
                     upload_target_copy['id'] = str(uuid.uuid4())
+                    upload_target_copy['title'] = title
+                    upload_target_copy['description'] = description
                     try:
                         upload_target_copy['error'] = False
-                        upload_hosting.value[0].validate_video_info_for_uploading(title=title,
-                                                                                  description=description,
+                        upload_hosting.value[0].validate_video_info_for_uploading(title=upload_target_copy['title'],
+                                                                                  description=upload_target_copy['description'],
                                                                                   duration=video_info[
                                                                                       'duration'],
                                                                                   filesize=video_info[
@@ -649,9 +664,9 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                         upload_target_copy['error'] = True
                     except NameIsTooLongException:
                         while (upload_hosting.value[0].title_size_restriction is not None and
-                               len(title) > upload_hosting.value[0].title_size_restriction) or \
+                               len(upload_target_copy['title']) > upload_hosting.value[0].title_size_restriction) or \
                                 (upload_hosting.value[0].min_title_size is not None and
-                                 len(title) < upload_hosting.value[0].min_title_size):
+                                 len(upload_target_copy['title']) < upload_hosting.value[0].min_title_size):
                             log_error(traceback.format_exc())
                             if upload_hosting.value[0].title_size_restriction is not None:
                                 label = f'{get_str("bad_title")} ({str(upload_hosting.value[0].min_title_size)} <= {get_str("name")} > {str(upload_hosting.value[0].title_size_restriction)})'
@@ -659,17 +674,17 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                 label = f'{get_str("bad_title")} ({str(upload_hosting.value[0].min_title_size)} <= {get_str("name")})'
                             form = TypeStrForm(parent=None,
                                                label=label,
-                                               current_text=title)
+                                               current_text=upload_target_copy['title'])
                             form.exec_()
-                            title = form.str
+                            upload_target_copy['title'] = form.str
                     except DescriptionIsTooLongException:
-                        while len(description) > upload_hosting.value[0].description_size_restriction:
+                        while len(upload_target_copy['description']) > upload_hosting.value[0].description_size_restriction:
                             log_error(traceback.format_exc())
                             form = TypeStrForm(parent=None,
                                                label=f'{get_str("too_long_description")}{str(upload_hosting.value[0].description_size_restriction)}',
-                                               current_text=description)
+                                               current_text=upload_target_copy['description'])
                             form.exec_()
-                            description = form.str
+                            upload_target_copy['description'] = form.str
                     except Exception:
                         log_error(traceback.format_exc())
                         if StateService().get_settings().send_crash_notifications is True:
@@ -679,8 +694,18 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                         upload_item_ids[j] = upload_target_copy['id']
                     j += 1
                     upload_targets.append(upload_target_copy)
+            id = str(uuid.uuid4())
 
-            queue_media = LoadQueuedMedia(media_id=str(uuid.uuid4()),
+            load_date = None
+
+            if index == 0:
+                load_date = first_upload_date
+
+            index += 1
+
+            queue_media = LoadQueuedMedia(media_id=id,
+                                          wait_for=prev_load_id,
+                                          load_in=load_in,
                                           url=table.item(i, 1).text(),
                                           account=self.tab_models[current_table_index].account,
                                           hosting=hosting.name,
@@ -694,8 +719,6 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                           video_quality=self.tab_models[current_table_index].video_quality[1],
                                           video_extension=self.tab_models[current_table_index].video_extension[1],
                                           remove_files_after_upload=self.tab_models[current_table_index].remove_files_after_upload,
-                                          title=title,
-                                          description=description,
                                           download_dir=self.tab_models[current_table_index].download_dir,
                                           manual_settings=self.tab_models[current_table_index].manual_settings,
                                           video_quality_str=self.tab_models[current_table_index].video_quality_str,
@@ -704,12 +727,14 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                           video_bitrate=self.tab_models[current_table_index].video_bitrate,
                                           fps=self.tab_models[current_table_index].fps,
                                           audio_sampling_rate=self.tab_models[current_table_index].audio_sampling_rate)
+            prev_load_id = id
             upload_targets = list()
 
             # Если необходима выгрузка, учитывается интервал выгрузки, исходя из типа интервала. 1 видео выгружается сразу
             if upload_on and upload_this:
                 j = 0
                 for target in queue_media.upload_targets:
+
                     if target['error'] is False:
                         account = self.state_service.get_account_by_hosting_and_login(target['hosting'], target['login'])
                         self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(target['id']),
@@ -718,6 +743,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                                                                           destination=target[
                                                                                               'upload_target'],
                                                                                           upload_in=upload_in,
+                                                                                          upload_date=load_date,
                                                                                           wait_for=prev_upload_item_ids[j],
                                                                                           status=5,
                                                                                           account=account,
@@ -761,11 +787,15 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             upload_time_type = upload_after_download_form.upload_interval_type  # тип интервала выгрузки после загрузки (мин, часы, дни, мес)
             upload_interval = upload_after_download_form.upload_interval  # сам интервал выгрузки после загрузки
 
+        load_interval = upload_after_download_form.load_interval
+        load_time_type = upload_after_download_form.load_interval_type
+        first_upload_date = upload_after_download_form.first_upload_date
+
         new_media = list()
         upload_date = datetime.datetime.now()
         approve_download = False
 
-        thread = Thread(target=self.process, daemon=True, args=[upload_after_download_form, upload_on, upload_time_type, upload_interval, new_media, upload_date, approve_download, self.current_table_index])
+        thread = Thread(target=self.process, daemon=True, args=[upload_after_download_form, upload_on, first_upload_date, upload_time_type, upload_interval, load_time_type, load_interval, new_media, upload_date, approve_download, self.current_table_index])
         thread.start()
 
     def on_channel_changed(self, item):

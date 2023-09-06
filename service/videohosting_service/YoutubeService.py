@@ -145,6 +145,8 @@ class YoutubeService(VideohostingService):
             page.click(selector='[name=PUBLIC]', timeout=0)
 
             while page.query_selector('.left-button-area.style-scope.ytcp-uploads-dialog').query_selector('.progress-label.style-scope.ytcp-video-upload-progress') is not None \
+                    and (page.query_selector('.left-button-area.style-scope.ytcp-uploads-dialog').query_selector('.progress-label.style-scope.ytcp-video-upload-progress').text_content().split(' ')[0] == 'Загружено'\
+                    or page.query_selector('.left-button-area.style-scope.ytcp-uploads-dialog').query_selector('.progress-label.style-scope.ytcp-video-upload-progress').text_content().split(' ')[0] == 'Uploading')\
                     and page.query_selector('.left-button-area.style-scope.ytcp-uploads-dialog').query_selector('.progress-label.style-scope.ytcp-video-upload-progress').text_content().split(' ')[1] != '100':
                 time.sleep(3)
 

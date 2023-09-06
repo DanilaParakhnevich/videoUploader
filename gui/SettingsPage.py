@@ -484,11 +484,11 @@ class SettingsPage(QtWidgets.QDialog):
 
     def on_save(self):
 
-        if self.old_settings.download_strategy != self.download_strategy_box.currentIndex() \
-                or self.old_settings.pack_count != int(self.pack_count_edit.text()):
-            msg = QtWidgets.QMessageBox()
-            msg.setText(get_str('for_applying_strategy_settings_need_to_restart'))
-            msg.exec_()
+        # if self.old_settings.download_strategy != self.download_strategy_box.currentIndex() \
+        #         or self.old_settings.pack_count != int(self.pack_count_edit.text()):
+        #     msg = QtWidgets.QMessageBox()
+        #     msg.setText(get_str('for_applying_strategy_settings_need_to_restart'))
+        #     msg.exec_()
 
         if self.old_settings.language != self.language_box.currentData():
             msg = QtWidgets.QMessageBox()

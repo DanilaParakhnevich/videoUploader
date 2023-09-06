@@ -140,6 +140,12 @@ class StateService(object):
                     queue_media.status_name = 'technical_error'
                 if hasattr(queue_media, 'upload_in') is False:
                     queue_media.upload_in = None
+                if hasattr(queue_media, 'load_in') is False:
+                    queue_media.load_in = 0
+                if hasattr(queue_media, 'wait_for') is False:
+                    queue_media.wait_for = None
+                if hasattr(queue_media, 'load_date') is False:
+                    queue_media.load_date = None
 
         return StateService.download_queue_media
 
