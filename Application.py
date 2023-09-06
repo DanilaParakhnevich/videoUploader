@@ -94,7 +94,7 @@ if __name__ == "__main__":
                         activated = key == result['chek']
                 if activated is False:
                     log_error(f'Неудачная валидация лицензии: encrypted_key: {"".join(license_model.encrypted_key)}, mac_id: {get_mac_address()}, mail: {license_model.user_mail[0]}, version: {"".join(current_client_version)}')
-
+            count = 0
             while activated is False:
                 form = EnterLicenseKeyForm()
                 form.setWindowIcon(QIcon('icon.png'))
@@ -117,9 +117,12 @@ if __name__ == "__main__":
                         MailService().send_mail(f'Лицензия активирована: mac_id: {get_mac_address()}, mail: {form.mail}, license_key: {form.license}, version: {current_client_version}')
 
                 if activated is False:
+                    count += 1
                     dialog = ShowErrorDialog(None, get_str('activation_failed'), get_str('error'))
                     dialog.exec_()
                     log_error(f'Неудачная попытка активации: mac_id: {get_mac_address()}, mail: {form.mail}, license_key: {form.license}, version: {current_client_version}')
+                    if count >= 5:
+                        log_error(f'Возможна попытка взлома: mac_id: {get_mac_address()}, mail: {form.mail}, license_key: {form.license}, version: {current_client_version}')
                     MailService().send_log()
         except ConnectionError as e:
             dialog = ShowErrorDialog(None, get_str('check_internet_connection'), get_str('error'))
