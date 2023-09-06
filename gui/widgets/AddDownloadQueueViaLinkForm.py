@@ -153,10 +153,12 @@ class AddDownloadQueueViaLinkForm(QDialog):
                 for upload_target in form.upload_targets:
                     upload_target['id'] = uuid.uuid4()
                     upload_hosting = Hosting[upload_target['hosting']]
+                    upload_target['title'] = self.title
+                    upload_target['description'] = self.description
                     try:
                         upload_target['error'] = False
-                        upload_hosting.value[0].validate_video_info_for_uploading(title=self.title,
-                                                                                  description=self.description,
+                        upload_hosting.value[0].validate_video_info_for_uploading(title=upload_target['title'],
+                                                                                  description=upload_target['description'],
                                                                                   duration=video_info[
                                                                                       'duration'],
                                                                                   filesize=video_info[
@@ -188,9 +190,9 @@ class AddDownloadQueueViaLinkForm(QDialog):
                         upload_target['error'] = True
                     except NameIsTooLongException:
                         while (upload_hosting.value[0].title_size_restriction is not None and
-                               len(self.title) > upload_hosting.value[0].title_size_restriction) or \
+                               len(upload_target['title']) > upload_hosting.value[0].title_size_restriction) or \
                                 (upload_hosting.value[0].min_title_size is not None and
-                                 len(self.title) < upload_hosting.value[0].min_title_size):
+                                 len(upload_target['title']) < upload_hosting.value[0].min_title_size):
                             log_error(traceback.format_exc())
                             if upload_hosting.value[0].title_size_restriction is not None:
                                 label = f'{get_str("bad_title")} ({str(upload_hosting.value[0].min_title_size)} >= {get_str("name")} < {str(upload_hosting.value[0].title_size_restriction)}'
@@ -198,19 +200,18 @@ class AddDownloadQueueViaLinkForm(QDialog):
                                 label = f'{get_str("bad_title")} ({str(upload_hosting.value[0].min_title_size)} >= {get_str("name")}'
                             form = TypeStrForm(parent=self,
                                                label=label,
-                                               current_text=self.title)
+                                               current_text=upload_target['title'])
                             form.exec_()
-                            self.title = form.str
+                            upload_target['title'] = form.str
 
                     except DescriptionIsTooLongException:
-                        self.description = video_info['description']
-                        while len(self.description) > self.upload_hosting.value[0].description_size_restriction:
+                        while len(upload_target['description']) > self.upload_hosting.value[0].description_size_restriction:
                             log_error(traceback.format_exc())
                             form = TypeStrForm(parent=self,
                                                label=f'{get_str("too_long_description")}{str(upload_hosting.value[0].description_size_restriction)}',
-                                               current_text=self.description)
+                                               current_text=upload_target['description'])
                             form.exec_()
-                            self.description = form.str
+                            upload_target['description'] = form.str
                     self.upload_targets.append(upload_target)
                                 
                 for target in self.upload_targets:
