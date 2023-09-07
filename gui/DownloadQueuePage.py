@@ -129,7 +129,10 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
     def downloading_serial_hook(self):
         if len(self.download_thread_dict) == 0:
             for media in self.queue_media_list:
-                if len(self.download_thread_dict) == 0 and media.status == 0 and (media.wait_for is None or (self.get_media_by_id(media.wait_for).status == 2 and media.load_date is not None)):
+                if len(self.download_thread_dict) == 0 and media.status == 0 and media.load_date is not None:
+                    if media.wait_for is not None and self.get_media_by_id(media.wait_for) is not None:
+                        if self.get_media_by_id(media.wait_for).status != 2:
+                            break
                     if datetime.now() > media.load_date:
                         event_loop = None
 
@@ -145,7 +148,10 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
     def downloading_parallel_hook(self):
         if len(self.download_thread_dict) < self.settings.pack_count:
             for media in self.queue_media_list:
-                if len(self.download_thread_dict) < self.settings.pack_count and media.status == 0 and (media.wait_for is None or (self.get_media_by_id(media.wait_for).status == 2 and media.load_date is not None)):
+                if len(self.download_thread_dict) < self.settings.pack_count and media.status == 0 and media.load_date is not None:
+                    if media.wait_for is not None and self.get_media_by_id(media.wait_for) is not None:
+                        if self.get_media_by_id(media.wait_for).status != 2:
+                            break
                     if datetime.now() > media.load_date:
                         event_loop = None
 
