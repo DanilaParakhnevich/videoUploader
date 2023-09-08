@@ -4,7 +4,7 @@ from service.StateService import StateService
 
 # Просто обертка над loguru
 
-logger.add('log/app.log', format='{time} {level} {message}', level='DEBUG', rotation='10MB', compression='zip')
+logger.add('log/BuxarVideoUploader.log', format='{time} {level} {message}', level='DEBUG', rotation='10MB', compression='zip')
 state_service = StateService()
 
 def log_error(msg: str):

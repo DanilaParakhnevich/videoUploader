@@ -32,11 +32,11 @@ class MailService(object):
         msg['Subject'] = 'BuxarVideoUploader bug attachment'
 
         part = MIMEBase('application', "octet-stream")
-        with open(f'{os.path.abspath("log/app.log")}', 'rb') as file:
+        with open(f'{os.path.abspath("log/BuxarVideoUploader.log")}', 'rb') as file:
             part.set_payload(file.read())
         encoders.encode_base64(part)
         part.add_header('Content-Disposition',
-                        'attachment; filename={}'.format('app.log'))
+                        'attachment; filename={}'.format('BuxarVideoUploader.log'))
         msg.attach(part)
 
         smtpObj.login(self.mail, self.password)

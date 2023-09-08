@@ -303,22 +303,28 @@ class SettingsPage(QtWidgets.QDialog):
         self.save_password.setChecked(self.old_settings.save_password)
         self.gridLayout.addWidget(self.save_password, 30, 0)
 
+        self.clean_log_button = QtWidgets.QPushButton()
+        self.clean_log_button.setObjectName("clean_log")
+        self.clean_log_button.setMaximumWidth(160)
+        self.clean_log_button.clicked.connect(self.on_clean_log)
+        self.gridLayout.addWidget(self.clean_log_button, 31, 0)
+
         self.send_notifications_button = QtWidgets.QPushButton()
         self.send_notifications_button.setObjectName("send_notifications")
         self.send_notifications_button.setMaximumWidth(160)
         self.send_notifications_button.clicked.connect(self.on_send)
-        self.gridLayout.addWidget(self.send_notifications_button, 31, 0)
+        self.gridLayout.addWidget(self.send_notifications_button, 32, 0)
 
         self.save_button = QtWidgets.QPushButton()
         self.save_button.setObjectName("save_button")
         self.save_button.setMaximumWidth(80)
         self.save_button.clicked.connect(self.on_save)
-        self.gridLayout.addWidget(self.save_button, 32, 0)
+        self.gridLayout.addWidget(self.save_button, 33, 0)
 
         self.autostart = QtWidgets.QCheckBox()
         self.autostart.setObjectName("autostart")
         self.autostart.setChecked(self.old_settings.autostart)
-        self.gridLayout.addWidget(self.autostart, 32, 1)
+        self.gridLayout.addWidget(self.autostart, 33, 1)
 
         if self.old_settings.manual_settings is False:
             self.audio_quality_number_label.hide()
@@ -372,6 +378,7 @@ class SettingsPage(QtWidgets.QDialog):
         self.debug_browser.setText(get_str('debug_browser'))
         self.add_localization_label.setText(get_str('add_localization'))
         self.choose_dir_button.setText(self.old_settings.download_dir)
+        self.clean_log_button.setText(get_str('clean_log'))
         self.send_notifications_button.setText(get_str('report_bug'))
         self.save_button.setText(get_str('save'))
         self.manual_settings_label.setText(get_str('manual_settings'))
@@ -466,6 +473,20 @@ class SettingsPage(QtWidgets.QDialog):
             self.audio_quality_label.hide()
             self.video_quality.hide()
             self.video_quality_label.hide()
+
+    def on_clean_log(self):
+        msg = QtWidgets.QMessageBox(self)
+
+        try:
+            open("log/BuxarVideoUploader.log", "w").close()
+            msg.setWindowTitle(get_str('ok'))
+            msg.setText(get_str('clean_successfully'))
+        except:
+            msg.setWindowTitle('error')
+            msg.setText(get_str('error'))
+            log_error(traceback.format_exc())
+
+        msg.exec_()
 
     def on_send(self):
         msg = QtWidgets.QMessageBox(self)

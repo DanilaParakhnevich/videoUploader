@@ -1,4 +1,7 @@
+import os
+import shutil
 import time
+from uuid import uuid4
 
 from PyQt5.QtWidgets import QTableWidgetItem
 
@@ -45,26 +48,33 @@ class RutubeService(VideohostingService):
         return self.login_form.account
 
     def login(self, login, password):
-        with sync_playwright() as p:
-            context = self.new_context(p=p, headless=False)
-            page = context.new_page()
-            page.goto('https://studio.rutube.ru/', timeout=0, wait_until='commit')
+        try:
+            with sync_playwright() as p:
 
-            page.wait_for_selector('#phone-or-email-login', timeout=0)
+                args = self.CHROMIUM_ARGS.copy()
+                args.append(self.user_agent_arg)
+                uuid = uuid4()
+                browser = p.chromium.launch_persistent_context(headless=self.state_service.get_settings().debug_browser is False, args=args, user_data_dir=f'tmp/playwright/{uuid}')
+                page = browser.new_page()
+                page.goto('https://studio.rutube.ru/', timeout=0, wait_until='commit')
 
-            page.query_selector('#phone-or-email-login').type(login, timeout=0)
-            time.sleep(3)
-            page.query_selector('#submit-login-continue').click()
-            time.sleep(3)
-            page.wait_for_selector('#login-password', timeout=0)
-            page.query_selector('#login-password').type(password, timeout=0)
-            page.click(
-                '.freyja_char-base-button__btnContent__3vr55.freyja_char-base-button__btnContent-icon-left__3L4yd')
+                page.wait_for_selector('#phone-or-email-login', timeout=0)
 
-            page.wait_for_selector('.pen-page-header_main-header.pen-page-header_color-default.pen-page-header_size-default.pen-page-header_margin-top', timeout=0)
+                page.query_selector('#phone-or-email-login').type(login, timeout=0)
+                time.sleep(3)
+                page.query_selector('#submit-login-continue').click()
+                time.sleep(3)
+                page.wait_for_selector('#login-password', timeout=0)
+                page.query_selector('#login-password').type(password, timeout=0)
+                page.click(
+                    '.freyja_char-base-button__btnContent__3vr55.freyja_char-base-button__btnContent-icon-left__3L4yd')
 
-            return page.context.cookies()
+                page.wait_for_selector('.pen-page-header_main-header.pen-page-header_color-default.pen-page-header_size-default.pen-page-header_margin-top', timeout=0)
 
+                return uuid
+        except:
+            shutil.rmtree(f'tmp/playwright/{uuid}')
+            raise Exception()
     def need_to_pass_channel_after_login(self):
         return False
 
@@ -72,26 +82,19 @@ class RutubeService(VideohostingService):
         if table_item is not None:
             table_item.setText(get_str('preparing'))
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=StateService.settings.debug_browser is False, use_user_agent_arg=True)
-            context.add_cookies(account.auth.copy())
+            args = self.CHROMIUM_ARGS.copy()
+            args.append(self.user_agent_arg)
 
-            page = context.new_page()
+            browser = p.chromium.launch_persistent_context(
+                headless=self.state_service.get_settings().debug_browser is False, args=args,
+                user_data_dir=f'tmp/playwright/{account.auth}')
+
+            page = browser.new_page()
             page.goto('https://studio.rutube.ru/uploader/', timeout=0)
 
-            try:
-                page.wait_for_selector(
-                    '.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y',
-                    timeout=5_000)
-            except:
-                if page.query_selector('#phone-or-email-login') is not None:
-                    page.query_selector('#phone-or-email-login').type(account.login, timeout=0)
-                    time.sleep(3)
-                    page.query_selector('#submit-login-continue').click()
-                    time.sleep(3)
-                    page.wait_for_selector('#login-password', timeout=0)
-                    page.query_selector('#login-password').type(account.password, timeout=0)
-                    page.click(
-                        '.freyja_char-base-button__btnContent__3vr55.freyja_char-base-button__btnContent-icon-left__3L4yd')
+            page.wait_for_selector(
+                '.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y',
+                timeout=5_000)
 
             page.wait_for_selector('.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
             with page.expect_file_chooser() as fc_info:
@@ -125,9 +128,14 @@ class RutubeService(VideohostingService):
 
     def check_auth(self, account) -> bool:
         with sync_playwright() as p:
-            context = self.new_context(p=p, headless=False, use_user_agent_arg=True)
-            context.add_cookies(account.auth)
-            page = context.new_page()
+            args = self.CHROMIUM_ARGS.copy()
+            args.append(self.user_agent_arg)
+
+            browser = p.chromium.launch_persistent_context(
+                headless=True, args=args,
+                user_data_dir=f'tmp/playwright/{account.auth}')
+
+            page = browser.new_page()
             page.goto('https://studio.rutube.ru/uploader/', wait_until='domcontentloaded', timeout=0)
             try:
                 page.wait_for_selector(
@@ -135,16 +143,5 @@ class RutubeService(VideohostingService):
                     timeout=5_000)
                 return True
             except:
-                if page.query_selector('#phone-or-email-login') is not None:
-                    page.query_selector('#phone-or-email-login').type(account.login, timeout=0)
-                    time.sleep(3)
-                    page.query_selector('#submit-login-continue').click()
-                    time.sleep(3)
-                    page.wait_for_selector('#login-password', timeout=0)
-                    page.query_selector('#login-password').type(account.password, timeout=0)
-                    page.click(
-                        '.freyja_char-base-button__btnContent__3vr55.freyja_char-base-button__btnContent-icon-left__3L4yd')
-
-                    page.wait_for_selector('.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y', timeout=10_000)
-                    return True
-            return False
+                shutil.rmtree(f'tmp/playwright/{account.auth}')
+                return False

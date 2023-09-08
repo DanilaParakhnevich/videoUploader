@@ -61,6 +61,10 @@ class StateService(object):
             if StateService.accounts is None:
                 StateService.accounts = list()
 
+            for account in StateService.accounts:
+                if account.hosting == 'Rutube' and type(account.auth) != str:
+                    account.auth = uuid.uuid4()
+
         return StateService.accounts
 
     def get_account_by_hosting_and_login(self, hosting: str, login: str):

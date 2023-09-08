@@ -173,3 +173,4 @@ if __name__ == "__main__":
         pass
     except:
         log_error(traceback.format_exc())
+        MailService().send_log()
