@@ -180,6 +180,8 @@ class StateService(object):
                     queue_media.upload_in = None
                 if hasattr(queue_media, 'wait_for') is False:
                     queue_media.wait_for = None
+                if hasattr(queue_media, 'hash') is False:
+                    queue_media.hash = None
 
         return StateService.upload_queue_media
 
