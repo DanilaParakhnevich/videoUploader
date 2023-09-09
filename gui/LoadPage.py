@@ -322,7 +322,9 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                               video_bitrate=self.tab_models[self.current_table_index].video_bitrate,
                                               fps=self.tab_models[self.current_table_index].fps,
                                               audio_sampling_rate=self.tab_models[
-                                                  self.current_table_index].audio_sampling_rate)
+                                                  self.current_table_index].audio_sampling_rate,
+                                              download_strategy=self.state_service.get_settings().download_strategy,
+                                              pack_count=self.state_service.get_settings().pack_count)
 
                 self.queue_media_service.add_to_the_download_queue(list([queue_media]))
 
@@ -726,7 +728,9 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                           audio_bitrate=self.tab_models[current_table_index].audio_bitrate,
                                           video_bitrate=self.tab_models[current_table_index].video_bitrate,
                                           fps=self.tab_models[current_table_index].fps,
-                                          audio_sampling_rate=self.tab_models[current_table_index].audio_sampling_rate)
+                                          audio_sampling_rate=self.tab_models[current_table_index].audio_sampling_rate,
+                                          download_strategy=self.state_service.get_settings().download_strategy,
+                                          pack_count=self.state_service.get_settings().pack_count)
             prev_load_id = id
             upload_targets = list()
 

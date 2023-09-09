@@ -303,28 +303,33 @@ class SettingsPage(QtWidgets.QDialog):
         self.save_password.setChecked(self.old_settings.save_password)
         self.gridLayout.addWidget(self.save_password, 30, 0)
 
+        self.enable_autostart = QtWidgets.QCheckBox()
+        self.enable_autostart.setObjectName("enable_autostart")
+        self.enable_autostart.setChecked(self.old_settings.enable_autostart)
+        self.gridLayout.addWidget(self.enable_autostart, 31, 0)
+
         self.clean_log_button = QtWidgets.QPushButton()
         self.clean_log_button.setObjectName("clean_log")
         self.clean_log_button.setMaximumWidth(160)
         self.clean_log_button.clicked.connect(self.on_clean_log)
-        self.gridLayout.addWidget(self.clean_log_button, 31, 0)
+        self.gridLayout.addWidget(self.clean_log_button, 32, 0)
 
         self.send_notifications_button = QtWidgets.QPushButton()
         self.send_notifications_button.setObjectName("send_notifications")
         self.send_notifications_button.setMaximumWidth(160)
         self.send_notifications_button.clicked.connect(self.on_send)
-        self.gridLayout.addWidget(self.send_notifications_button, 32, 0)
+        self.gridLayout.addWidget(self.send_notifications_button, 33, 0)
 
         self.save_button = QtWidgets.QPushButton()
         self.save_button.setObjectName("save_button")
         self.save_button.setMaximumWidth(80)
         self.save_button.clicked.connect(self.on_save)
-        self.gridLayout.addWidget(self.save_button, 33, 0)
+        self.gridLayout.addWidget(self.save_button, 34, 0)
 
         self.autostart = QtWidgets.QCheckBox()
         self.autostart.setObjectName("autostart")
         self.autostart.setChecked(self.old_settings.autostart)
-        self.gridLayout.addWidget(self.autostart, 33, 1)
+        self.gridLayout.addWidget(self.autostart, 34, 1)
 
         if self.old_settings.manual_settings is False:
             self.audio_quality_number_label.hide()
@@ -380,6 +385,7 @@ class SettingsPage(QtWidgets.QDialog):
         self.choose_dir_button.setText(self.old_settings.download_dir)
         self.clean_log_button.setText(get_str('clean_log'))
         self.send_notifications_button.setText(get_str('report_bug'))
+        self.enable_autostart.setText(get_str('enable_autostart'))
         self.save_button.setText(get_str('save'))
         self.manual_settings_label.setText(get_str('manual_settings'))
         self.video_quality_label.setText(get_str('video_quality'))
@@ -600,4 +606,5 @@ X-GNOME-Autostart-Delay=5
                 user_mail=self.old_settings.user_mail,
                 video_extension=self.extension_chooser_combo_box.currentIndex(),
                 debug_browser=self.debug_browser.checkState() != 0,
-                autostart=self.autostart.checkState() != 0))
+                autostart=self.autostart.checkState() != 0,
+                enable_autostart=self.enable_autostart.checkState() != 0))

@@ -150,6 +150,10 @@ class StateService(object):
                     queue_media.wait_for = None
                 if hasattr(queue_media, 'load_date') is False:
                     queue_media.load_date = None
+                if hasattr(queue_media, 'download_strategy') is False:
+                    queue_media.download_strategy = self.get_settings().download_strategy
+                if hasattr(queue_media, 'pack_count') is False:
+                    queue_media.pack_count = self.get_settings().pack_count
 
         return StateService.download_queue_media
 
@@ -279,6 +283,8 @@ class StateService(object):
                     StateService.settings.user_mail = None
                 if hasattr(StateService.settings, 'encrypted_key') is False:
                     StateService.settings.encrypted_key = None
+                if hasattr(StateService.settings, 'enable_autostart') is False:
+                    StateService.settings.enable_autostart = True
         return StateService.settings
 
     def get_license_model(self):

@@ -68,18 +68,9 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
         self.timer.timeout.connect(self.update_queue_media)
         self.timer.start(3_000)
 
-        if self.settings.download_strategy == 1:
-            self.timer = QTimer(self)
-            self.timer.timeout.connect(self.downloading_serial_hook)
-            self.timer.start(3_000)
-        elif self.settings.download_strategy == 2:
-            self.timer = QTimer(self)
-            self.timer.timeout.connect(self.downloading_parallel_hook)
-            self.timer.start(3_000)
-
-        self.update_threads_timer = QTimer(self)
-        self.update_threads_timer.timeout.connect(self.update_threads)
-        self.update_threads_timer.start(3_000)
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.download_media_by_download_strategy)
+        self.timer.start(3_000)
 
         self.update_load_items_timer = QTimer(self)
         self.update_load_items_timer.timeout.connect(self.update_load_items)
@@ -90,18 +81,6 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
 
         self.lock = Lock()
         self.horizontalHeader().sectionResized.connect(self.section_resized)
-
-    def update_threads(self):
-        settings = self.state_service.get_settings()
-        if settings.download_strategy != self.strategy and settings.download_strategy == 1:
-            self.timer.timeout.disconnect()
-            self.timer.timeout.connect(self.downloading_serial_hook)
-            self.timer.start(3_000)
-        elif settings.download_strategy != self.strategy and settings.download_strategy == 2:
-            self.timer.timeout.disconnect()
-            self.timer.timeout.connect(self.downloading_parallel_hook)
-            self.timer.start(3_000)
-        self.strategy = settings.download_strategy
 
     def on_add(self):
         button = self.sender()
@@ -126,43 +105,28 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                                                                                           description=target['description'],
                                                                                           remove_files_after_upload=False))
 
-    def downloading_serial_hook(self):
-        if len(self.download_thread_dict) == 0:
-            for media in self.queue_media_list:
-                if len(self.download_thread_dict) == 0 and media.status == 0 and media.load_date is not None:
-                    if media.wait_for is not None and self.get_media_by_id(media.wait_for) is not None:
-                        if self.get_media_by_id(media.wait_for).status != 2:
-                            break
-                    if datetime.now() > media.load_date:
-                        event_loop = None
+    def download_media_by_download_strategy(self):
+        for media in self.queue_media_list:
+            if media.status == 0 and media.load_date is not None:
+                if media.download_strategy == 1:
+                    if len(self.download_thread_dict) == 0:
+                        self.add_to_download_list(media)
+                elif media.download_strategy == 2:
+                    if len(self.download_thread_dict) < media.pack_count:
+                        self.add_to_download_list(media)
 
-                        if Hosting[media.hosting].value[0].is_async():
-                            event_loop = asyncio.new_event_loop()
+    def add_to_download_list(self, media):
+        if datetime.now() > media.load_date:
+            event_loop = None
 
-                        download_video_thread = kthread.KThread(target=self.download_video, daemon=True,
-                                                                args=[media, event_loop])
+            if Hosting[media.hosting].value[0].is_async():
+                event_loop = asyncio.new_event_loop()
 
-                        self.download_thread_dict[media.id] = download_video_thread
-                        download_video_thread.start()
+            download_video_thread = kthread.KThread(target=self.download_video, daemon=True,
+                                                    args=[media, event_loop])
 
-    def downloading_parallel_hook(self):
-        if len(self.download_thread_dict) < self.settings.pack_count:
-            for media in self.queue_media_list:
-                if len(self.download_thread_dict) < self.settings.pack_count and media.status == 0 and media.load_date is not None:
-                    if media.wait_for is not None and self.get_media_by_id(media.wait_for) is not None:
-                        if self.get_media_by_id(media.wait_for).status != 2:
-                            break
-                    if datetime.now() > media.load_date:
-                        event_loop = None
-
-                        if Hosting[media.hosting].value[0].is_async():
-                            event_loop = asyncio.new_event_loop()
-
-                        download_video_thread = kthread.KThread(target=self.download_video, daemon=True,
-                                                                args=[media, event_loop])
-
-                        self.download_thread_dict[media.id] = download_video_thread
-                        download_video_thread.start()
+            self.download_thread_dict[media.id] = download_video_thread
+            download_video_thread.start()
 
     def update_load_items(self):
         for queue_media in self.queue_media_list:
@@ -238,7 +202,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                                                                                           description=upload_target['description']))
         except SystemExit:
             self.download_thread_dict.pop(media.id)
-            self.set_media_status(media.id, 0)
+            self.set_media_status(media.id, 4)
             self.download_thread_dict.pop(media.id)
             return
         except NoFreeSpaceException:
@@ -287,29 +251,37 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
         item1.setData(11, queue_media.id)
 
         action_button = QtWidgets.QPushButton(self)
-        if queue_media.status == 0:
+        if queue_media.status == 0 or queue_media.status == 4:
             item2 = QtWidgets.QPushButton(get_str('stopped'))
             item2.clicked.connect(self.do_nothing)
             action_button.setText(get_str('start'))
             action_button.clicked.connect(self.on_start_download)
         elif queue_media.status == 1:
-            item2 = QtWidgets.QPushButton(get_str('process'))
-            item2.clicked.connect(self.do_nothing)
-            action_button.setText(get_str('stop'))
-            action_button.clicked.connect(self.on_stop_download)
+            if self.settings.enable_autostart:
+                item2 = QtWidgets.QPushButton(get_str('process'))
+                item2.clicked.connect(self.do_nothing)
+                action_button.setText(get_str('stop'))
+                action_button.clicked.connect(self.on_stop_download)
 
-            if queue_media.id not in self.download_thread_dict.keys():
-                event_loop = None
+                if queue_media.id not in self.download_thread_dict.keys():
+                    event_loop = None
 
-                if Hosting[queue_media.hosting].value[0].is_async():
-                    event_loop = asyncio.new_event_loop()
+                    if Hosting[queue_media.hosting].value[0].is_async():
+                        event_loop = asyncio.new_event_loop()
 
-                time.sleep(1)
+                    time.sleep(1)
 
-                download_video_thread = kthread.KThread(target=self.download_video, daemon=True,
-                                                        args=[queue_media, event_loop])
-                self.download_thread_dict[queue_media.id] = download_video_thread
-                download_video_thread.start()
+                    download_video_thread = kthread.KThread(target=self.download_video, daemon=True,
+                                                            args=[queue_media, event_loop])
+                    self.download_thread_dict[queue_media.id] = download_video_thread
+                    download_video_thread.start()
+            else:
+                item2 = QtWidgets.QPushButton(get_str('stopped'))
+                item2.clicked.connect(self.do_nothing)
+                action_button.setText(get_str('start'))
+                action_button.clicked.connect(self.on_start_download)
+                queue_media.status = 4
+                state_service.save_download_queue_media(self.queue_media_list)
 
         elif queue_media.status == 2:
             item2 = QtWidgets.QPushButton(get_str('end'))
@@ -342,7 +314,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                 media.status = status
                 self.state_service.save_download_queue_media(self.queue_media_list)
 
-                if status == 0:
+                if status == 0 or status == 4:
                     self.cellWidget(i, 1).setText(get_str('stopped'))
                     self.cellWidget(i, 1).clicked.disconnect()
                     self.cellWidget(i, 1).clicked.connect(self.do_nothing)
@@ -420,7 +392,7 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             time.sleep(0.2)
             row = self.indexAt(button.pos()).row()
             media_id = self.item(row, 0).data(11)
-            self.set_media_status(media_id, 0)
+            self.set_media_status(media_id, 4)
 
             if media_id in self.download_thread_dict:
                 if self.download_thread_dict[media_id] is not None and self.download_thread_dict[media_id].is_alive():
