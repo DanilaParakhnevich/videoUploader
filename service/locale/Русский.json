@@ -202,7 +202,7 @@
   "loading": "Загрузка",
   "already_sent": "В отчёте нет новых ошибок",
   "load_interval": "Интервал загрузки",
-  "first_upload_time": "Время выгрузки (ч, с)",
+  "first_upload_time": "Время выгрузки (ч, м)",
   "upload_interval": "Интервал выгрузки",
   "clean_successfully": "Отчёт успешно очищен",
   "clean_log": "Очистить файл с отчётом",

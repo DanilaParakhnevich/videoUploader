@@ -170,10 +170,10 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
             hash = str(uuid.uuid4())
             if media.upload_after_download:
                 old_dir = video_dir
-                video_dir = video_dir.replace(os.path.splitext(video_dir)[0], os.path.splitext(video_dir)[0] + hash)
+                video_dir = video_dir.replace(os.path.splitext(video_dir)[0], os.path.splitext(video_dir)[0] + f'_{hash}')
                 os.renames(old_dir, video_dir)
                 os.renames(os.path.splitext(old_dir)[0] + '.info.json',
-                           (os.path.splitext(old_dir)[0] + '.info.json').replace(os.path.splitext(old_dir)[0], os.path.splitext(old_dir)[0] + hash))
+                           (os.path.splitext(old_dir)[0] + '.info.json').replace(os.path.splitext(old_dir)[0], os.path.splitext(old_dir)[0] + f'_{hash}'))
 
             self.state_service.add_loaded_video_to_the_history(media.url, media.video_quality, media.video_extension)
 

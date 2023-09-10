@@ -193,9 +193,9 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
             if rename and queue_media.hash is not None:
                 os.renames(queue_media.video_dir,
-                           queue_media.video_dir.replace(queue_media.hash, ''))
+                           queue_media.video_dir.replace(f'_{queue_media.hash}', ''))
                 os.renames(os.path.splitext(queue_media.video_dir)[0] + '.info.json',
-                           (os.path.splitext(queue_media.video_dir)[0] + '.info.json').replace(queue_media.hash, ''))
+                           (os.path.splitext(queue_media.video_dir)[0] + '.info.json').replace(f'_{queue_media.hash}', ''))
 
                 for item in self.queue_media_list:
                     if item.video_dir == queue_media.video_dir and item != queue_media:
@@ -272,6 +272,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 if i is not None:
                     queue_media.wait_for = self.queue_media_list[i].wait_for
                     queue_media.upload_in = self.queue_media_list[i].upload_in
+                    queue_media.upload_date = self.queue_media_list[i].upload_date
 
                     self.queue_media_list[i] = queue_media
                     self.insert_queue_media(queue_media, i)
@@ -384,6 +385,13 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
     def set_media_status(self, media_id, status, error_name=None):
         self.lock.acquire()
+
+        def clicked_disconnect(i, j):
+            try:
+                self.cellWidget(i, j).clicked.disconnect
+            except:
+                pass
+
         i = 0
         for media in self.queue_media_list:
             if media.id == media_id:
@@ -391,49 +399,49 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 self.state_service.save_upload_queue_media(self.queue_media_list)
                 if self.cellWidget(i, 4) is not None:
                     if status == 0 or status == 4:
-                        self.cellWidget(i, 3).clicked.disconnect()
+                        clicked_disconnect(i, 3)
                         self.cellWidget(i, 3).clicked.connect(self.do_nothing)
                         self.cellWidget(i, 3).setText(get_str('stopped'))
                         self.cellWidget(i, 4).setText(get_str('start'))
-                        self.cellWidget(i, 4).clicked.disconnect()
+                        clicked_disconnect(i, 4)
                         self.cellWidget(i, 4).clicked.connect(self.on_start_upload)
                     elif status == 1:
-                        self.cellWidget(i, 3).clicked.disconnect()
+                        clicked_disconnect(i, 3)
                         self.cellWidget(i, 3).clicked.connect(self.do_nothing)
                         self.cellWidget(i, 3).setText(get_str('process'))
                         self.cellWidget(i, 4).setText(get_str('stop'))
-                        self.cellWidget(i, 4).clicked.disconnect()
+                        clicked_disconnect(i, 4)
                         self.cellWidget(i, 4).clicked.connect(self.on_stop_upload)
                     elif status == 2:
-                        self.cellWidget(i, 3).clicked.disconnect()
+                        clicked_disconnect(i, 3)
                         self.cellWidget(i, 3).clicked.connect(self.do_nothing)
                         self.item(i, 0).setText(media.video_dir)
                         self.cellWidget(i, 3).setText(get_str('end'))
                         self.cellWidget(i, 4).setText('-')
-                        self.cellWidget(i, 4).clicked.disconnect()
+                        clicked_disconnect(i, 4)
                     elif status == 3:
                         if error_name is not None:
-                            self.cellWidget(i, 3).clicked.disconnect()
+                            clicked_disconnect(i, 3)
                             self.cellWidget(i, 3).clicked.connect(partial(self.show_error, get_str(error_name)))
                             self.cellWidget(i, 3).setText(get_str('error'))
                             self.queue_media_list[i].error_name = error_name
                             self.state_service.save_upload_queue_media(self.queue_media_list)
                         else:
-                            self.cellWidget(i, 3).clicked.disconnect()
+                            clicked_disconnect(i, 3)
                             self.cellWidget(i, 3).clicked.connect(self.do_nothing)
                             self.cellWidget(i, 3).setText(get_str('error'))
 
                         if error_name is None or get_str(error_name) == get_str('technical_error'):
                             self.cellWidget(i, 4).setText(get_str('retry'))
-                            self.cellWidget(i, 4).clicked.disconnect()
+                            clicked_disconnect(i, 4)
                             self.cellWidget(i, 4).clicked.connect(self.on_start_upload)
                         elif get_str(error_name) == get_str('check_fail'):
                             self.cellWidget(i, 4).setText(get_str('reauthorize'))
-                            self.cellWidget(i, 4).clicked.disconnect()
+                            clicked_disconnect(i, 4)
                             self.cellWidget(i, 4).clicked.connect(partial(self.reauthorize, media))
                         else:
                             self.cellWidget(i, 4).setText('-')
-                            self.cellWidget(i, 4).clicked.disconnect()
+                            clicked_disconnect(i, 4)
                             self.cellWidget(i, 4).clicked.connect(self.do_nothing)
 
                 break
@@ -480,7 +488,9 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         for item in self.queue_media_list:
             if item.account.login == media.account.login and item.account.hosting == media.account.hosting and item.account.url == media.account.url and item != media:
                 item.account = account
-                self.set_media_status(item.id, 0)
+                
+                if item.status == 3:
+                    self.set_media_status(item.id, 0)
 
                 if item.destination is not None:
                     item2 = item.destination

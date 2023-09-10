@@ -202,7 +202,7 @@
   "loading": "Loading",
   "already_sent": "There are no new errors in the report",
   "load_interval": "Load Interval",
-  "first_upload_time": "Upload time (h, s)",
+  "first_upload_time": "Upload time (h, m)",
   "upload_interval": "Upload interval",
   "clean_successful": "Cleanup report successful",
   "clean_log": "Clear the report file",
