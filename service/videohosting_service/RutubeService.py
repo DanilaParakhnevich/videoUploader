@@ -54,7 +54,9 @@ class RutubeService(VideohostingService):
                 args = self.CHROMIUM_ARGS.copy()
                 args.append(self.user_agent_arg)
                 uuid = uuid4()
-                browser = p.chromium.launch_persistent_context(headless=self.state_service.get_settings().debug_browser is False, args=args, user_data_dir=f'tmp/playwright/{uuid}')
+                browser = p.chromium.launch_persistent_context(headless=self.state_service.get_settings().debug_browser is False,
+                                                               args=args,
+                                                               user_data_dir=f'{os.getcwd()}/tmp/playwright/{uuid}')
                 page = browser.new_page()
                 page.goto('https://studio.rutube.ru/', timeout=0, wait_until='commit')
 
@@ -62,10 +64,9 @@ class RutubeService(VideohostingService):
 
                 page.query_selector('#phone-or-email-login').type(login, timeout=0)
                 time.sleep(3)
-                page.query_selector('#submit-login-continue').click()
-                time.sleep(3)
-                page.wait_for_selector('#login-password', timeout=0)
-                page.query_selector('#login-password').type(password, timeout=0)
+                page.click('#submit-login-continue', timeout=0)
+                page.wait_for_selector('.freyja_char-input__input__DSQH0.freyja_char-input__inputPadding__gkp0a', timeout=0)
+                page.query_selector('.freyja_char-input__input__DSQH0.freyja_char-input__inputPadding__gkp0a').type(password, timeout=0)
                 page.click(
                     '.freyja_char-base-button__btnContent__3vr55.freyja_char-base-button__btnContent-icon-left__3L4yd')
 
@@ -87,7 +88,7 @@ class RutubeService(VideohostingService):
 
             browser = p.chromium.launch_persistent_context(
                 headless=self.state_service.get_settings().debug_browser is False, args=args,
-                user_data_dir=f'tmp/playwright/{account.auth}')
+                user_data_dir=f'{os.getcwd()}/tmp/playwright/{account.auth}')
 
             page = browser.new_page()
             page.goto('https://studio.rutube.ru/uploader/', timeout=0)
@@ -127,21 +128,27 @@ class RutubeService(VideohostingService):
                 timeout=0)
 
     def check_auth(self, account) -> bool:
-        with sync_playwright() as p:
-            args = self.CHROMIUM_ARGS.copy()
-            args.append(self.user_agent_arg)
+        try:
+            with sync_playwright() as p:
+                args = self.CHROMIUM_ARGS.copy()
+                args.append(self.user_agent_arg)
 
-            browser = p.chromium.launch_persistent_context(
-                headless=True, args=args,
-                user_data_dir=f'tmp/playwright/{account.auth}')
+                browser = p.chromium.launch_persistent_context(
+                    headless=True, args=args,
+                    user_data_dir=f'{os.getcwd()}/tmp/playwright/{account.auth}')
 
-            page = browser.new_page()
-            page.goto('https://studio.rutube.ru/uploader/', wait_until='domcontentloaded', timeout=0)
-            try:
+                page = browser.new_page()
+                page.goto('https://studio.rutube.ru/uploader/', wait_until='domcontentloaded', timeout=0)
+
                 page.wait_for_selector(
                     '.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y',
                     timeout=5_000)
                 return True
-            except:
-                shutil.rmtree(f'tmp/playwright/{account.auth}')
+        except:
+            try:
+                shutil.rmtree(f'{os.getcwd()}/tmp/playwright/{account.auth}')
                 return False
+            except:
+                return False
+
+

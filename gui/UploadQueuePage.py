@@ -199,7 +199,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
                 for item in self.queue_media_list:
                     if item.video_dir == queue_media.video_dir and item != queue_media:
-                        item.video_dir = queue_media.video_dir.replace(queue_media.hash, '')
+                        item.video_dir = queue_media.video_dir.replace(f'_{queue_media.hash}', '')
                         self.item(self.find_row_number_by_id(item.id), 0).setText(item.video_dir)
                         self.update()
 
@@ -228,16 +228,19 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             self.upload_thread_dict.pop(queue_media.id)
             return
         except Exception as e:
-            log_error(traceback.format_exc())
-            if e.args[0].__contains__('Видео в слишком низком разрешении'):
-                self.set_media_status(queue_media.id, 3, 'video_in_low_resolution')
-            elif e.args[0].__contains__('Необходимо активировать аккаунт'):
-                self.set_media_status(queue_media.id, 3, 'need_make_some_action_on_videohosting')
-            elif e.args[0].__contains__('ERR_CONNECTION_RESET'):
-                self.set_media_status(queue_media.id, 3, 'check_internet_connection')
-            elif e.args[0].__contains__('Дубликат'):
-                self.set_media_status(queue_media.id, 3, 'duplicate')
-            else:
+            try:
+                log_error(traceback.format_exc())
+                if e.args[0].__contains__('Видео в слишком низком разрешении'):
+                    self.set_media_status(queue_media.id, 3, 'video_in_low_resolution')
+                elif e.args[0].__contains__('Необходимо активировать аккаунт'):
+                    self.set_media_status(queue_media.id, 3, 'need_make_some_action_on_videohosting')
+                elif e.args[0].__contains__('ERR_CONNECTION_RESET'):
+                    self.set_media_status(queue_media.id, 3, 'check_internet_connection')
+                elif e.args[0].__contains__('Дубликат'):
+                    self.set_media_status(queue_media.id, 3, 'duplicate')
+                else:
+                    self.set_media_status(queue_media.id, 3, 'technical_error')
+            except:
                 self.set_media_status(queue_media.id, 3, 'technical_error')
             if state_service.get_settings().send_crash_notifications:
                 MailService().send_log()
@@ -488,7 +491,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         for item in self.queue_media_list:
             if item.account.login == media.account.login and item.account.hosting == media.account.hosting and item.account.url == media.account.url and item != media:
                 item.account = account
-                
+
                 if item.status == 3:
                     self.set_media_status(item.id, 0)
 
