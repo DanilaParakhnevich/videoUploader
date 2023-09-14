@@ -130,20 +130,38 @@ class RutubeService(VideohostingService):
     def check_auth(self, account) -> bool:
         try:
             with sync_playwright() as p:
-                args = self.CHROMIUM_ARGS.copy()
-                args.append(self.user_agent_arg)
+                try:
+                    args = self.CHROMIUM_ARGS.copy()
+                    args.append(self.user_agent_arg)
 
-                browser = p.chromium.launch_persistent_context(
-                    headless=True, args=args,
-                    user_data_dir=f'{os.getcwd()}/tmp/playwright/{account.auth}')
+                    browser = p.chromium.launch_persistent_context(
+                        headless=False, args=args,
+                        user_data_dir=f'{os.getcwd()}/tmp/playwright/{account.auth}')
 
-                page = browser.new_page()
-                page.goto('https://studio.rutube.ru/uploader/', wait_until='domcontentloaded', timeout=0)
+                    page = browser.new_page()
+                    page.goto('https://studio.rutube.ru/uploader/', wait_until='domcontentloaded', timeout=0)
 
-                page.wait_for_selector(
-                    '.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y',
-                    timeout=5_000)
-                return True
+                    page.wait_for_selector(
+                        '.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y',
+                        timeout=5_000)
+                    return True
+                except:
+                    page.wait_for_selector('#phone-or-email-login', timeout=10_000)
+
+                    page.query_selector('#phone-or-email-login').type(account.login, timeout=0)
+                    time.sleep(3)
+                    page.click('#submit-login-continue', timeout=10_000)
+                    page.wait_for_selector('.freyja_char-input__input__DSQH0.freyja_char-input__inputPadding__gkp0a',
+                                           timeout=0)
+                    page.query_selector('.freyja_char-input__input__DSQH0.freyja_char-input__inputPadding__gkp0a').type(
+                        account.password, timeout=10_000)
+                    page.click(
+                        '.freyja_char-base-button__btnContent__3vr55.freyja_char-base-button__btnContent-icon-left__3L4yd')
+
+                    page.wait_for_selector(
+                        '.pen-page-header_main-header.pen-page-header_color-default.pen-page-header_size-default.pen-page-header_margin-top',
+                        timeout=20_000)
+                    return True
         except:
             try:
                 shutil.rmtree(f'{os.getcwd()}/tmp/playwright/{account.auth}')
