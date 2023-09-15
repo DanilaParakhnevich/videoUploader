@@ -98,6 +98,10 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         self.uploading_by_schedule_timer.timeout.connect(self.upload_by_schedule)
         self.uploading_by_schedule_timer.start(10_000)
 
+        self.updating_accounts = QTimer(self)
+        self.updating_accounts.timeout.connect(self.update_accounts)
+        self.updating_accounts.start(3_000)
+
         self.horizontalHeader().sectionResized.connect(self.section_resized)
 
     def update_upload_items(self):
@@ -131,6 +135,21 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 self.upload_thread_dict[queue_media.id] = upload_thread
                 upload_thread.start()
 
+    def update_accounts(self):
+        for dict in self.queue_media_service.get_reauthorized_accounts_from_accounts_page():
+            for queue_media in self.queue_media_list:
+                if queue_media.account.url == dict[0].url and queue_media.account.login == dict[0].login and queue_media.account.hosting == dict[0].hosting:
+                    queue_media.account = dict[1]
+                    self.state_service.save_upload_queue_media(self.queue_media_list)
+                    row = self.find_row_number_by_id(queue_media.id)
+
+                    if dict[1].url is not None:
+                        item = dict[1].url
+                    else:
+                        item = dict[1].login
+
+                    self.item(row, 1).setText(item)
+
     def upload_video(self, queue_media, queue_media_id, event_loop):
         try:
 
@@ -163,7 +182,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
             acc = None
             for upload_account in state_service.get_accounts():
-                if queue_media.account.login == upload_account.login and queue_media.account.hosting == upload_account.hosting and queue_media.destination == upload_account.url:
+                if queue_media.account.login == upload_account.login and queue_media.account.hosting == upload_account.hosting and queue_media.account.url == upload_account.url:
                     acc = upload_account
                     break
 
@@ -180,13 +199,13 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 account=acc,
                 name=name,
                 description=description,
-                destination=queue_media.destination,
+                destination=queue_media.account.url,
                 table_item=self.get_status_table_item_by_id(queue_media_id))
 
             rename = True
 
             for item in self.queue_media_list:
-                if (item.hosting != queue_media.hosting or item.destination != queue_media.destination) \
+                if (item.hosting != queue_media.hosting or item.destination != queue_media.account.url) \
                         and item.video_dir == queue_media.video_dir and item.status != 2:
                     rename = False
                     break
@@ -247,7 +266,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             return
 
         self.event_service.add_event(Event(
-            f'{get_str("event_uploaded")} {queue_media.video_dir} {get_str("to")} {queue_media.hosting}, {queue_media.destination if queue_media.destination is not None else acc.login}'))
+            f'{get_str("event_uploaded")} {queue_media.video_dir} {get_str("to")} {queue_media.hosting}, {queue_media.account.url if queue_media.account.url is not None else acc.login}'))
         self.set_media_status(queue_media.id, 2)
         self.upload_thread_dict.pop(queue_media.id)
 
@@ -310,8 +329,8 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
         item3 = QtWidgets.QTableWidgetItem(queue_media.hosting)
 
-        if queue_media.destination is not None:
-            item2 = QtWidgets.QTableWidgetItem(queue_media.destination)
+        if queue_media.account.url is not None:
+            item2 = QtWidgets.QTableWidgetItem(queue_media.account.url)
         else:
             item2 = QtWidgets.QTableWidgetItem(queue_media.account.login)
 
@@ -474,10 +493,10 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
         if hosting.value[0].need_to_pass_channel_after_login():
             try:
-                if hosting.value[0].validate_url_by_account(media.destination, account) is False:
+                if hosting.value[0].validate_url_by_account(media.account.url, account) is False:
                     msg = QtWidgets.QMessageBox(self)
-                    msg.setText(f'{get_str("failed_account_validation")}: {media.destination}')
-                    self.event_service.add_event(Event(f'{get_str("failed_account_validation")}: {media.destination}'))
+                    msg.setText(f'{get_str("failed_account_validation")}: {media.account.url}')
+                    self.event_service.add_event(Event(f'{get_str("failed_account_validation")}: {media.account.url}'))
                     msg.exec_()
                     return
             except:
@@ -495,8 +514,8 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                 if item.status == 3:
                     self.set_media_status(item.id, 0)
 
-                if item.destination is not None:
-                    item2 = item.destination
+                if item.account.url is not None:
+                    item2 = item.account.url
                 else:
                     item2 = item.account.login
 
@@ -504,11 +523,13 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
         self.state_service.save_upload_queue_media(self.queue_media_list)
 
-        account.url = media.destination
+        account.url = media.account.url
+        acc_temp = media.account
+
         media.account = account
 
-        if media.destination is not None:
-            item2 = media.destination
+        if media.account.url is not None:
+            item2 = media.account.url
         else:
             item2 = media.account.login
 
@@ -524,6 +545,8 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
         if Hosting[media.hosting].value[0].is_async():
             event_loop = asyncio.new_event_loop()
+
+        self.queue_media_service.add_reauthorized_account_from_upload_page(acc_temp, account)
 
         upload_thread = kthread.KThread(target=self.upload_video, daemon=True,
                                         args=[media, media.id, event_loop])

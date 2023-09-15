@@ -45,7 +45,24 @@ class QueueMediaService(object):
         QueueMediaService.last_added_temp_upload_queue_media.clear()
         return result
 
+    def add_reauthorized_account_from_upload_page(self, old_account, account):
+        QueueMediaService.reauthorized_accounts_from_upload_page.append([old_account, account])
+
+    def get_reauthorized_accounts_from_upload_page(self):
+        result = QueueMediaService.reauthorized_accounts_from_upload_page.copy()
+        QueueMediaService.reauthorized_accounts_from_upload_page.clear()
+        return result
+
+    def add_reauthorized_account_from_accounts_page(self, old_account, account):
+        QueueMediaService.reauthorized_accounts_from_accounts_page.append([old_account, account])
+
+    def get_reauthorized_accounts_from_accounts_page(self):
+        result = QueueMediaService.reauthorized_accounts_from_accounts_page.copy()
+        QueueMediaService.reauthorized_accounts_from_accounts_page.clear()
+        return result
 
 QueueMediaService.last_added_download_queue_media = list()
 QueueMediaService.last_added_upload_queue_media = list()
 QueueMediaService.last_added_temp_upload_queue_media = list()
+QueueMediaService.reauthorized_accounts_from_upload_page = list()
+QueueMediaService.reauthorized_accounts_from_accounts_page = list()

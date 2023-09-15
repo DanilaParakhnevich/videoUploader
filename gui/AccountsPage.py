@@ -2,6 +2,7 @@ import traceback
 from functools import partial
 
 from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import QTimer
 
 from gui.widgets.ComboBoxWithCompleter import ComboBoxWithCompleter
 from gui.widgets.TypeUrlForm import TypeUrlForm
@@ -11,6 +12,7 @@ from gui.widgets.LoadingButton import AnimatedButton
 from service.EventService import EventService
 from service.LocalizationService import *
 from service.LoggingService import log_error
+from service.QueueMediaService import QueueMediaService
 
 
 class AccountsPageWidget(QtWidgets.QTableWidget):
@@ -85,6 +87,26 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
             self.setItem(input_position, 1, item2)
 
         self.horizontalHeader().sectionResized.connect(self.section_resized)
+
+        self.queue_media_service = QueueMediaService()
+        self.updating_accounts = QTimer(self)
+        self.updating_accounts.timeout.connect(self.update_accounts)
+        self.updating_accounts.start(3_000)
+
+    def update_accounts(self):
+        for dict in self.queue_media_service.get_reauthorized_accounts_from_upload_page():
+            i = 0
+            for account in self.accounts:
+                if account.url == dict[1].url and account.login == dict[1].login and account.hosting == dict[1].hosting:
+
+                    if dict[1].url is not None:
+                        item = dict[1].url
+                    else:
+                        item = dict[1].login
+
+                    self.item(i, 1).setText(item)
+
+                i = i + 1
 
     def on_add(self):
         self.add_button.start_animation()
@@ -164,6 +186,8 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
         account = by_url if by_url is not None else by_login
         hosting = Hosting[hosting]
 
+        acc_temp = account
+
         account = hosting.value[0].show_login_dialog(hosting, form=self, title='check_fail',
                                                      login=account.login,
                                                      password=account.password if self.state_service.get_settings().save_password else '',
@@ -196,6 +220,8 @@ class AccountsPageWidget(QtWidgets.QTableWidget):
                 self.add_button.stop_animation()
                 return
         msg.exec_()
+
+        QueueMediaService().add_reauthorized_account_from_accounts_page(acc_temp, account)
 
         button = self.sender()
         row = self.indexAt(button.pos()).row()
