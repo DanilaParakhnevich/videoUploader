@@ -122,7 +122,7 @@ class AddUploadQueueByDirectoryForm(QDialog):
 
         self.first_upload_date = datetime.now()
         if self.first_upload_date.hour > upload_hours:
-            self.first_upload_date + timedelta(days=1)
+            self.first_upload_date = self.first_upload_date + timedelta(days=1)
 
         self.first_upload_date = self.first_upload_date.replace(minute=upload_minutes, hour=upload_hours)
 
@@ -130,24 +130,26 @@ class AddUploadQueueByDirectoryForm(QDialog):
         self.close()
 
     def handle_file(self, file_dir):
-        title = None
-        description = None
-        upload = False
         upload_targets = list()
-
-        try:
-            f = open(os.path.splitext(file_dir)[0] + '.info.json', 'r', encoding='utf-8')
-            data = json.load(f)
-
-            title = data['title']
-
-            if 'description' in data:
-                description = data['description']
-
-        except:
-            log_error(f'{os.path.splitext(file_dir)[0]} - .info.json не найден')
+        upload = False
 
         for target in self.upload_targets:
+
+            title = None
+            description = None
+            upload = False
+
+            try:
+                f = open(os.path.splitext(file_dir)[0] + '.info.json', 'r', encoding='utf-8')
+                data = json.load(f)
+
+                title = data['title']
+
+                if 'description' in data:
+                    description = data['description']
+
+            except:
+                log_error(f'{os.path.splitext(file_dir)[0]} - .info.json не найден')
 
             try:
                 target['title'] = title

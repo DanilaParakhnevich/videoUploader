@@ -117,7 +117,7 @@ class UploadAfterDownloadForm(QDialog):
 
 			self.first_upload_date = datetime.now()
 			if self.first_upload_date.hour > upload_hours:
-				self.first_upload_date + timedelta(days=1)
+				self.first_upload_date = self.first_upload_date + timedelta(days=1)
 
 			self.first_upload_date = self.first_upload_date.replace(minute=upload_minutes, hour=upload_hours)
 

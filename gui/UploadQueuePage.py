@@ -341,22 +341,30 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             action_button.setText(get_str('start'))
             action_button.clicked.connect(self.on_start_upload)
         elif queue_media.status == 1:
-            item4 = QtWidgets.QPushButton(get_str('process'))
-            item4.clicked.connect(self.do_nothing)
-            action_button.setText(get_str('stop'))
-            action_button.clicked.connect(self.on_stop_upload)
+            if state_service.get_settings().enable_autostart:
+                item4 = QtWidgets.QPushButton(get_str('process'))
+                item4.clicked.connect(self.do_nothing)
+                action_button.setText(get_str('stop'))
+                action_button.clicked.connect(self.on_stop_upload)
 
-            if queue_media.id not in self.upload_thread_dict.keys():
-                event_loop = None
+                if queue_media.id not in self.upload_thread_dict.keys():
+                    event_loop = None
 
-                if Hosting[queue_media.hosting].value[0].is_async():
-                    event_loop = asyncio.new_event_loop()
+                    if Hosting[queue_media.hosting].value[0].is_async():
+                        event_loop = asyncio.new_event_loop()
 
-                upload_video_thread = kthread.KThread(target=self.upload_video,
-                                                      daemon=True,
-                                                      args=[queue_media, queue_media.id, event_loop])
+                    upload_video_thread = kthread.KThread(target=self.upload_video,
+                                                          daemon=True,
+                                                          args=[queue_media, queue_media.id, event_loop])
 
-                self.upload_thread_dict[queue_media.id] = upload_video_thread
+                    self.upload_thread_dict[queue_media.id] = upload_video_thread
+            else:
+                queue_media.status = 0
+                self.state_service.save_upload_queue_media(self.queue_media_list)
+                item4 = QtWidgets.QPushButton(get_str('stopped'))
+                item4.clicked.connect(self.do_nothing)
+                action_button.setText(get_str('start'))
+                action_button.clicked.connect(self.on_start_upload)
 
         elif queue_media.status == 2:
             item4 = QtWidgets.QPushButton(get_str('end'))
@@ -567,9 +575,8 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
         if form.passed is True:
             prev_id = {}
-
+            index = 0
             for item in form.video_info:
-                index = 0
                 for target in item[4]:
 
                     id = str(uuid.uuid4())
@@ -581,7 +588,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
                     upload_date = None
 
-                    if index == 1:
+                    if index == 0:
                         upload_date = form.first_upload_date
 
                     self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=id,
@@ -599,8 +606,8 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                                                                                       title=target['title'],
                                                                                       description=target['description'],
                                                                                       remove_files_after_upload=False))
-                    index += 1
                     prev_id[str([target['hosting'], target['login']])] = id
+                index += 1
 
     def get_status_table_item_by_id(self, media_id):
         i = 0
