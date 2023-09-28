@@ -54,7 +54,7 @@ class QueueMediaService(object):
         return result
 
     def add_reauthorized_account_from_accounts_page(self, old_account, account):
-        QueueMediaService.reauthorized_accounts_from_accounts_page.append([old_account, account])
+        QueueMediaService.reauthorized_accounts_from_accounts_page.append([old_account.copy(), account.copy()])
 
     def get_reauthorized_accounts_from_accounts_page(self):
         result = QueueMediaService.reauthorized_accounts_from_accounts_page.copy()

@@ -192,6 +192,12 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             result = Hosting[queue_media.hosting].value[0].check_auth(acc)
             if result is False:
                 self.set_media_status(queue_media.id, 3, 'check_fail')
+                for media in self.queue_media_list:
+                    if media.id != queue_media.id and media.account.hosting == queue_media.account.hosting and media.account.url == queue_media.account.url and media.account.login == queue_media.account.login and media.status == 1:
+                        if media.id in self.upload_thread_dict.keys():
+                            if self.upload_thread_dict[media.id] is not None and self.upload_thread_dict[media.id].is_alive():
+                                self.upload_thread_dict[media.id].terminate()
+                        self.set_media_status(media.id, 0)
                 return
 
             Hosting[queue_media.hosting].value[0].upload_video(
@@ -418,7 +424,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
         def clicked_disconnect(i, j):
             try:
-                self.cellWidget(i, j).clicked.disconnect
+                self.cellWidget(i, j).clicked.disconnect()
             except:
                 pass
 
@@ -488,6 +494,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                                                      can_relogin=True)
 
         if account is None:
+            self.set_media_status(media.id, 3, get_str("check_fail"))
             return
 
         index = 0
