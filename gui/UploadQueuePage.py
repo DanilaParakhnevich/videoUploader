@@ -365,7 +365,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
                     self.upload_thread_dict[queue_media.id] = upload_video_thread
             else:
-                queue_media.status = 0
+                queue_media.status = 4
                 self.state_service.save_upload_queue_media(self.queue_media_list)
                 item4 = QtWidgets.QPushButton(get_str('stopped'))
                 item4.clicked.connect(self.do_nothing)
@@ -604,7 +604,8 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                                                                                       status=0,
                                                                                       account=self.state_service.get_account_by_hosting_and_login(
                                                                                           target['hosting'],
-                                                                                          target['login']),
+                                                                                          target['login'],
+                                                                                          target['upload_target']),
                                                                                       destination=target[
                                                                                           'upload_target'],
                                                                                       upload_date=upload_date,

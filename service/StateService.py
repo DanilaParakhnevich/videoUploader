@@ -67,10 +67,13 @@ class StateService(object):
 
         return StateService.accounts
 
-    def get_account_by_hosting_and_login(self, hosting: str, login: str):
+    def get_account_by_hosting_and_login(self, hosting: str, login: str, upload_target=None):
         for account in self.accounts:
             if account.hosting == hosting and account.login == login:
-                return account
+                if upload_target is not None and account.url == upload_target:
+                    return account
+                elif upload_target is None:
+                    return account
         return None
 
     def get_account_by_hosting_and_url(self, hosting: str, url: str):

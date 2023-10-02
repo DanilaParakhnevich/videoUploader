@@ -740,7 +740,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                 for target in queue_media.upload_targets:
 
                     if target['error'] is False:
-                        account = self.state_service.get_account_by_hosting_and_login(target['hosting'], target['login'])
+                        account = self.state_service.get_account_by_hosting_and_login(target['hosting'], target['login'], target['upload_target'])
                         self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=str(target['id']),
                                                                                           video_dir='upload_yet',
                                                                                           hosting=target['hosting'],
@@ -1079,7 +1079,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                                                           status=6,
                                                                           account=self.state_service.get_account_by_hosting_and_login(
                                                                               target['hosting'],
-                                                                              target['login']),
+                                                                              target['login'],
+                                                                              target['upload_target']),
                                                                           destination=target[
                                                                               'upload_target'],
                                                                           upload_date=None,

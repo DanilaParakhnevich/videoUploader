@@ -97,7 +97,9 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                                                                                           status=0,
                                                                                           account=self.state_service.get_account_by_hosting_and_login(
                                                                                               target['hosting'],
-                                                                                              target['login']),
+                                                                                              target['login'],
+                                                                                              target['upload_target']
+                                                                                          ),
                                                                                           destination=target[
                                                                                               'upload_target'],
                                                                                           upload_date=form.result[3],
@@ -193,7 +195,8 @@ class DownloadQueuePageWidget(QtWidgets.QTableWidget):
                                                                                           status=status,
                                                                                           account=self.state_service.get_account_by_hosting_and_login(
                                                                                               upload_target['hosting'],
-                                                                                              upload_target['login']),
+                                                                                              upload_target['login'],
+                                                                                              upload_target['upload_target']),
                                                                                           destination=upload_target[
                                                                                               'upload_target'],
                                                                                           upload_in=media.upload_in,

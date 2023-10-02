@@ -179,7 +179,8 @@ class AddUploadQueueByUploadedMediaForm(QDialog):
                                                                           status=3,
                                                                           account=self.state_service.get_account_by_hosting_and_login(
                                                                               target['hosting'],
-                                                                              target['login']),
+                                                                              target['login'],
+                                                                              target['upload_target']),
                                                                           destination=target[
                                                                               'upload_target'],
                                                                           upload_date=None,
