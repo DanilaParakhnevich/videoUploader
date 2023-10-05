@@ -148,7 +148,7 @@ class RutubeService(VideohostingService):
                 except:
                     page.wait_for_selector('#phone-or-email-login', timeout=10_000)
 
-                    page.query_selector('#phone-or-email-login').type(account.login, timeout=0)
+                    page.query_selector('#phone-or-email-login').type(account.login, timeout=10_000)
                     time.sleep(3)
                     page.click('#submit-login-continue', timeout=10_000)
                     page.wait_for_selector('.freyja_char-input__input__DSQH0.freyja_char-input__inputPadding__gkp0a',
