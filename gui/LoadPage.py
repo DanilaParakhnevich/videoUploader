@@ -737,6 +737,8 @@ class LoadPageWidget(QtWidgets.QTabWidget):
             # Если необходима выгрузка, учитывается интервал выгрузки, исходя из типа интервала. 1 видео выгружается сразу
             if upload_on and upload_this:
                 j = 0
+
+
                 for target in queue_media.upload_targets:
 
                     if target['error'] is False:
@@ -747,12 +749,16 @@ class LoadPageWidget(QtWidgets.QTabWidget):
                                                                                           destination=target[
                                                                                               'upload_target'],
                                                                                           upload_in=upload_in,
-                                                                                          upload_date=load_date,
+                                                                                          upload_date=datetime.datetime(year=first_upload_date.year, month=first_upload_date.month,
+                                                   day=first_upload_date.day, hour=first_upload_date.hour,
+                                                   minute=first_upload_date.minute, second=first_upload_date.second,
+                                                   microsecond=first_upload_date.microsecond),
                                                                                           wait_for=prev_upload_item_ids[j],
                                                                                           status=5,
                                                                                           account=account,
                                                                                           remove_files_after_upload=queue_media.remove_files_after_upload))
                     j += 1
+                first_upload_date = first_upload_date + upload_in
 
             if upload_on:
                 prev_upload_item_ids = upload_item_ids

@@ -109,18 +109,12 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             if queue_media.upload_date is None:
                 if queue_media.wait_for is None:
                     queue_media.upload_date = datetime.now()
-                elif queue_media.upload_in is not None:
-                    media = self.find_queue_media_by_id(queue_media.wait_for)
-                    if media is not None:
-                        if media.status == 2:
-                            queue_media.upload_date = datetime.now() + queue_media.upload_in
-                    else:
-                        queue_media.upload_date = datetime.now() + queue_media.upload_in
 
     def upload_by_schedule(self):
         for queue_media in self.queue_media_list:
-            if queue_media.upload_date is not None and queue_media.upload_date < datetime.now() \
-                    and queue_media.status == 0 and queue_media.video_dir != get_str('on_download'):
+            wait_for = self.find_queue_media_by_id(queue_media.wait_for)
+            if ((wait_for is None or wait_for.status == 2) and queue_media.upload_date is not None and
+                    queue_media.upload_date < datetime.now() and queue_media.status == 0 and queue_media.video_dir != get_str('on_download')):
 
                 queue_media.status = 1
                 self.state_service.save_upload_queue_media(self.queue_media_list)
@@ -578,6 +572,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         if form.passed is True:
             prev_id = {}
             index = 0
+            upload_date = form.first_upload_date
             for item in form.video_info:
                 for target in item[4]:
 
@@ -587,11 +582,6 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
                     if str([target['hosting'], target['login']]) in prev_id:
                         wait_for = prev_id[str([target['hosting'], target['login']])]
-
-                    upload_date = None
-
-                    if index == 0:
-                        upload_date = form.first_upload_date
 
                     self.queue_media_service.add_to_the_upload_queue(UploadQueueMedia(media_id=id,
                                                                                       video_dir=item[0],
@@ -610,6 +600,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                                                                                       description=target['description'],
                                                                                       remove_files_after_upload=False))
                     prev_id[str([target['hosting'], target['login']])] = id
+                upload_date = upload_date + form.upload_in
                 index += 1
 
     def get_status_table_item_by_id(self, media_id):
