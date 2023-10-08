@@ -37,6 +37,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
     queue_media_list = state_service.get_upload_queue_media()
     settings = state_service.get_settings()
     upload_thread_dict = {}
+    lock_bool = False
 
     def __init__(self, central_widget):
         super().__init__(central_widget)
@@ -111,6 +112,11 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                     queue_media.upload_date = datetime.now()
 
     def upload_by_schedule(self):
+
+        if self.lock_bool is True:
+            return
+
+        self.lock_bool = True
         for queue_media in self.queue_media_list:
             wait_for = self.find_queue_media_by_id(queue_media.wait_for)
             if ((wait_for is None or wait_for.status == 2) and queue_media.upload_date is not None and
@@ -128,6 +134,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
                 self.upload_thread_dict[queue_media.id] = upload_thread
                 upload_thread.start()
+        self.lock_bool = False
 
     def update_accounts(self):
         for dict in self.queue_media_service.get_reauthorized_accounts_from_accounts_page():
@@ -268,6 +275,19 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
         self.event_service.add_event(Event(
             f'{get_str("event_uploaded")} {queue_media.video_dir} {get_str("to")} {queue_media.hosting}, {queue_media.account.url if queue_media.account.url is not None else acc.login}'))
         self.set_media_status(queue_media.id, 2)
+
+        while self.lock_bool is not False:
+            pass
+
+        self.lock_bool = True
+
+        for media in self.queue_media_list:
+            if media.wait_for == queue_media.id:
+                while media.upload_date < datetime.now():
+                    media.upload_date = media.upload_date + media.upload_in
+
+        self.lock_bool = False
+
         self.upload_thread_dict.pop(queue_media.id)
 
     def update_queue_media(self):
