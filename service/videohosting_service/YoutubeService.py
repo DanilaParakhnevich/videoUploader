@@ -163,11 +163,18 @@ class YoutubeService(VideohostingService):
         return True
 
     def check_auth(self, account) -> bool:
-        for auth in account.auth:
-            if auth['name'] == 'ACCOUNT_CHOOSER':
-                if datetime.utcfromtimestamp(auth['expires']) > datetime.now():
-                    return True
-                else:
-                    return False
+        with sync_playwright() as p:
+            context = self.new_context(p=p, headless=False,
+                                       use_user_agent_arg=True)
+            context.add_cookies(account.auth)
+            page = context.new_page()
 
-        return False
+            page.goto("https://www.youtube.com/", timeout=0)
+
+            try:
+                page.wait_for_selector('#avatar-btn', timeout=20_000)
+                return True
+            except:
+                return False
+
+        return True

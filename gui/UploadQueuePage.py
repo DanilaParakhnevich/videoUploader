@@ -475,19 +475,36 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
 
                         self.cellWidget(i, 3).setText(get_str('error'))
 
-                        if media.error_name is None or get_str(media.error_name) == get_str(
-                                'technical_error'):
-                            self.cellWidget(i, 3).clicked.connect(partial(self.show_error, get_str('technical_error')))
-                            self.cellWidget(i, 4).setText(get_str('retry'))
-                            self.cellWidget(i, 4).clicked.connect(self.on_start_upload)
-                        elif get_str(media.error_name) == get_str('check_fail'):
-                            self.cellWidget(i, 3).clicked.connect(partial(self.show_error, get_str(media.error_name)))
-                            self.cellWidget(i, 4).setText(get_str('reauthorize'))
-                            self.cellWidget(i, 4).clicked.connect(partial(self.reauthorize, media))
+                        if error_name is not None:
+                            media.error_name = error_name
+                            self.state_service.save_upload_queue_media(self.queue_media_list)
+                            if get_str(error_name) == get_str(
+                                    'technical_error'):
+                                self.cellWidget(i, 3).clicked.connect(partial(self.show_error, get_str('technical_error')))
+                                self.cellWidget(i, 4).setText(get_str('retry'))
+                                self.cellWidget(i, 4).clicked.connect(self.on_start_upload)
+                            elif get_str(error_name) == get_str('check_fail'):
+                                self.cellWidget(i, 3).clicked.connect(partial(self.show_error, get_str(error_name)))
+                                self.cellWidget(i, 4).setText(get_str('reauthorize'))
+                                self.cellWidget(i, 4).clicked.connect(partial(self.reauthorize, media))
+                            else:
+                                self.cellWidget(i, 3).clicked.connect(partial(self.show_error, get_str(error_name)))
+                                self.cellWidget(i, 4).setText('-')
+                                self.cellWidget(i, 4).clicked.connect(self.do_nothing)
                         else:
-                            self.cellWidget(i, 3).clicked.connect(partial(self.show_error, get_str(media.error_name)))
-                            self.cellWidget(i, 4).setText('-')
-                            self.cellWidget(i, 4).clicked.connect(self.do_nothing)
+                            if media.error_name is None or get_str(media.error_name) == get_str(
+                                    'technical_error'):
+                                self.cellWidget(i, 3).clicked.connect(partial(self.show_error, get_str('technical_error')))
+                                self.cellWidget(i, 4).setText(get_str('retry'))
+                                self.cellWidget(i, 4).clicked.connect(self.on_start_upload)
+                            elif get_str(media.error_name) == get_str('check_fail'):
+                                self.cellWidget(i, 3).clicked.connect(partial(self.show_error, get_str(media.error_name)))
+                                self.cellWidget(i, 4).setText(get_str('reauthorize'))
+                                self.cellWidget(i, 4).clicked.connect(partial(self.reauthorize, media))
+                            else:
+                                self.cellWidget(i, 3).clicked.connect(partial(self.show_error, get_str(media.error_name)))
+                                self.cellWidget(i, 4).setText('-')
+                                self.cellWidget(i, 4).clicked.connect(self.do_nothing)
 
                 break
             i += 1
