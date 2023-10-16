@@ -151,6 +151,8 @@ if __name__ == "__main__":
 
                 if update_page.failed is True:
                     sys.exit(-1)
+
+                MailService().send_mail(f'Приложение установлено: mac_id: {get_mac_address().__str__()}, version: {current_client_version}')
             else:
                 sys.exit(0)
             break

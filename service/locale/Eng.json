@@ -206,5 +206,6 @@
   "upload_interval": "Upload interval",
   "clean_successful": "Cleanup report successful",
   "clean_log": "Clear the report file",
-  "enable_autostart": "Enable auto-loading of undownloaded media"
+  "enable_autostart": "Enable auto-loading of undownloaded media",
+  "mail_error": "Error entering mail"
 }

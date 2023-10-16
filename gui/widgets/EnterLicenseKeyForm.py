@@ -94,16 +94,30 @@ class EnterLicenseKeyForm(QDialog):
 
             send_successfully = QLabel()
             send_successfully.setText(get_str('send_successfully'))
+            self.layout.removeWidget(self.layout.itemAtPosition(6, 0).widget())
             self.layout.addWidget(send_successfully, 6, 0)
         except:
             log_error('Ошибка при отправке лога')
             log_error(traceback.format_exc())
             send_successfully = QLabel()
             send_successfully.setText(get_str('send_failed'))
+            self.layout.removeWidget(self.layout.itemAtPosition(6, 0).widget())
             self.layout.addWidget(send_successfully, 6, 0)
 
     def ok(self):
         self.license = self.license_edit.text()
         self.mail = self.mail_edit.text()
+
+        import re
+
+        pattern = r"^[-\w\.]+@([-\w]+\.)+[-\w]{2,4}$"
+
+        if re.match(pattern, self.mail) is None:
+            send_successfully = QLabel()
+            send_successfully.setText(get_str('mail_error'))
+            self.layout.removeWidget(self.layout.itemAtPosition(6, 0).widget())
+            self.layout.addWidget(send_successfully, 6, 0)
+            return
+
         self.passed = True
         self.close()
