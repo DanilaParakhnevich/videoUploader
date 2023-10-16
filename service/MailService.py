@@ -13,11 +13,18 @@ class MailService(object):
         self.password = 'qvznovxklvhktlsy'
         self.receiver_mail = 'buxarnet@yandex.com'
 
-    def send_mail(self, msg):
+    def send_mail(self, message):
         smtpObj = smtplib.SMTP('smtp.gmail.com', 587)
         smtpObj.starttls()
+
+        msg = MIMEMultipart()
+        msg['From'] = self.mail
+        msg['To'] = self.mail
+        msg['Date'] = formatdate(localtime=True)
+        msg['Subject'] = message
+
         smtpObj.login(self.mail, self.password)
-        smtpObj.sendmail(self.mail, self.receiver_mail, msg)
+        smtpObj.sendmail(self.mail, self.receiver_mail, msg.as_string())
         smtpObj.quit()
 
     def send_log(self):
