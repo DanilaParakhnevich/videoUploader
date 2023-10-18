@@ -54,7 +54,7 @@ class RutubeService(VideohostingService):
                 args = self.CHROMIUM_ARGS.copy()
                 args.append(self.user_agent_arg)
                 uuid = uuid4()
-                browser = p.chromium.launch_persistent_context(headless=self.state_service.get_settings().debug_browser is False,
+                browser = p.chromium.launch_persistent_context(headless=False,
                                                                args=args,
                                                                user_data_dir=f'{os.getcwd()}/tmp/playwright/{uuid}')
                 page = browser.new_page()
@@ -135,7 +135,7 @@ class RutubeService(VideohostingService):
                     args.append(self.user_agent_arg)
 
                     browser = p.chromium.launch_persistent_context(
-                        headless=True, args=args,
+                        headless=False, args=args,
                         user_data_dir=f'{os.getcwd()}/tmp/playwright/{account.auth}')
 
                     page = browser.new_page()
@@ -168,5 +168,3 @@ class RutubeService(VideohostingService):
                 return False
             except:
                 return False
-
-

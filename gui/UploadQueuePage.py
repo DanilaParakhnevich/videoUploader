@@ -190,7 +190,12 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
             if acc is None:
                 acc = queue_media.account
 
-            result = Hosting[queue_media.hosting].value[0].check_auth(acc)
+            try:
+                result = Hosting[queue_media.hosting].value[0].check_auth(acc)
+            except:
+                log_error(traceback.format_exc())
+                result = False
+
             if result is False:
                 self.set_media_status(queue_media.id, 3, 'check_fail')
                 for media in self.queue_media_list:
