@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 import threading
 
@@ -43,7 +44,7 @@ class UpdatePage(QDialog):
             if os.name == 'nt':
                 os.putenv('NODE_SKIP_PLATFORM_CHECK', '1')
                 os.putenv('PLAYWRIGHT_BROWSERS_PATH', '0')
-                os.system('call playwright\\driver\\playwright.cmd install chromium')
+                subprocess.call([fr'{os.getcwd()}\\playwright\\driver\\playwright.cmd','install','chromium'], shell=False, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, creationflags=0x08000000)
                 response = requests.get(
                     'https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip',
                     stream=True, timeout=6000)
@@ -52,8 +53,8 @@ class UpdatePage(QDialog):
                         f.write(response.raw.read())
 
                 os.makedirs('dist\\Application', exist_ok=True)
-                os.system(
-                    f'powershell Expand-Archive -Path ffmpeg-master-latest-win64-gpl.zip -DestinationPath {os.path.abspath("dist/Application")}')
+                subprocess.call(
+                    ['powershell', '-WindowStyle', 'hidden', 'Expand-Archive', '-Path', 'ffmpeg-master-latest-win64-gpl.zip', '-DestinationPath', rf'{os.path.abspath("dist/Application")}'], shell=False)
                 os.remove('ffmpeg-master-latest-win64-gpl.zip')
                 self.failed = False
             else:
