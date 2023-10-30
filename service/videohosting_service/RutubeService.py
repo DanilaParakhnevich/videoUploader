@@ -136,7 +136,7 @@ class RutubeService(VideohostingService):
                     args.append(self.user_agent_arg)
 
                     browser = p.chromium.launch_persistent_context(
-                        headless=False, args=args,
+                        headless=True, args=args,
                         user_data_dir=f'{os.getcwd()}/tmp/playwright/{account.auth}')
 
                     page = browser.new_page()
