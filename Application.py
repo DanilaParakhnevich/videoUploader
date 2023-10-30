@@ -135,6 +135,7 @@ if __name__ == "__main__":
     try:
         if os.name == 'nt':
             settings.ffmpeg = os.path.abspath('dist/Application/ffmpeg-master-latest-win64-gpl')
+            open('driver/package/.local-browsers/chromium-1024')
         else:
             settings.ffmpeg = os.path.abspath('dist/Application/ffmpeg-master-latest-linux64-gpl')
 

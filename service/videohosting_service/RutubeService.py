@@ -1,6 +1,7 @@
 import os
 import shutil
 import time
+import traceback
 from uuid import uuid4
 
 from PyQt5.QtWidgets import QTableWidgetItem
@@ -144,6 +145,7 @@ class RutubeService(VideohostingService):
                     page.wait_for_selector(
                         '.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y',
                         timeout=5_000)
+
                     return True
                 except:
                     page.wait_for_selector('#phone-or-email-login', timeout=10_000)
@@ -164,6 +166,7 @@ class RutubeService(VideohostingService):
                     return True
         except:
             try:
+                log_error(traceback.format_exc())
                 shutil.rmtree(f'{os.getcwd()}/tmp/playwright/{account.auth}')
                 return False
             except:
