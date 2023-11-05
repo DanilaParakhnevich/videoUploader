@@ -14,8 +14,8 @@ import sys
 class OKService(VideohostingService):
 
     def __init__(self):
-        self.video_regex = 'https://ok.ru/video/.*'
-        self.channel_regex = 'https:\/\/ok.ru\/.*'
+        self.video_regex = 'https://.*ok.ru/video/.*'
+        self.channel_regex = 'https:\/\/.*ok.ru\/.*'
         self.duration_restriction = sys.maxsize
         self.size_restriction = 2 * 1024
         self.min_title_size = 1

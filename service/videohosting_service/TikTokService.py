@@ -14,8 +14,8 @@ from service.Tiktok_uploader import uploadVideo
 class TikTokService(VideohostingService):
 
     def __init__(self):
-        self.video_regex = 'https://www.tiktok.com/.*/video/.*'
-        self.channel_regex = 'https://www.tiktok.com/.*'
+        self.video_regex = 'https://.*tiktok.com/.*/video/.*'
+        self.channel_regex = 'https://.*tiktok.com/.*'
         self.title_size_restriction = 2_200
         self.min_title_size = 0
         self.duration_restriction = 5

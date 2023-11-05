@@ -16,8 +16,8 @@ from playwright.sync_api import sync_playwright
 class YandexDzenService(VideohostingService):
 
     def __init__(self):
-        self.video_regex = 'https:\/\/dzen.ru\/video\/watch\/.*'
-        self.channel_regex = '(https:\/\/dzen.ru\/id\/.*)|(https:\/\/dzen.ru\/.*)'
+        self.video_regex = 'https:\/\/.*dzen.ru\/video\/watch\/.*'
+        self.channel_regex = '(https:\/\/.*dzen.ru\/id\/.*)|(https:\/\/.*dzen.ru\/.*)'
         self.title_size_restriction = 200
         self.min_title_size = 0
         self.size_restriction = 30 * 1024

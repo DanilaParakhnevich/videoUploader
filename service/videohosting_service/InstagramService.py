@@ -19,8 +19,8 @@ import re
 class InstagramService(VideohostingService):
 
     def __init__(self):
-        self.video_regex = 'https:\/\/www.instagram.com\/p\/.*\/'
-        self.channel_regex = 'https:\/\/www.instagram.com\/.*'
+        self.video_regex = 'https:\/\/.*instagram.com\/p\/.*\/'
+        self.channel_regex = 'https:\/\/.*instagram.com\/.*'
         self.upload_video_formats = list(['mp4', 'mov'])
         self.duration_restriction = 1
         self.size_restriction = 100

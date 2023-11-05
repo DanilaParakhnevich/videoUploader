@@ -20,8 +20,8 @@ from playwright.sync_api import sync_playwright
 class RutubeService(VideohostingService):
 
     def __init__(self):
-        self.video_regex = 'https:/\/rutube.ru\/video\/.*'
-        self.channel_regex = 'https:\/\/rutube.ru\/channel\/.*'
+        self.video_regex = 'https:/\/.*rutube.ru\/video\/.*'
+        self.channel_regex = 'https:\/\/.*rutube.ru\/channel\/.*'
         self.upload_video_formats = list(['mp4', 'flv', 'avi', 'mov', 'mpg', 'wmv', 'm4v', 'mp3',
                                           'wma', '3gp', 'mkv', 'webm'])
         self.duration_restriction = 300

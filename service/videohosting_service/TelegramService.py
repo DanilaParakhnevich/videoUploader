@@ -20,8 +20,8 @@ class TelegramService(VideohostingService):
     api_hash = "e4fda4b7d7ab5c8f27df56c71fbe44d9"
 
     def __init__(self):
-        self.video_regex = 'https:\/\/t.me/.*\/.*'
-        self.channel_regex = 'https://t.me/.*'
+        self.video_regex = 'https:\/\/.*t.me/.*\/.*'
+        self.channel_regex = 'https://.*t.me/.*'
         self.title_size_restriction = 100
         self.min_title_size = 0
         self.duration_restriction = 240

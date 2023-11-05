@@ -32,8 +32,8 @@ class VKService(VideohostingService):
     state_service = StateService()
 
     def __init__(self):
-        self.video_regex = 'https:\/\/vk.com\/.*\/=video-.*'
-        self.channel_regex = 'https:\/\/vk.com\/.*'
+        self.video_regex = 'https:\/\/.*vk.com\/.*\/=video-.*'
+        self.channel_regex = 'https:\/\/.*vk.com\/.*'
         self.title_size_restriction = 3_772
         self.min_title_size = 1
         self.description_size_restriction = 9_999_999_999

@@ -16,8 +16,8 @@ from playwright.sync_api import sync_playwright
 class DailyMotionService(VideohostingService):
 
     def __init__(self):
-        self.video_regex = 'https:\/\/www.dailymotion.com\/video\/.*'
-        self.channel_regex = 'https:\/\/www.dailymotion.com\/.*'
+        self.video_regex = 'https:\/\/.*dailymotion.com\/video\/.*'
+        self.channel_regex = 'https:\/\/.*dailymotion.com\/.*'
         self.title_size_restriction = 255
         self.min_title_size = 0
         self.size_restriction = 4 * 1024

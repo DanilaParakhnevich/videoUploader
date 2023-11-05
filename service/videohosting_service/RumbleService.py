@@ -14,8 +14,8 @@ from playwright.sync_api import sync_playwright
 class RumbleService(VideohostingService):
 
     def __init__(self):
-        self.video_regex = 'https:\/\/rumble.com\/.*.html'
-        self.channel_regex = '(https:\/\/rumble.com\/c\/.*)|(https:\/\/rumble.com\/user\/.*)'
+        self.video_regex = 'https:\/\/.*rumble.com\/.*.html'
+        self.channel_regex = '(https:\/\/.*rumble.com\/c\/.*)|(https:\/\/.*rumble.com\/user\/.*)'
         self.title_size_restriction = 255
         self.min_title_size = 0
         self.description_size_restriction = 999999

@@ -74,18 +74,20 @@ class UpdatePage(QDialog):
                 os.system('rm ffmpeg-master-latest-linux64-gpl.tar.xz')
                 self.failed = False
         except Exception as e:
-
             dialog = ShowErrorDialog(None, e.args[0], get_str('error'))
             dialog.setWindowIcon(QIcon('icon.png'))
             dialog.exec_()
 
-            if os.name == 'nt':
-                os.remove('ffmpeg-master-latest-win64-gpl.zip')
-            else:
-                os.system('rm ffmpeg-master-latest-linux64-gpl.tar.xz')
+            try:
+                if os.name == 'nt':
+                    os.remove('ffmpeg-master-latest-win64-gpl.zip')
+                else:
+                    os.system('rm ffmpeg-master-latest-linux64-gpl.tar.xz')
 
-            os.removedirs(self.settings.ffmpeg)
-            os.removedirs(os.path.abspath('playwright/driver/package/.local-browsers'))
+                os.removedirs(self.settings.ffmpeg)
+                os.removedirs(os.path.abspath('playwright/driver/package/.local-browsers'))
+            except:
+                pass
 
         finally:
             self.close()

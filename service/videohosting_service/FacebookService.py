@@ -13,8 +13,8 @@ import time
 class FacebookService(VideohostingService):
 
     def __init__(self):
-        self.video_regex = '(https:\/\/www.facebook.com\/watch\/\?v=.*)|(https:\/\/www.facebook.com\/.*\/videos\/.*)'
-        self.channel_regex = '(https:\/\/www.facebook.com\/watch\/.*\/.*)|(https:\/\/www.facebook.com\/.*)|(https:\/\/web.facebook.com\/.*)'
+        self.video_regex = '(https:\/\/.*facebook.com\/watch\/\?v=.*)|(https:\/\/.*facebook.com\/.*\/videos\/.*)'
+        self.channel_regex = '(https:\/\/.*facebook.com\/watch\/.*\/.*)|(https:\/\.*facebook.com\/.*)|(https:\/\/web.facebook.com\/.*)'
         self.upload_video_formats = list(['3g2', '3gp', '3gpp', 'asf', 'avi', 'dat', 'divx', 'dv', 'f4v', 'flv', 'gif',
                                           'm2ts', 'm4v', 'mkv', 'mod', 'mov', 'mp4', 'mpe', 'mpeg', 'mpeg4', 'mpg',
                                           'mts', 'nsv', 'ogm', 'ogv', 'qt', 'tod', 'ts', 'vob', 'wmv', 'webm'])

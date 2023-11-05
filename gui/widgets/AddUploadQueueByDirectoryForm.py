@@ -135,6 +135,8 @@ class AddUploadQueueByDirectoryForm(QDialog):
 
         for target in self.upload_targets:
 
+            target_copy = target.copy()
+
             title = None
             description = None
             upload = False
@@ -147,75 +149,75 @@ class AddUploadQueueByDirectoryForm(QDialog):
 
                 if 'description' in data:
                     description = data['description']
-
+                f.close()
             except:
                 log_error(f'{os.path.splitext(file_dir)[0]} - .info.json не найден')
 
             try:
-                target['title'] = title
-                target['description'] = description
-                Hosting[target['hosting']].value[0].validate_video_info_for_uploading(video_dir=file_dir)
+                target_copy['title'] = title
+                target_copy['description'] = description
+                Hosting[target_copy['hosting']].value[0].validate_video_info_for_uploading(video_dir=file_dir)
             except VideoDurationException:
                 log_error(traceback.format_exc())
                 self.event_service.add_event(Event(f'{get_str("bad_file_duration")}{file_dir}'))
-                self.add_error_upload_item(file_dir, target, f'{get_str("bad_file_duration")}{file_dir}')
+                self.add_error_upload_item(file_dir, target_copy, f'{get_str("bad_file_duration")}{file_dir}')
                 continue
             except FileSizeException:
                 log_error(traceback.format_exc())
                 self.event_service.add_event(Event(f'{get_str("bad_file_size")}{file_dir}'))
-                self.add_error_upload_item(file_dir, target, f'{get_str("bad_file_size")}{file_dir}')
+                self.add_error_upload_item(file_dir, target_copy, f'{get_str("bad_file_size")}{file_dir}')
                 continue
             except FileFormatException:
                 log_error(traceback.format_exc())
                 self.event_service.add_event(Event(f'{get_str("bad_file_format")}{file_dir}'))
-                self.add_error_upload_item(file_dir, target, f'{get_str("bad_file_format")}{file_dir}')
+                self.add_error_upload_item(file_dir, target_copy, f'{get_str("bad_file_format")}{file_dir}')
                 continue
             except Exception:
                 continue
 
-            if target['title'] is None:
+            if target_copy['title'] is None:
                 form = TypeStrForm(parent=self, label=f'{get_str("input_title")}: {file_dir}')
                 form.exec_()
 
-                target['title'] = form.str
+                target_copy['title'] = form.str
 
             try:
-                Hosting[target['hosting']].value[0].validate_video_info_for_uploading(title=target['title'])
+                Hosting[target_copy['hosting']].value[0].validate_video_info_for_uploading(title=target_copy['title'])
             except NameIsTooLongException:
-                while (Hosting[target['hosting']].value[0].title_size_restriction is not None and \
-                        len(target['title']) > Hosting[target['hosting']].value[0].title_size_restriction) or \
+                while (Hosting[target_copy['hosting']].value[0].title_size_restriction is not None and \
+                        len(target_copy['title']) > Hosting[target_copy['hosting']].value[0].title_size_restriction) or \
                         (Hosting[target['hosting']].value[0].min_title_size is not None and \
-                        len(target['title']) < Hosting[target['hosting']].value[0].min_title_size):
+                        len(target_copy['title']) < Hosting[target_copy['hosting']].value[0].min_title_size):
                     log_error(traceback.format_exc())
-                    if Hosting[target['hosting']].value[0].title_size_restriction is not None:
-                        label = f'{get_str("bad_title")} ({str(Hosting[target["hosting"]].value[0].min_title_size)} <= {get_str("name")} > {str(Hosting[target["hosting"]].value[0].title_size_restriction)})'
+                    if Hosting[target_copy['hosting']].value[0].title_size_restriction is not None:
+                        label = f'{get_str("bad_title")} ({str(Hosting[target_copy["hosting"]].value[0].min_title_size)} <= {get_str("name")} > {str(Hosting[target["hosting"]].value[0].title_size_restriction)})'
                     else:
-                        label = f'{get_str("bad_title")} ({str(Hosting[target["hosting"]].value[0].min_title_size)} <= {get_str("name")})'
+                        label = f'{get_str("bad_title")} ({str(Hosting[target_copy["hosting"]].value[0].min_title_size)} <= {get_str("name")})'
                     form = TypeStrForm(parent=self,
                                        label=label,
                                        current_text=target['title'])
                     form.exec_()
-                    target['title'] = form.str
+                    target_copy['title'] = form.str
 
-            if Hosting[target['hosting']].value[0].description_size_restriction is not None:
-                if target['description'] is None:
+            if Hosting[target_copy['hosting']].value[0].description_size_restriction is not None:
+                if target_copy['description'] is None:
                     form = TypeStrForm(parent=self, label=f'{get_str("input_description")}: {file_dir}')
                     form.exec_()
 
-                    target['description'] = form.str
+                    target_copy['description'] = form.str
 
                 try:
-                    Hosting[target['hosting']].value[0].validate_video_info_for_uploading(description=target['description'])
+                    Hosting[target_copy['hosting']].value[0].validate_video_info_for_uploading(description=target_copy['description'])
                 except DescriptionIsTooLongException:
-                    while len(target['description']) > Hosting[target['hosting']].value[0].description_size_restriction:
+                    while len(target_copy['description']) > Hosting[target_copy['hosting']].value[0].description_size_restriction:
                         log_error(traceback.format_exc())
                         form = TypeStrForm(parent=self,
-                                           label=f'{get_str("too_long_description")}{str(Hosting[target["hosting"]].value[0].description_size_restriction)}',
-                                           current_text=target['description'])
+                                           label=f'{get_str("too_long_description")}{str(Hosting[target_copy["hosting"]].value[0].description_size_restriction)}',
+                                           current_text=target_copy['description'])
                         form.exec_()
-                        target['description'] = form.str
+                        target_copy['description'] = form.str
 
-            upload_targets.append(target)
+            upload_targets.append(target_copy)
             upload = True
         if upload:
             return list([file_dir, title, description, datetime.now(), upload_targets])
