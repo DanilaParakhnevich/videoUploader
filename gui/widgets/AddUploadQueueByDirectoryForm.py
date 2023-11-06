@@ -186,16 +186,16 @@ class AddUploadQueueByDirectoryForm(QDialog):
             except NameIsTooLongException:
                 while (Hosting[target_copy['hosting']].value[0].title_size_restriction is not None and \
                         len(target_copy['title']) > Hosting[target_copy['hosting']].value[0].title_size_restriction) or \
-                        (Hosting[target['hosting']].value[0].min_title_size is not None and \
+                        (Hosting[target_copy['hosting']].value[0].min_title_size is not None and \
                         len(target_copy['title']) < Hosting[target_copy['hosting']].value[0].min_title_size):
                     log_error(traceback.format_exc())
                     if Hosting[target_copy['hosting']].value[0].title_size_restriction is not None:
-                        label = f'{get_str("bad_title")} ({str(Hosting[target_copy["hosting"]].value[0].min_title_size)} <= {get_str("name")} > {str(Hosting[target["hosting"]].value[0].title_size_restriction)})'
+                        label = f'{get_str("bad_title")} ({str(Hosting[target_copy["hosting"]].value[0].min_title_size)} <= {get_str("name")} > {str(Hosting[target_copy["hosting"]].value[0].title_size_restriction)})'
                     else:
                         label = f'{get_str("bad_title")} ({str(Hosting[target_copy["hosting"]].value[0].min_title_size)} <= {get_str("name")})'
                     form = TypeStrForm(parent=self,
                                        label=label,
-                                       current_text=target['title'])
+                                       current_text=target_copy['title'])
                     form.exec_()
                     target_copy['title'] = form.str
 
