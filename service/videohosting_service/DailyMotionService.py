@@ -97,7 +97,7 @@ class DailyMotionService(VideohostingService):
             with page.expect_file_chooser() as fc_info:
                 page.click('[data-testid="upload-banner"]', timeout=0)
             file_chooser = fc_info.value
-            file_chooser.set_files(file_path)
+            file_chooser.set_files(file_path, timeout=0)
 
             page.wait_for_selector('#title', timeout=0)
             page.click('#title', click_count=3)

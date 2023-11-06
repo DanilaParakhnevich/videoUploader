@@ -86,7 +86,7 @@ class YandexDzenService(VideohostingService):
             if table_item is not None:
                 table_item.setText(get_str('uploading'))
             file_chooser = fc_info.value
-            file_chooser.set_files(file_path)
+            file_chooser.set_files(file_path, timeout=0)
 
             if table_item is not None:
                 table_item.setText(get_str('ending'))

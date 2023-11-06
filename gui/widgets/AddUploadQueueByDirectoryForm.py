@@ -132,13 +132,13 @@ class AddUploadQueueByDirectoryForm(QDialog):
     def handle_file(self, file_dir):
         upload_targets = list()
         upload = False
+        title = None
+        description = None
 
         for target in self.upload_targets:
 
             target_copy = target.copy()
 
-            title = None
-            description = None
             upload = False
 
             try:

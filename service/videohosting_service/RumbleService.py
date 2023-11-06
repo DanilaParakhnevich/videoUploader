@@ -88,7 +88,7 @@ class RumbleService(VideohostingService):
             with page.expect_file_chooser() as fc_info:
                 page.click('.upload-video-placeholder', timeout=0)
             file_chooser = fc_info.value
-            file_chooser.set_files(file_path)
+            file_chooser.set_files(file_path, timeout=0)
 
             page.wait_for_selector('#title', timeout=0)
             page.query_selector('#title').type(name, timeout=0)
