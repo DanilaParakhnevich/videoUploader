@@ -557,7 +557,7 @@ class LoadPageWidget(QtWidgets.QTabWidget):
         prev_load_id = None
         index = 0
 
-        for i in range(0, table.rowCount()).__reversed__():
+        for i in range(0, table.rowCount()):
 
             if table.item(i, 3).checkState() == 0:
                 continue

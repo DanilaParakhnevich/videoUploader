@@ -635,7 +635,7 @@ class UploadQueuePageWidget(QtWidgets.QTableWidget):
                                                                                           target['upload_target']),
                                                                                       destination=target[
                                                                                           'upload_target'],
-                                                                                      upload_date=upload_date,
+                                                                                      upload_date=None if len(form.video_info) == 1 else upload_date,
                                                                                       upload_in=form.upload_in,
                                                                                       wait_for=wait_for,
                                                                                       title=target['title'],

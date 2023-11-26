@@ -84,49 +84,53 @@ class RutubeService(VideohostingService):
         if table_item is not None:
             table_item.setText(get_str('preparing'))
         with sync_playwright() as p:
-            args = self.CHROMIUM_ARGS.copy()
-            args.append(self.user_agent_arg)
+            try:
+                args = self.CHROMIUM_ARGS.copy()
+                args.append(self.user_agent_arg)
 
-            browser = p.chromium.launch_persistent_context(
-                headless=self.state_service.get_settings().debug_browser is False, args=args,
-                user_data_dir=f'{os.getcwd()}/tmp/playwright/{account.auth}')
+                browser = p.chromium.launch_persistent_context(
+                    headless=self.state_service.get_settings().debug_browser is False, args=args,
+                    user_data_dir=f'{os.getcwd()}/tmp/playwright/{account.auth}')
 
-            page = browser.new_page()
-            page.goto('https://studio.rutube.ru/uploader/', timeout=0)
+                page = browser.new_page()
+                page.goto('https://studio.rutube.ru/uploader/', timeout=0)
 
-            page.wait_for_selector(
-                '.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y',
-                timeout=5_000)
+                page.wait_for_selector(
+                    '.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y',
+                    timeout=5_000)
 
-            page.wait_for_selector('.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
-            with page.expect_file_chooser() as fc_info:
-                page.click(selector='.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
-            if table_item is not None:
-                table_item.setText(get_str('uploading'))
-            file_chooser = fc_info.value
-            file_chooser.set_files(file_path, timeout=0)
+                page.wait_for_selector('.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
+                with page.expect_file_chooser() as fc_info:
+                    page.click(selector='.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__large__vS7yq.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
+                if table_item is not None:
+                    table_item.setText(get_str('uploading'))
+                file_chooser = fc_info.value
+                file_chooser.set_files(file_path, timeout=0)
 
-            if table_item is not None:
-                table_item.setText(get_str('ending'))
-            page.wait_for_selector('[name=title]', timeout=0)
-            page.wait_for_selector('[name=description]', timeout=0)
+                if table_item is not None:
+                    table_item.setText(get_str('ending'))
+                page.wait_for_selector('[name=title]', timeout=0)
+                page.wait_for_selector('[name=description]', timeout=0)
 
-            time.sleep(1)
+                time.sleep(1)
 
-            page.query_selector('[name="title"]').fill('')
-            page.query_selector('[name="title"]').type(text=name, timeout=0)
+                page.query_selector('[name="title"]').fill('')
+                page.query_selector('[name="title"]').type(text=name, timeout=0)
 
-            page.query_selector('[name="description"]').type(description if description is not None else '', timeout=0)
+                page.query_selector('[name="description"]').type(description if description is not None else '', timeout=0)
 
-            page.click('[name="categories"]')
-            page.click('.freyja_char-dropdown-layout__dropdownItem__x8JCK')
+                page.click('[name="categories"]')
+                page.click('.freyja_char-dropdown-layout__dropdownItem__x8JCK')
 
-            page.wait_for_selector(
-                '.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__regular__ksZLL.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
+                page.wait_for_selector(
+                    '.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__regular__ksZLL.freyja_char-base-button__pointerCursor__JNA7y', timeout=0)
 
-            page.click(
-                selector='.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__regular__ksZLL.freyja_char-base-button__pointerCursor__JNA7y',
-                timeout=0)
+                page.click(
+                    selector='.freyja_char-base-button__button__7JyC-.freyja_char-base-button__contained-accent__Z8hc1.freyja_char-base-button__regular__ksZLL.freyja_char-base-button__pointerCursor__JNA7y',
+                    timeout=0)
+            except Exception as e:
+                log_error(traceback.format_exc())
+                raise e
 
     def check_auth(self, account) -> bool:
         try:
@@ -148,6 +152,7 @@ class RutubeService(VideohostingService):
 
                     return True
                 except:
+                    log_error(traceback.format_exc())
                     page.wait_for_selector('#phone-or-email-login', timeout=10_000)
 
                     page.query_selector('#phone-or-email-login').type(account.login, timeout=10_000)
